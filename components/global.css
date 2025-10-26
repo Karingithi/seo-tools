@@ -1,6 +1,7 @@
 /* =========================================================
    Cralite Global Styles — Optimized and Consolidated
    ========================================================= */
+
 /* --- Local Fonts (Sofia Pro) --- */
 @font-face {
   font-family: 'Sofia Pro';
@@ -70,7 +71,7 @@
   --radius: 10px;
   --accent: var(--primary);
   --accent-hover: #f2bb0b;
-   --font: 'Sofia Pro', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font: 'Sofia Pro', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* =========================================================
@@ -94,44 +95,48 @@ body {
   flex-direction: column;
 }
 
-.container {
+/* =========================================================
+   Unified Container Widths — 95% layout alignment
+   ========================================================= */
+.container,
+.footer-container,
+.hero-container,
+.tools-container {
+  width: 95% !important;
   max-width: 1240px;
-  padding: 0 1rem;
+  margin: 0 auto;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  box-sizing: border-box;
 }
 
 /* =========================================================
-   CRALITE TOOLS HEADER — Transparent + Compact
+   CRALITE TOOLS HEADER — Transparent + Floating Overlay
    ========================================================= */
-
 .site-header {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background: transparent;
+  background: transparent !important;
   color: #fff;
   z-index: 1000;
-  padding: 0.75rem 0; /* slightly shorter height */
+  padding: 0.75rem 0;
   transition: background 0.4s ease, box-shadow 0.4s ease;
 }
 
-/* Header when scrolled — subtle indigo fade */
 .site-header.scrolled {
-  background: rgba(7, 0, 38, 0.95);
+  background: rgba(7, 0, 38, 0.85);
+  backdrop-filter: blur(8px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Inner container alignment — matches footer + main */
 .site-header .container {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Brand logo */
 .brand {
   display: flex;
   align-items: center;
@@ -139,12 +144,12 @@ body {
 }
 
 .brand .logo {
-  height: 42px; /* slightly smaller for compact header */
+  height: 42px;
   width: auto;
   display: block;
+  filter: brightness(0) invert(1);
 }
 
-/* Navigation links */
 .site-header nav a {
   color: #fff;
   text-decoration: none;
@@ -160,18 +165,10 @@ body {
   opacity: 1;
 }
 
-/* Add smooth fade effect for transparency on scroll */
-@keyframes fadeHeader {
-  from { background: transparent; }
-  to { background: rgba(7, 0, 38, 0.95); }
-}
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .site-header .container {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0 1rem;
   }
 
   .brand {
@@ -191,10 +188,9 @@ body {
 /* =========================================================
    CRALITE FOOTER — Left-Aligned with Image Overlay
    ========================================================= */
-
 .site-footer {
   position: relative;
-  background: var(--secondary); /* Solid dark base */
+  background: var(--secondary);
   color: #fff;
   padding: 4rem 0 2rem;
   font-family: var(--font);
@@ -203,42 +199,34 @@ body {
   z-index: 1;
 }
 
-/* 🔥 Overlay image layer (non-intrusive blend) */
 .site-footer::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: 
-    url("https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp")
-    no-repeat 80% 0 / 42% auto;
-  opacity: 1; /* controls how visible the image is */
+  background: url("https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp")
+              no-repeat 80% 0 / 42% auto;
+  opacity: 0.25;
   z-index: 0;
-  pointer-events: none; /* don't block clicks */
+  pointer-events: none;
 }
 
-/* Optional darker tint overlay for better contrast */
 .site-footer::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(7, 0, 38, 0.9); /* adds depth and legibility */
+  background: rgba(7, 0, 38, 0.9);
   z-index: 0;
 }
 
-/* Footer container (content layer) */
 .footer-container {
-  max-width: 1240px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.2fr 2fr;
   gap: 2rem;
-  padding: 0 1.5rem;
   position: relative;
-  z-index: 2; /* above overlays */
+  z-index: 2;
   text-align: left;
 }
 
-/* Brand section */
 .footer-brand {
   display: flex;
   flex-direction: column;
@@ -259,7 +247,6 @@ body {
   margin: 0;
 }
 
-/* Link columns */
 .footer-links {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -287,12 +274,10 @@ body {
   color: var(--primary);
 }
 
-/* Social icons */
 .social-icons {
   display: flex;
   gap: 0.8rem;
   margin-top: 0.8rem;
-  text-align: left;
 }
 
 .social-icons a {
@@ -305,19 +290,19 @@ body {
   color: var(--primary);
 }
 
-/* Bottom section */
+/* Footer bottom bar */
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.141);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
   margin-top: 2rem;
-  padding: 1.5rem 1.5rem 0;
+  padding: 1.5rem 10px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  width: 95%;
   max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
-  text-align: left;
   position: relative;
   z-index: 2;
 }
@@ -349,7 +334,6 @@ body {
   color: var(--primary);
 }
 
-/* Responsive Footer */
 @media (max-width: 900px) {
   .footer-container {
     grid-template-columns: 1fr;
@@ -411,29 +395,6 @@ a {
 
 a:hover {
   color: var(--primary);
-}
-
-/* =========================================================
-   Responsive Adjustments
-   ========================================================= */
-@media (max-width: 768px) {
-  .site-header .container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .brand {
-    margin-bottom: 0.5rem;
-  }
-
-  .site-header nav {
-    margin-top: 0.5rem;
-  }
-
-  .site-header a {
-    margin: 0.4rem 0.6rem 0 0 !important;
-    display: inline-block;
-  }
 }
 
 /* =========================================================
