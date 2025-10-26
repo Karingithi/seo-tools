@@ -216,15 +216,6 @@ body {
   pointer-events: none; /* don't block clicks */
 }
 
-/* Optional darker tint overlay for better contrast */
-.site-footer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(7, 0, 38, 0.9); /* adds depth and legibility */
-  z-index: 0;
-}
-
 /* Footer container (content layer) */
 .footer-container {
   max-width: 1240px;
