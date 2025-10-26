@@ -1,0 +1,464 @@
+/* =========================================================
+   Cralite Global Styles — Optimized and Consolidated
+   ========================================================= */
+
+/* --- Local Fonts (Sofia Pro) --- */
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro-Light.woff2') format('woff2'),
+       url('fonts/SofiaPro-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro.woff2') format('woff2'),
+       url('fonts/SofiaPro.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro-Medium.woff2') format('woff2'),
+       url('fonts/SofiaPro-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro-SemiBold.woff2') format('woff2'),
+       url('fonts/SofiaPro-SemiBold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro-Bold.woff2') format('woff2'),
+       url('fonts/SofiaPro-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sofia Pro';
+  src: url('fonts/SofiaPro-Italic.woff2') format('woff2'),
+       url('fonts/SofiaPro-Italic.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* =========================================================
+   Root Variables
+   ========================================================= */
+:root {
+  --primary: #ffc50c;
+  --secondary: #070026;
+  --bg: #fafafa;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --card: #fff;
+  --border: #e5e7eb;
+  --radius: 10px;
+  --font: 'Sofia Pro', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --accent: var(--primary);
+  --accent-hover: #e0b200;
+}
+
+/* =========================================================
+   Base Layout
+   ========================================================= */
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background-color: #f7fafc;
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  font-weight: 400;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1240px;
+  padding: 0 1rem;
+}
+
+/* =========================================================
+   CRALITE TOOLS HEADER — Transparent + Compact
+   ========================================================= */
+
+.site-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: transparent;
+  color: #fff;
+  z-index: 1000;
+  padding: 0.75rem 0; /* slightly shorter height */
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Header when scrolled — subtle indigo fade */
+.site-header.scrolled {
+  background: rgba(7, 0, 38, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Inner container alignment — matches footer + main */
+.site-header .container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Brand logo */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand .logo {
+  height: 42px; /* slightly smaller for compact header */
+  width: auto;
+  display: block;
+}
+
+/* Navigation links */
+.site-header nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 1.5rem;
+  font-size: 15.5px;
+  transition: color 0.25s ease, opacity 0.25s ease;
+  opacity: 0.9;
+}
+
+.site-header nav a:hover {
+  color: var(--primary);
+  opacity: 1;
+}
+
+/* Add smooth fade effect for transparency on scroll */
+@keyframes fadeHeader {
+  from { background: transparent; }
+  to { background: rgba(7, 0, 38, 0.95); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .site-header .container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 1rem;
+  }
+
+  .brand {
+    margin-bottom: 0.5rem;
+  }
+
+  .site-header nav {
+    margin-top: 0.5rem;
+  }
+
+  .site-header nav a {
+    margin: 0.4rem 0.8rem 0 0 !important;
+    display: inline-block;
+  }
+}
+
+/* =========================================================
+   CRALITE FOOTER — Left-Aligned with Image Overlay
+   ========================================================= */
+
+.site-footer {
+  position: relative;
+  background: #070026; /* Solid dark base */
+  color: #fff;
+  padding: 4rem 0 2rem;
+  font-family: var(--font);
+  overflow: hidden;
+  text-align: left;
+  z-index: 1;
+}
+
+/* 🔥 Overlay image layer (non-intrusive blend) */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: 
+    url("https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp")
+    no-repeat 80% 0 / 42% auto;
+  opacity: 0.25; /* controls how visible the image is */
+  z-index: 0;
+  pointer-events: none; /* don't block clicks */
+}
+
+/* Optional darker tint overlay for better contrast */
+.site-footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 0, 38, 0.9); /* adds depth and legibility */
+  z-index: 0;
+}
+
+/* Footer container (content layer) */
+.footer-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 2fr;
+  gap: 2rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 2; /* above overlays */
+  text-align: left;
+}
+
+/* Brand section */
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.footer-logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+.footer-tagline {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Link columns */
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  text-align: left;
+}
+
+.footer-column h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.footer-column a {
+  display: block;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 15px;
+  margin-bottom: 0.6rem;
+  transition: color 0.25s ease;
+}
+
+.footer-column a:hover {
+  color: var(--primary);
+}
+
+/* Social icons */
+.social-icons {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+  text-align: left;
+}
+
+.social-icons a {
+  color: #fff;
+  font-size: 1.1rem;
+  transition: color 0.25s ease;
+}
+
+.social-icons a:hover {
+  color: var(--primary);
+}
+
+/* Bottom section */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.141);
+  margin-top: 2rem;
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  position: relative;
+  z-index: 2;
+}
+
+.footer-bottom p {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.brand-highlight {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-bottom-links a {
+  color: #fff;
+  font-size: 15px;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.footer-bottom-links a:hover {
+  color: var(--primary);
+}
+
+/* Responsive Footer */
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-links {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   UI Elements (Buttons, Cards, Links)
+   ========================================================= */
+button,
+.btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 0.7rem 1.3rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.15s ease;
+}
+
+button:hover,
+.btn:hover,
+a.btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+a {
+  color: var(--secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* =========================================================
+   Responsive Adjustments
+   ========================================================= */
+@media (max-width: 768px) {
+  .site-header .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .brand {
+    margin-bottom: 0.5rem;
+  }
+
+  .site-header nav {
+    margin-top: 0.5rem;
+  }
+
+  .site-header a {
+    margin: 0.4rem 0.6rem 0 0 !important;
+    display: inline-block;
+  }
+}
+
+/* =========================================================
+   Custom Cursor
+   ========================================================= */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease-out, width 0.15s ease, height 0.15s ease, border 0.15s ease;
+  z-index: 9999;
+  mix-blend-mode: difference;
+}
+
+a:hover ~ .custom-cursor,
+button:hover ~ .custom-cursor,
+[class*="tab"]:hover ~ .custom-cursor {
+  width: 34px;
+  height: 34px;
+  border-color: var(--accent-hover);
+}

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cralite Tools — SEO & Schema Utilities</title>
+  <meta name="description" content="Explore upcoming Cralite tools — SEO utilities, Schema generators, and web optimization features.">
+
+  <!-- Global + Page Styles -->
+  <link rel="stylesheet" href="components/home.css">
+
+  <!-- Dynamic include script -->
+  <script src="components/include.js"></script>
+  <script src="components/global.js"></script>
+</head>
+
+<body>
+
+  <!-- Dynamic Header -->
+  <div id="header"></div>
+  <script>includeHTML("header", "components/header.html");</script>
+
+  <main class="tools-container">
+    <!-- Tools Section -->
+    <section class="tools-main">
+      <h1 class="page-title">Cralite Tools</h1>
+      <p class="page-subtitle">
+        Simplify SEO, schema, and content optimization with Cralite's powerful utilities.
+      </p>
+
+      <!-- Search -->
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search tools...">
+      </div>
+
+      <!-- Tools Grid -->
+      <div class="tools-grid" id="toolsGrid">
+        <!-- dynamically generated tools here -->
+      </div>
+    </section>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="banner card">
+        <img src="components/images/banner-placeholder.jpg" alt="Cralite Tools Banner">
+        <div class="banner-content">
+          <h3>Discover More Tools</h3>
+          <p>
+            Stay ahead in SEO, schema, and digital marketing.<br>
+            New tools are coming soon — optimized for visibility and results.
+          </p>
+          <a href="#" class="btn primary">Learn More</a>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
+  <script>includeHTML("footer", "components/footer.html");</script>
+
+  <!-- Script Logic -->
+  <script>
+    const tools = [
+      { title: "robots.txt Tester", desc: "Test and validate your robots.txt directives against any URL." },
+      { title: ".htaccess Tester", desc: "Simulate and debug Apache .htaccess rewrite rules easily." },
+      { title: "Sitemap Generator", desc: "Create optimized XML sitemaps for better search indexing." },
+      { title: "SERP Simulator", desc: "Preview how your meta titles and descriptions appear in Google results." },
+      { title: "Readability & SEO Score Tool", desc: "Analyze readability, keyword balance, and SEO strength in real time." },
+      { title: "URL & Meta Tag Extractor", desc: "Extract metadata, canonical URLs, and headings from any web page." },
+      { title: "Open Graph & Twitter Card Checker", desc: "Check and preview social meta tags for Facebook, X, and LinkedIn." },
+      { title: "XML Sitemap Generator", desc: "Build and validate multi-URL XML sitemaps for search engines." },
+      { title: "Robots.txt Generator", desc: "Quickly generate a valid robots.txt file for your website." }
+    ];
+
+    const grid = document.getElementById("toolsGrid");
+    const searchInput = document.getElementById("searchInput");
+
+    function renderTools(animated = false) {
+      const query = searchInput.value.toLowerCase();
+      const filtered = tools.filter(t => t.title.toLowerCase().includes(query));
+
+      grid.style.opacity = 0;
+      setTimeout(() => {
+        grid.innerHTML = "";
+
+        if (!filtered.length) {
+          grid.innerHTML = "<p>No tools found.</p>";
+        } else {
+          filtered.forEach(t => {
+            const card = document.createElement("div");
+            card.className = "tool-card";
+            card.innerHTML = `
+              <div class="tool-icon">
+                <img src="components/icons/seo.svg" alt="Tool Icon" />
+              </div>
+              <div class="tool-title">${t.title}</div>
+              <div class="tool-desc">${t.desc}</div>
+              <a href="#" onclick="return false;" class="btn primary">Coming Soon</a>
+            `;
+            grid.appendChild(card);
+          });
+        }
+
+        if (animated) grid.style.transition = "opacity 0.25s ease";
+        grid.style.opacity = 1;
+      }, 150);
+    }
+
+    searchInput.addEventListener("input", () => renderTools(true));
+    renderTools();
+  </script>
+  <script>
+  // Animate sidebar banner when it comes into view
+  document.addEventListener("DOMContentLoaded", () => {
+    const banner = document.querySelector(".banner");
+    if (!banner) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            banner.classList.add("visible");
+            observer.unobserve(banner); // Run once only
+          }
+        });
+      },
+      { threshold: 0.2 } // Trigger when 20% of banner is visible
+    );
+
+    observer.observe(banner);
+  });
+</script>
+<script>
+  // Fade-in animation for tool cards after they’re generated
+  function observeToolCards() {
+    const cards = document.querySelectorAll(".tool-card");
+    if (!cards.length) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    cards.forEach((card, i) => {
+      // Stagger animation for nicer flow
+      setTimeout(() => observer.observe(card), i * 100);
+    });
+  }
+
+  // Hook into your existing renderTools() function
+  const originalRenderTools = renderTools;
+  renderTools = function(animated = false) {
+    originalRenderTools(animated);
+    setTimeout(observeToolCards, 300); // Wait until cards are in DOM
+  };
+
+  // Initial run in case tools already loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(observeToolCards, 600);
+  });
+</script>
+
+
+</body>
+</html>

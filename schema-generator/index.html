@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cralite Schema Generator — SEO made simple</title>
+  <meta name="description" content="Cralite Schema Generator — Generate JSON-LD structured data quickly.">
+
+  <!-- Global & Local Styles -->
+  <link rel="stylesheet" href="../components/global.css">
+  <link rel="stylesheet" href="schema.css">
+  <link rel="stylesheet" href="../components/forms.css">
+
+  <!-- Dynamic include script -->
+  <script src="../components/include.js"></script>
+</head>
+
+<body>
+
+  <!-- Dynamic Header -->
+  <div id="header"></div>
+  <script>
+    includeHTML("header", "../components/header.html");
+  </script>
+  <section class="schema-header">
+  <div class="container">
+    <h1 class="schema-title">Schema Markup Generator (JSON-LD)</h1>
+    <p class="schema-subtitle">
+      Create Google-friendly structured data in seconds. Choose your schema type, fill out your details,
+      and instantly preview or copy your JSON-LD markup.
+    </p>
+  </div>
+</section>
+
+  <!-- Schema Selector Section -->
+  <div class="schema-selector-area card">
+    <div class="schema-intro-grid">
+
+      <div class="schema-left">
+        <label class="label schema-question">
+          Which Schema.org markup would you like to generate?
+        </label>
+        <select id="schemaType" class="select">
+          <option value="Article">Article (Blog / News)</option>
+          <option value="Organization">Organization</option>
+          <option value="LocalBusiness">Local Business</option>
+          <option value="Product">Product</option>
+          <option value="FAQ">FAQ Page</option>
+        </select>
+      </div>
+
+      <div class="schema-right">
+        <p>
+          Use this Schema.org structured data generator to create JSON-LD markups easily.
+          After generating, test your markup with 
+          <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener">Google Rich Results Test</a> 
+          or the 
+          <a href="https://validator.schema.org/" target="_blank" rel="noopener">Schema Markup Validator</a>.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main Tool Interface -->
+  <main class="container main-grid">
+    <section class="form-panel">
+      <div id="formArea" class="form-area"></div>
+    </section>
+
+    <aside class="preview-panel">
+      <div class="preview-header">
+        <h3>JSON-LD Preview</h3>
+        <div id="errorCount" class="error-count">Errors: 0</div>
+      </div>
+
+      <!-- ✅ Buttons moved here: below header, above preview -->
+      <div class="actions">
+        <button id="copyBtn" class="btn primary" type="button">Copy JSON-LD</button>
+        <button id="downloadBtn" class="btn primary" type="button">Download</button>
+        <button id="resetBtn" class="btn" type="button">Reset</button>
+      </div>
+
+      <pre id="jsonPreview" class="json-preview">{}</pre>
+      <div id="hints" class="hints"></div>
+
+      <div class="footer-note">Paste JSON-LD into &lt;head&gt; or via Tag Manager.</div>
+    </aside>
+  </main>
+
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
+  <script>
+    includeHTML("footer", "../components/footer.html");
+  </script>
+
+  <!-- App Logic -->
+  <script src="core.js"></script>
+<script src="organization.js"></script>
+<script src="article.js"></script>
+<script src="product.js"></script>
+<script src="localbusiness.js"></script>
+<script src="faq.js"></script>
+
+</body>
+</html>
