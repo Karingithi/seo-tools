@@ -41,9 +41,10 @@
   line-height: 1.2;
   margin-bottom: 1rem;
 }
-@media (min-width: 1025px) 
+@media (min-width: 1025px) {
 .hero-content {
   padding: 30px !important;
+}
 }
 
 .hero-content h1 span {
