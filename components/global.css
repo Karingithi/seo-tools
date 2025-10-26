@@ -194,7 +194,7 @@ body {
 
 .site-footer {
   position: relative;
-  background: #070026; /* Solid dark base */
+  background: var(--secondary); /* Solid dark base */
   color: #fff;
   padding: 4rem 0 2rem;
   font-family: var(--font);
