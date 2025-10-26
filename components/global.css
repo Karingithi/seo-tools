@@ -192,7 +192,25 @@ body {
 /* =========================================================
    Mobile Header Adjustments (Now up to 1024px)
    ========================================================= */
-@media (max-width: 1024px) {
+  @media (max-width: 1024px) {
+  /* Mobile dropdown links: white by default */
+  .nav-links .dropdown-menu a {
+    color: #fff !important;
+    transition: color 0.25s ease;
+  }
+
+  /* On hover or active */
+  .nav-links .dropdown-menu a:hover,
+  .nav-links .dropdown-menu a:active {
+    color: var(--primary) !important;
+  }
+  /* Optional: make transitions smoother */
+  .nav-links .dropdown-menu a {
+    transition: color 0.25s ease;
+  }
+}
+
+   @media (max-width: 1024px) {
   .brand .logo {
     height: 40px;
     z-index: 3003;

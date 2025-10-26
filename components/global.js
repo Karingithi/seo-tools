@@ -2,51 +2,6 @@
 // Cralite Global Cursor Ring — Enlarges on hover
 // =========================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  const waitForHeader = setInterval(() => {
-    const toggleBtn = document.querySelector(".menu-toggle");
-    const nav = document.querySelector(".nav-links");
-    const header = document.querySelector(".site-header");
-
-    if (toggleBtn && nav && header) {
-      clearInterval(waitForHeader);
-
-      // Open / close full-screen menu
-      toggleBtn.addEventListener("click", () => {
-        nav.classList.toggle("open");
-        toggleBtn.classList.toggle("active");
-        header.classList.toggle("menu-open");
-      });
-
-      // Close drawer when link clicked
-      document.querySelectorAll(".nav-links a").forEach(link => {
-        link.addEventListener("click", () => {
-          nav.classList.remove("open");
-          toggleBtn.classList.remove("active");
-          header.classList.remove("menu-open");
-        });
-      });
-
-      // Dropdown toggles
-      const dropdowns = document.querySelectorAll(".menu-item.has-dropdown");
-      dropdowns.forEach(item => {
-        const toggle = item.querySelector(".dropdown-toggle");
-        toggle.addEventListener("click", e => {
-          e.stopPropagation();
-
-          // Optional: close other dropdowns
-          dropdowns.forEach(d => {
-            if (d !== item) d.classList.remove("open");
-          });
-
-          item.classList.toggle("open");
-        });
-      });
-    }
-  }, 200);
-});
-
-
 
 (function () {
   if (document.querySelector(".custom-cursor-ring")) return;
@@ -108,4 +63,49 @@ document.addEventListener("scroll", () => {
   } else {
     header.classList.remove("scrolled");
   }
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const waitForHeader = setInterval(() => {
+    const toggleBtn = document.querySelector(".menu-toggle");
+    const nav = document.querySelector(".nav-links");
+    const header = document.querySelector(".site-header");
+
+    if (toggleBtn && nav && header) {
+      clearInterval(waitForHeader);
+
+      // Open / close full-screen menu
+      toggleBtn.addEventListener("click", () => {
+        nav.classList.toggle("open");
+        toggleBtn.classList.toggle("active");
+        header.classList.toggle("menu-open");
+      });
+
+      // Close drawer when link clicked
+      document.querySelectorAll(".nav-links a").forEach(link => {
+        link.addEventListener("click", () => {
+          nav.classList.remove("open");
+          toggleBtn.classList.remove("active");
+          header.classList.remove("menu-open");
+        });
+      });
+
+      // Dropdown toggles
+      const dropdowns = document.querySelectorAll(".menu-item.has-dropdown");
+      dropdowns.forEach(item => {
+        const toggle = item.querySelector(".dropdown-toggle");
+        toggle.addEventListener("click", e => {
+          e.stopPropagation();
+
+          // Optional: close other dropdowns
+          dropdowns.forEach(d => {
+            if (d !== item) d.classList.remove("open");
+          });
+
+          item.classList.toggle("open");
+        });
+      });
+    }
+  }, 200);
 });

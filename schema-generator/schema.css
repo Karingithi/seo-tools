@@ -7,10 +7,7 @@
    SCHEMA SELECTOR AREA
 ------------------------------------------- */
 .schema-selector-area {
-  max-width: 1100px;
-  margin: 28px auto;
   background: var(--card);
-  padding: 32px 28px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(12,12,12,0.04);
 }
@@ -51,7 +48,7 @@
 .form-panel,
 .preview-panel {
   background: var(--card);
-  padding: 20px;
+  padding: 30px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(12,12,12,0.04);
 }
@@ -154,20 +151,22 @@
   }
 }
 
-/* --- Align schema selector and main grid widths --- */
+/* =========================================================
+   Fix width alignment between Hero and Schema Sections
+   ========================================================= */
 .schema-selector-area,
 .container.main-grid {
-  max-width: 1100px;
+  width: 95% !important;
+  max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
+  padding: 30px;
   box-sizing: border-box;
-  padding-left: 28px;
-  padding-right: 28px;
 }
 
 .container.main-grid {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 
@@ -192,7 +191,7 @@
   text-align: center;
   padding: 20px;
   border-radius: 10px;
-  max-width: 1100px;
+  max-width: 1240px;
   margin: 0 auto 28px;
 }
 
@@ -220,4 +219,203 @@
   .schema-subtitle {
     font-size: 15px;
   }
+}
+
+/* =========================================================
+   Schema Page Layout Wrapper
+   ========================================================= */
+.schema-wrapper {
+  width: 95%;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  margin-top: 5rem;
+}
+
+/* =========================================================
+   Copy Icon — With Soft Background
+   ========================================================= */
+.preview-panel .actions .icon-btn {
+  background: rgba(255, 197, 12, 0.12); /* subtle yellow tint */
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.preview-panel .actions .icon-btn svg {
+  fill: var(--primary);
+  width: 22px;
+  height: 22px;
+  transition: transform 0.25s ease, fill 0.25s ease;
+}
+
+/* Hover effect — brighten the yellow & scale slightly */
+.preview-panel .actions .icon-btn:hover {
+  background: rgba(255, 197, 12, 0.25);
+  transform: scale(1.08);
+}
+
+.preview-panel .actions .icon-btn:hover svg {
+  fill: var(--accent-hover);
+}
+
+/* Floating "Copied!" message above the icon */
+.copy-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-message {
+  position: absolute;
+  bottom: 110%; /* places message above the icon */
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  color: var(--secondary);
+  background: transparent;
+  font-size: 16px;
+  font-weight: 400;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.copy-message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  animation: fadeOutUp 2s ease forwards;
+}
+
+@keyframes fadeOutUp {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+
+/* =========================================================
+   Icon Buttons Row (Copy, Download, Reset, Test)
+   ========================================================= */
+.icon-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-btn {
+  position: relative;
+  background: var(--secondary);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.icon-btn svg {
+  fill: var(--primary);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.icon-btn:hover {
+  background: var(--accent-hover);
+  transform: scale(1.1);
+}
+
+.icon-btn:hover svg {
+  fill: #000;
+}
+
+/* Tooltip styling */
+.tooltip {
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--secondary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 400;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.icon-btn:hover .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-3px);
+}
+
+/* Copied message floating */
+.copy-message {
+  position: relative;
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--secondary);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.copy-message.show {
+  opacity: 1;
+  animation: fadeOutUp 2s ease forwards;
+}
+
+@keyframes fadeOutUp {
+  0% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+.icon-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+/* Group wrapper for copy icon + floating message */
+.icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Copy message directly above the copy icon */
+.copy-message {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--secondary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.copy-message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
 }

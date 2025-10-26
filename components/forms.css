@@ -27,7 +27,7 @@ label,
   font-weight: 500;
   color: var(--secondary);
   margin-bottom: 0.4rem;
-  font-size: 15px;
+  font-size: 17px;
   display: block;
 }
 
@@ -479,11 +479,6 @@ button.secondary:hover,
     top: 13px; /* slightly lower for mobile visual balance */
     right: 10px;
   }
-
-  /* Add breathing space on very small screens */
-  body {
-    padding: 16px !important;
-  }
 }
 
 
@@ -528,11 +523,6 @@ button.secondary:hover,
   .form-row.inline {
     flex-direction: column !important;
     gap: 0.8rem !important;
-  }
-
-  /* Add breathing space around body */
-  body {
-    padding: 16px !important;
   }
 }
 
@@ -911,7 +901,7 @@ button.secondary:hover,
   font-weight: 500;
   color: var(--secondary);
   margin-top: 0.5rem;
-  font-size: 15px;
+  font-size: 17px;
   display: block;
 }
 

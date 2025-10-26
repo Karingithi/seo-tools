@@ -1,0 +1,85 @@
+/* =========================================================
+   HERO SECTION — Consistent Across Pages
+   ========================================================= */
+.hero-section {
+  background: #070026;
+  color: #fff;
+  padding: 8rem 10px 6rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp");
+  --background-overlay: '';
+  background-position: 50% 0;
+  background-repeat: no-repeat;
+  background-size: 60% auto;
+}
+@media (max-width: 768px) {
+    .hero-section::before {
+        background-position: 10vw 0;
+        background-size: 150% auto;
+    }
+}
+
+.hero-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 2.5rem;
+  max-width: 1240px;
+  width: 95%;
+  margin: 0 auto;
+}
+
+.hero-content h1 {
+  font-size: clamp(2.4rem, 4vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+@media (min-width: 1025px) 
+.hero-content {
+  padding: 30px !important;
+}
+
+.hero-content h1 span {
+  color: var(--primary);
+}
+
+.hero-content p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-section.hero-visible .hero-content {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Hero */
+@media (max-width: 900px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-content p {
+    margin: 0 auto;
+  }
+
+}
