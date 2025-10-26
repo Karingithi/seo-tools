@@ -1,12 +1,11 @@
 /* =========================================================
    Cralite Global Styles — Optimized and Consolidated
    ========================================================= */
-
 /* --- Local Fonts (Sofia Pro) --- */
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro-Light.woff2') format('woff2'),
-       url('fonts/SofiaPro-Light.woff') format('woff');
+  src: url('./fonts/SofiaPro-Light.woff2') format('woff2'),
+       url('./fonts/SofiaPro-Light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -14,8 +13,8 @@
 
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro.woff2') format('woff2'),
-       url('fonts/SofiaPro.woff') format('woff');
+  src: url('./fonts/SofiaPro.woff2') format('woff2'),
+       url('./fonts/SofiaPro.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -23,8 +22,8 @@
 
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro-Medium.woff2') format('woff2'),
-       url('fonts/SofiaPro-Medium.woff') format('woff');
+  src: url('./fonts/SofiaPro-Medium.woff2') format('woff2'),
+       url('./fonts/SofiaPro-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -32,8 +31,8 @@
 
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro-SemiBold.woff2') format('woff2'),
-       url('fonts/SofiaPro-SemiBold.woff') format('woff');
+  src: url('./fonts/SofiaPro-SemiBold.woff2') format('woff2'),
+       url('./fonts/SofiaPro-SemiBold.woff') format('woff');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -41,8 +40,8 @@
 
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro-Bold.woff2') format('woff2'),
-       url('fonts/SofiaPro-Bold.woff') format('woff');
+  src: url('./fonts/SofiaPro-Bold.woff2') format('woff2'),
+       url('./fonts/SofiaPro-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -50,8 +49,8 @@
 
 @font-face {
   font-family: 'Sofia Pro';
-  src: url('fonts/SofiaPro-Italic.woff2') format('woff2'),
-       url('fonts/SofiaPro-Italic.woff') format('woff');
+  src: url('./fonts/SofiaPro-Italic.woff2') format('woff2'),
+       url('./fonts/SofiaPro-Italic.woff') format('woff');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -71,6 +70,7 @@
   --radius: 10px;
   --accent: var(--primary);
   --accent-hover: #f2bb0b;
+  --font: 'Sofia Pro', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* =========================================================
