@@ -196,6 +196,7 @@ body {
   overflow: hidden;
   text-align: left;
   z-index: 1;
+  margin-top: 5rem;
 }
 
 .site-footer::before {
