@@ -2,14 +2,56 @@
   <div class="container">
     <div class="brand">
       <a href="/tools/">
-        <img src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg" alt="Cralite Logo" class="logo" />
+        <img
+          src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg"
+          alt="Cralite Logo"
+          class="logo"
+        />
       </a>
     </div>
 
-    <nav>
-      <a href="/tools/schema-generator/">Schema Generator</a>
-      <a href="/tools/robots-txt/">Robots.txt Generator</a>
-      <a href="/tools/meta-tags/">Meta Tag Tool</a>
+    <!-- Hamburger / Close Toggle (Mobile only) -->
+    <button class="menu-toggle" aria-label="Toggle menu" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" width="26" height="26" class="hamburger-icon">
+        <path clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"
+          d="M3 5c0-.26522.10536-.51957.29289-.70711C3.48043 4.10536 3.73478 4 4 4h12c.2652 0 .5196.10536.7071.29289C16.8946 4.48043 17 4.73478 17 5s-.1054.51957-.2929.70711C16.5196 5.89464 16.2652 6 16 6H4c-.26522 0-.51957-.10536-.70711-.29289C3.10536 5.51957 3 5.26522 3 5zm0 5c0-.26522.10536-.51957.29289-.70711C3.48043 9.10536 3.73478 9 4 9h6c.2652 0 .5196.10536.7071.29289C10.8946 9.48043 11 9.73478 11 10c0 .2652-.1054.5196-.2929.7071C10.5196 10.8946 10.2652 11 10 11H4c-.26522 0-.51957-.1054-.70711-.2929C3.10536 10.5196 3 10.2652 3 10zm0 5c0-.2652.10536-.5196.29289-.7071C3.48043 14.1054 3.73478 14 4 14h12c.2652 0 .5196.1054.7071.2929.1875.1875.2929.4419.2929.7071s-.1054.5196-.2929.7071c-.1875.1875-.4419.2929-.7071.2929H4c-.26522 0-.51957-.1054-.70711-.2929C3.10536 15.5196 3 15.2652 3 15z" />
+      </svg>
+    </button>
+
+    <!-- Navigation -->
+    <nav class="nav-links">
+      <div class="menu-item has-dropdown">
+        <button class="dropdown-toggle">Services <span class="arrow">▾</span></button>
+        <div class="dropdown-menu">
+          <a href="/services/seo/">SEO</a>
+          <a href="/services/web-analytics/">Web Design</a>
+        </div>
+      </div>
+
+      <div class="menu-item has-dropdown">
+        <button class="dropdown-toggle">Portfolio <span class="arrow">▾</span></button>
+        <div class="dropdown-menu">
+          <a href="/portfolio/branding/">Branding</a>
+          <a href="/portfolio/digital-design/">Digital Design</a>
+          <a href="/portfolio/rich-media-gallery/">Rich Media Gallery</a>
+          <a href="/portfolio/web-design/">Web Design</a>
+        </div>
+      </div>
+
+      <div class="menu-item has-dropdown">
+        <button class="dropdown-toggle">Resources <span class="arrow">▾</span></button>
+        <div class="dropdown-menu">
+          <a href="/blog/">Blog</a>
+          <a href="/free-seo-tools/">Free SEO Tools</a>
+        </div>
+      </div>
+
+      <a href="/contact/" class="standalone-link">Contact</a>
     </nav>
+
+    <!-- Optional right side actions -->
+    <div class="header-actions">
+      <a href="/get-started/" class="btn">Get Started</a>
+    </div>
   </div>
 </header>

@@ -49,6 +49,14 @@ body {
   background-size: 60% auto;
 }
 
+/* ✅ Mobile optimization: reposition and enlarge background */
+@media (max-width: 768px) {
+  .hero-section::before {
+    background-position: 10vw 0;
+    background-size: 150% auto;
+  }
+}
+
 
 /* Ensure content layers above overlay */
 .hero-container {
@@ -58,6 +66,13 @@ body {
   align-items: center;
   gap: 3rem;
   z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .hero-container {
+    grid-template-columns: 1fr; /* stack content */
+    gap: 1.2rem; /* reduce vertical spacing */
+  }
 }
 
 .hero-content h1 {
@@ -124,7 +139,7 @@ body {
 }
 
 /* Responsive Hero */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .hero-container {
     grid-template-columns: 1fr;
     text-align: center;
@@ -140,6 +155,20 @@ body {
     order: 2;
     margin-top: 2rem;
   }
+
+  @media (max-width: 768px) {
+  .hero-image {
+    order: 2;
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center; /* ✅ centers image horizontally */
+  }
+
+  .hero-image img {
+    max-width: 90%;
+    height: auto;
+  }
+}
 
   .hero-content h1 {
     font-size: 2.3rem;

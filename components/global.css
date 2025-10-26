@@ -111,7 +111,7 @@ body {
 }
 
 /* =========================================================
-   CRALITE TOOLS HEADER — Transparent + Floating Overlay
+   CRALITE HEADER — Transparent + Floating Overlay
    ========================================================= */
 .site-header {
   position: fixed;
@@ -121,81 +121,357 @@ body {
   background: transparent !important;
   color: #fff;
   z-index: 1000;
-  padding: 0.75rem 0;
   transition: background 0.4s ease, box-shadow 0.4s ease;
+  padding: 0.6rem 0;
 }
 
 .site-header.scrolled {
-  background: rgba(7, 0, 38, 0.85) !important;
-  backdrop-filter: blur(8px);
+  background: var(--secondary) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  backdrop-filter: none;
 }
 
 .site-header .container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  height: 64px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
 }
 
 .brand .logo {
-  height: 55px;
+  height: 48px;
   width: auto;
   display: block;
+  transition: height 0.25s ease;
 }
 
-.site-header nav a {
+/* =========================================================
+   SVG Hamburger Icon — White + Larger for Visibility
+   ========================================================= */
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  position: relative;
+  z-index: 2001;
+  width: 38px;
+  height: 38px;
   color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 1.5rem;
-  font-size: 15.5px;
-  transition: color 0.25s ease, opacity 0.25s ease;
-  opacity: 0.9;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.site-header nav a:hover {
-  color: var(--primary);
-  opacity: 1;
+.menu-toggle .hamburger-icon {
+  width: 30px;
+  height: 30px;
+  display: block;
+  transition: transform 0.3s ease;
+  color: #ffffff;
 }
 
-@media (max-width: 768px) {
+.menu-toggle.active .hamburger-icon {
+  transform: rotate(90deg);
+}
+
+/* Prevent global hover on hamburger */
+.menu-toggle:hover,
+.menu-toggle:active,
+.menu-toggle:focus {
+  background: transparent !important;
+  transform: none !important;
+}
+
+/* =========================================================
+   Mobile Header Adjustments (Now up to 1024px)
+   ========================================================= */
+@media (max-width: 1024px) {
+  .brand .logo {
+    height: 40px;
+    z-index: 3003;
+    position: relative;
+  }
+
+  .site-header {
+    z-index: 3002;
+    transition: background 0.3s ease;
+  }
+
+  .site-header.menu-open {
+    background: var(--secondary) !important;
+  }
+
   .site-header .container {
+    height: 60px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3004;
+    background: transparent;
+    border: none;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: relative;
+  }
+
+  .menu-toggle.active .hamburger-icon {
+    transform: rotate(0);
+    opacity: 0;
+  }
+
+  .menu-toggle.active::after {
+    content: "✕";
+    position: absolute;
+    font-size: 26px;
+    color: #fff;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .nav-links {
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
+    position: fixed;
+    inset: 0;
+    background: var(--secondary);
+    padding: 5rem 1.5rem 2rem;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s ease;
+    z-index: 3001;
   }
 
-  .brand {
-    margin-bottom: 0.5rem;
+  .nav-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  .site-header nav {
-    margin-top: 0.5rem;
+  .nav-links .menu-item {
+    width: 100%;
+    position: relative;
   }
 
-  .site-header nav a {
-    margin: 0.4rem 0.8rem 0 0 !important;
-    display: inline-block;
+  .nav-links .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    padding: 1rem 0;
+    text-align: left;
+    transition: color 0.25s ease;
+  }
+
+  .nav-links .dropdown-toggle:hover {
+    color: var(--primary);
+  }
+
+  .nav-links .dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1.2rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .nav-links .menu-item.open .dropdown-menu {
+    max-height: 200px;
+    opacity: 1;
+  }
+
+  .nav-links .dropdown-menu a {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.6rem 0;
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+
+  .nav-links .dropdown-menu a:hover {
+    color: var(--primary);
   }
 }
 
 /* =========================================================
-   CRALITE FOOTER — Left-Aligned with Image Overlay
+   DESKTOP NAVIGATION — Clean Inline Dropdowns
+   ========================================================= */
+@media (min-width: 1025px) {
+  .site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    max-width: 1240px;
+  }
+
+  .brand .logo {
+    height: 50px;
+    width: auto;
+  }
+
+  .menu-toggle {
+    display: none !important;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: static;
+    background: transparent;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    width: auto;
+    padding: 0;
+  }
+
+  .nav-links a,
+  .nav-links .dropdown-toggle {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.25s ease;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .nav-links a:hover,
+  .nav-links .dropdown-toggle:hover {
+    color: var(--primary);
+  }
+
+  .nav-links .menu-item {
+    position: relative;
+  }
+
+/* =========================================================
+   Dropdown Menu — White Background + Black Links
+   ========================================================= */
+.nav-links .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff; /* ✅ White dropdown background */
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  min-width: 220px;
+  padding: 0.6rem 0;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 999;
+}
+
+.nav-links .menu-item:hover .dropdown-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Dropdown links */
+.nav-links .dropdown-menu a {
+  display: block;
+  padding: 0.6rem 1rem;
+  font-family: var(--font);
+  font-weight: 400;
+  color: #000 ; /* ✅ Black links */
+  font-size: 15.5px;
+  text-decoration: none;
+  transition: color 0.25s ease;
+  white-space: nowrap;
+}
+
+.nav-links .dropdown-menu a:hover {
+  color: var(--primary); /* ✅ Yellow hover text */
+  background: none !important; /* No hover background */
+}
+
+  .nav-links .menu-item:hover .dropdown-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav-links .dropdown-menu a {
+    display: block;
+    padding: 0.6rem 1rem;
+    color: #fff;
+    font-size: 15px;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-links .dropdown-menu a:hover {
+    color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-links .standalone-link {
+    margin-top: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .header-actions .btn {
+    background: var(--primary);
+    color: #000;
+    font-weight: 400;
+    padding: 0.6rem 1.3rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: background 0.25s ease, transform 0.2s ease;
+  }
+
+  .header-actions .btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+  }
+}
+
+/* =========================================================
+   FOOTER — REFINED BALANCE + VISUAL ALIGNMENT
    ========================================================= */
 .site-footer {
-  position: relative;
   background: var(--secondary);
   color: #fff;
-  padding: 4rem 0 2rem;
+  padding: 4rem 0 1rem;
   font-family: var(--font);
+  position: relative;
   overflow: hidden;
-  text-align: left;
-  z-index: 1;
   margin-top: 5rem;
 }
 
@@ -210,20 +486,23 @@ body {
   pointer-events: none;
 }
 
+/* ---- Main Grid Layout ---- */
 .footer-container {
   display: grid;
-  grid-template-columns: 1.2fr 2fr;
-  gap: 2rem;
+  grid-template-columns: 33% 17% 17% 33%;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
   position: relative;
   z-index: 2;
-  text-align: left;
 }
 
+/* ---- Brand Column ---- */
 .footer-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-self: flex-start;
 }
 
 .footer-logo {
@@ -233,32 +512,27 @@ body {
 }
 
 .footer-tagline {
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: 400;
+  color: rgb(255, 255, 255);
+  margin-top: 1rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
+  max-width: 360px;
 }
 
-.footer-links {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  text-align: left;
-}
-
+/* ---- Footer Columns ---- */
 .footer-column h4 {
-  font-size: 18px;
   font-weight: 600;
+  font-size: 18px;
   margin-bottom: 1rem;
-  color: #fff;
 }
 
 .footer-column a {
   display: block;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgb(255, 255, 255);
   text-decoration: none;
-  font-size: 15px;
-  margin-bottom: 0.6rem;
+  font-size: 18px;
+  margin-bottom: 0.5rem;
   transition: color 0.25s ease;
 }
 
@@ -266,59 +540,62 @@ body {
   color: var(--primary);
 }
 
+/* ---- Social Icons ---- */
 .social-icons {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.8rem;
-  margin-top: 0.8rem;
+  margin-top: 1rem;
 }
 
 .social-icons a {
   color: #fff;
-  font-size: 1.1rem;
-  transition: color 0.25s ease;
+  font-size: 18px;
+  transition: color 0.25s ease, transform 0.25s ease;
 }
 
 .social-icons a:hover {
   color: var(--primary);
+  transform: translateY(-2px);
 }
 
-/* Footer bottom bar */
+/* ---- Footer Bottom ---- */
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  margin-top: 2rem;
-  padding: 1.5rem 10px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  width: 95%;
-  max-width: 1240px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  position: relative;
-  z-index: 2;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .footer-bottom p {
-  margin: 0;
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
 }
 
 .brand-highlight {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .footer-bottom-links {
   display: flex;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .footer-bottom-links a {
-  color: #fff;
-  font-size: 15px;
+  color: rgb(255, 255, 255);
   text-decoration: none;
+  font-size: 14px;
   transition: color 0.25s ease;
 }
 
@@ -326,31 +603,51 @@ body {
   color: var(--primary);
 }
 
-@media (max-width: 900px) {
+/* =========================================================
+   RESPONSIVE STYLES
+   ========================================================= */
+@media (max-width: 1024px) {
   .footer-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
   }
-
-  .footer-links {
-    grid-template-columns: 1fr 1fr;
+  .footer-container > * {
+    border: none;
+    padding: 0;
   }
 }
 
-@media (max-width: 600px) {
-  .footer-links {
+@media (max-width: 768px) {
+  .footer-container {
     grid-template-columns: 1fr;
+    text-align: center;
+    gap: 2.5rem;
+  }
+
+  .footer-container > * {
+    border: none;
+    padding: 0;
+  }
+
+  .footer-tagline {
+    font-size: 18px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .social-icons {
+    justify-content: center;
   }
 
   .footer-bottom {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.8rem;
-    text-align: left;
+    text-align: center;
   }
 }
 
+
 /* =========================================================
-   UI Elements (Buttons, Cards, Links)
+   Buttons & Misc
    ========================================================= */
 button,
 .btn {
@@ -364,29 +661,84 @@ button,
   transition: background 0.3s ease, transform 0.15s ease;
 }
 
-button:hover,
+button:hover:not(.menu-toggle),
 .btn:hover,
 a.btn:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
 }
 
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
 
-a {
-  color: var(--secondary);
+/* =========================================================
+   UNIVERSAL NAVIGATION TYPOGRAPHY FIX — Desktop + Mobile
+   ========================================================= */
+
+/* Base nav links & dropdown toggles (all breakpoints) */
+.nav-links a,
+.nav-links .dropdown-toggle {
+  font-family: var(--font);
+  font-weight: 400; /* Matches site tone */
+  font-size: 17px;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  color: #fff;
+  text-transform: none;
+  background: none;
+  border: none;
+  cursor: pointer;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.25s ease;
 }
 
-a:hover {
+/* Hover color across devices */
+.nav-links a:hover,
+.nav-links .dropdown-toggle:hover {
   color: var(--primary);
+}
+
+/* Dropdown submenu links */
+.nav-links .dropdown-menu a {
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: 17px;
+  letter-spacing: 0.1px;
+  line-height: 1.5;
+  color: #000;
+  text-decoration: none;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+
+.nav-links .dropdown-menu a:hover {
+  color: var(--primary);
+  background: none !important;
+}
+
+/* =========================================================
+   Dropdown Hover Cleanup — No Background, Just Color Change
+   ========================================================= */
+.nav-links a:hover,
+.nav-links .dropdown-toggle:hover,
+.nav-links .dropdown-menu a:hover {
+  color: var(--primary);
+  background: none !important;
+}
+
+
+/* Dropdown toggle arrows alignment (mobile + desktop) */
+.nav-links .arrow {
+  font-size: 0.85rem;
+  margin-left: 6px;
+  transition: transform 0.3s ease;
+}
+
+/* Keep consistent text rendering */
+body,
+.nav-links,
+.nav-links a,
+.nav-links .dropdown-toggle,
+.nav-links .dropdown-menu a {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* =========================================================
@@ -413,4 +765,13 @@ button:hover ~ .custom-cursor,
   width: 34px;
   height: 34px;
   border-color: var(--accent-hover);
+}
+
+/* =========================================================
+   HIDE CTA BUTTON ON MOBILE / TABLET
+   ========================================================= */
+@media (max-width: 1024px) {
+  .header-actions {
+    display: none !important;
+  }
 }
