@@ -243,12 +243,16 @@
     wrap.innerHTML = "";
 
     const types = [
-      { value: "Article", desc: "Blog posts or news content." },
-      { value: "Organization", desc: "Company identity: logo, socials, contacts." },
-      { value: "LocalBusiness", desc: "Local service, hours, location." },
-      { value: "Product", desc: "SKU, price, reviews, offers." },
-      { value: "FAQ", desc: "Questions & answers for rich results." }
-    ];
+  { value: "Article", desc: "Blog posts or news content." },
+  { value: "Breadcrumb", desc: "Website structure: Home → Category → Page" },
+  { value: "Website Sitelinks Searchbox", desc: "Enable sitelinks searchbox in Google." },
+  { value: "Organization", desc: "Company brand, socials, contacts." },
+  { value: "LocalBusiness", desc: "Local service, hours, location." },
+  { value: "Product", desc: "SKU, price, reviews, offers." },
+  { value: "FAQ Page", desc: "Questions & answers for rich results." },
+  { value: "Video", desc: "Video metadata with thumbnails, embed & content URL." },
+];
+
 
     const cs = createCustomSelect(types, currentType, renderForm);
     wrap.appendChild(cs.wrapper);

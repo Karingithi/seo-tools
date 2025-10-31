@@ -1,25 +1,21 @@
-// faq.js — Cralite Schema Generator: FAQ Module
+// faq.js — Cralite Schema Generator: FAQ Module (with references ✅)
 (function () {
-  const { el, addSectionTitle, rowInput, registerSchemaType, updatePreview } = window.SchemaCore;
+  const { el, addSectionTitle, registerSchemaType, updatePreview } = window.SchemaCore;
 
-  // Default structure for new FAQ schema
   const faqDefaults = {
     mainEntity: [
       { question: "", answer: "" }
     ]
   };
 
-  // --- RENDER FORM ---
   function renderFAQ(form) {
     const formArea = document.querySelector("#formArea");
     formArea.innerHTML = "";
     addSectionTitle("FAQ Page", "Add questions and answers to create a valid FAQ schema.");
 
-    // For each FAQ question
     (form.mainEntity || []).forEach((item, i) => {
       const qBox = el("div", { class: "faq-box card" });
 
-      // Question field
       const qLabel = el("label", { text: `Question ${i + 1}` });
       const qInput = el("input", {
         type: "text",
@@ -31,11 +27,10 @@
         updatePreview();
       };
 
-      // Answer field
       const aLabel = el("label", { text: "Answer" });
       const aTextarea = el("textarea", {
         rows: 3,
-        placeholder: "Provide the answer for this question"
+        placeholder: "Provide the answer"
       });
       aTextarea.value = item.answer || "";
       aTextarea.oninput = e => {
@@ -43,29 +38,17 @@
         updatePreview();
       };
 
-      // Remove button
-      const rm = el("button", { class: "remove-btn", type: "button" });
-      rm.appendChild(el("img", {
-        src: "../components/icons/remove.svg",
-        alt: "Remove",
-        class: "remove-icon"
-      }));
+      const rm = el("button", { class: "remove-btn", type: "button", text: "×" });
       rm.onclick = () => {
         form.mainEntity.splice(i, 1);
         renderFAQ(form);
         updatePreview();
       };
 
-      // Combine all
-      qBox.appendChild(qLabel);
-      qBox.appendChild(qInput);
-      qBox.appendChild(aLabel);
-      qBox.appendChild(aTextarea);
-      qBox.appendChild(rm);
+      qBox.append(qLabel, qInput, aLabel, aTextarea, rm);
       formArea.appendChild(qBox);
     });
 
-    // Add new question button
     const addQ = el("button", { class: "btn primary", text: "Add Question" });
     addQ.onclick = () => {
       form.mainEntity.push({ question: "", answer: "" });
@@ -73,9 +56,29 @@
       updatePreview();
     };
     formArea.appendChild(addQ);
+
+    /* ✅ Documentation References */
+    const refs = el("div", { class: "schema-references" });
+    refs.innerHTML = `
+      <div class="ref-columns">
+        <div class="ref-block">
+          <strong>Schema.org's references:</strong>
+          <ul>
+            <li><a href="https://schema.org/FAQPage" target="_blank" rel="noopener">FAQPage</a></li>
+          </ul>
+        </div>
+
+        <div class="ref-block">
+          <strong>Google's documentation:</strong>
+          <ul>
+            <li><a href="https://developers.google.com/search/docs/appearance/structured-data/faqpage" target="_blank" rel="noopener">FAQ Page</a></li>
+          </ul>
+        </div>
+      </div>
+    `;
+    formArea.appendChild(refs);
   }
 
-  // --- BUILD JSON-LD ---
   function buildFAQSchema(f) {
     return {
       "@context": "https://schema.org",
@@ -93,7 +96,6 @@
     };
   }
 
-  // --- VALIDATION ---
   function validateFAQ(schema) {
     const errors = [];
     if (!schema.mainEntity || schema.mainEntity.length === 0) {
@@ -107,6 +109,5 @@
     return errors;
   }
 
-  // Register this schema type with the core
-  registerSchemaType("FAQ", renderFAQ, buildFAQSchema, faqDefaults, validateFAQ);
+  registerSchemaType("FAQ Page", renderFAQ, buildFAQSchema, faqDefaults, validateFAQ);
 })();

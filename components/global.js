@@ -109,3 +109,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 200);
 });
+
+function initDatePickers() {
+flatpickr(".flatpickr-input", {
+  altInput: true,
+  altFormat: "d-m-Y", // ✅ user sees dd-mm-yyyy
+  dateFormat: "Y-m-d", // ✅ JSON uses yyyy-mm-dd
+  allowInput: true,
+  onChange: function(selectedDates, dateStr, instance) {
+    const field = instance.input.dataset.field;
+    if (window.SchemaCore.activeForm && field) {
+      window.SchemaCore.activeForm[field] = dateStr; // ISO → correct for schema
+      updatePreview();
+    }
+  }
+});
+}
+
+// ✅ Call again after form updates
+document.addEventListener("schemaFormUpdated", initDatePickers);
+
+// ✅ One-time initial call
+document.addEventListener("DOMContentLoaded", initDatePickers);

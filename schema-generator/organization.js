@@ -336,6 +336,30 @@ function recreateSubSelect(primaryVal) {
       };
 
       formArea.appendChild(cpWrap);
+      /* ---------------------------------------
+   ✅ Schema References Footer
+--------------------------------------- */
+const refs = el("div", { class: "schema-references" });
+refs.innerHTML = `
+  <div class="ref-columns">
+    <div class="ref-block">
+      <strong>Schema.org's references:</strong>
+      <ul>
+        <li><a href="https://schema.org/Organization" target="_blank">Organization</a></li>
+      </ul>
+    </div>
+
+    <div class="ref-block">
+      <strong>Google's documentation:</strong>
+      <ul>
+        <li><a href="https://developers.google.com/search/docs/appearance/structured-data/logo" target="_blank">Logo</a></li>
+        <li><a href="https://developers.google.com/search/docs/appearance/structured-data/social-profile" target="_blank">Social Profile Links</a></li>
+      </ul>
+    </div>
+  </div>
+`;
+formArea.appendChild(refs);
+
     }
 
     /* ---------------------------------------

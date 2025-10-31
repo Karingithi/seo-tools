@@ -95,10 +95,18 @@
   color: #e6eef8;
   padding: 14px;
   border-radius: 8px;
-  max-height: 56vh;
-  overflow: auto;
   font-size: 15px;
   line-height: 1.55;
+  overflow-x: auto; /* allow only horizontal scroll when necessary */
+  overflow-y: visible; /* allow vertical expansion */
+  height: auto; /* auto stretch */
+  max-height: none; /* disable scroll limit */
+}
+
+@media (max-width: 900px) {
+  .json-preview {
+    max-height: 40vh;
+  }
 }
 
 .error-count {
@@ -489,4 +497,80 @@
 /* Ensure icons buttons stay positioned correctly */
 .icon-btn {
   position: relative;
+}
+
+
+.schema-references {
+  margin-top: 1.8rem;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--secondary);
+}
+
+.schema-references a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.schema-references a:hover {
+  text-decoration: underline;
+}
+
+.ref-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.6rem;
+}
+
+.ref-block ul {
+  margin-top: 6px;
+  margin-left: 18px;
+}
+
+@media (max-width: 700px) {
+  .ref-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.schema-breadcrumb {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--secondary);
+  margin: 18px 0 10px;
+}
+
+.schema-breadcrumb a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.schema-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.schema-breadcrumb .sep {
+  margin: 0 8px;
+  opacity: 0.6;
+}
+
+.schema-breadcrumb .current {
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+/* === Video: align Upload Date with Minutes/Seconds === */
+.video-size {
+  height: 48px;              /* match your number inputs */
+  padding: 0.65rem 1rem;
+  box-sizing: border-box;
+}
+
+/* normalize native date input sizing & icon spacing */
+input[type="date"].video-size {
+  appearance: none;
+  -webkit-appearance: none;
+  line-height: 1;
+  padding-right: 2.2rem;     /* room for calendar icon */
 }
