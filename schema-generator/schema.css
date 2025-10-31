@@ -236,7 +236,7 @@
    Copy Icon — With Soft Background
    ========================================================= */
 .preview-panel .actions .icon-btn {
-  background: rgba(255, 197, 12, 0.12); /* subtle yellow tint */
+  background: var(--primary);
   border: none;
   padding: 8px;
   border-radius: 50%;
@@ -248,7 +248,7 @@
 }
 
 .preview-panel .actions .icon-btn svg {
-  fill: var(--primary);
+  fill: var(--secondary);
   width: 22px;
   height: 22px;
   transition: transform 0.25s ease, fill 0.25s ease;
@@ -418,4 +418,75 @@
 .copy-message.show {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
+}
+
+.disabled-select {
+  font-size: 15px;
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #d5d8e1;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* =============================
+   Test Menu Popup — FINAL CLEAN STYLE
+   ============================= */
+
+.test-menu-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.test-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 240px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 99;
+  padding: 6px 0;
+}
+
+.test-menu.show {
+  display: flex;
+}
+
+.test-option {
+  background: #fff !important; /* override button pill */
+  border: none;
+  text-align: left;
+  padding: 12px 16px;
+  width: 100%;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.test-option:hover {
+  box-shadow: none !important;
+}
+
+/* Mobile: Align left under button */
+@media (max-width: 640px) {
+  .test-menu {
+    right: auto;
+    left: 0;
+  }
+}
+
+/* Ensure icons buttons stay positioned correctly */
+.icon-btn {
+  position: relative;
 }

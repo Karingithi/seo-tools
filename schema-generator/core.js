@@ -1,8 +1,5 @@
-// core.js — Cralite Schema Generator Core v1.1 (with validation + error hints)
+// core.js — Final Stable Version (Popup Test Menu + Custom Selector + Button Actions)
 (function () {
-  /* ---------------------------------------
-     BASIC HELPERS
-  --------------------------------------- */
   const q = (sel, el = document) => el.querySelector(sel);
   const el = (tag, attrs = {}, children = []) => {
     const n = document.createElement(tag);
@@ -11,184 +8,153 @@
       else if (k === "text") n.textContent = v;
       else n.setAttribute(k, v);
     }
-    (children || []).forEach(c => n.appendChild(c));
+    children.forEach(c => n.appendChild(c));
     return n;
   };
 
-  /* ---------------------------------------
-     GLOBAL STATE + DOM REFERENCES
-  --------------------------------------- */
-  const schemaType = q("#schemaType");
+  // DOM
   const formArea = q("#formArea");
   const jsonPreview = q("#jsonPreview");
   const errorCount = q("#errorCount");
   const hints = q("#hints");
   const copyBtn = q("#copyBtn");
+  const copyMessage = q("#copyMessage");
   const downloadBtn = q("#downloadBtn");
   const resetBtn = q("#resetBtn");
+  const testBtn = q("#testBtn");
+  const testMenu = q("#testMenu");
+  const testRichResults = q("#testRichResults");
+  const testSDTT = q("#testSDTT");
 
-  let currentType = schemaType ? schemaType.value : "Organization";
+  let currentType = "Article";
   let form = {};
-  const schemaModules = {}; // { type: { renderFn, buildFn, defaults, validateFn } }
-  const openCustomLists = new Set();
+  const schemaModules = {};
 
-  /* ---------------------------------------
-     CUSTOM SELECT
-  --------------------------------------- */
-  function createCustomSelect(opts = [], initial = "", onChange = () => {}) {
-    const items = opts.map(o => typeof o === "string" ? { value: o, desc: "" } : o);
+  /* ------------------------------------
+     ✅ Custom Select
+  ------------------------------------- */
+  function createCustomSelect(opts, initial, onChange) {
     const wrapper = el("div", { class: "custom-select" });
-    const display = el("div", { class: "custom-select-display", role: "button", tabindex: 0 });
+    const display = el("div", { class: "custom-select-display", tabindex: 0 });
     const list = el("ul", { class: "custom-select-list" });
-    let selected = initial || "";
-    let placeholder = "Select option";
 
-    function renderDisplay() {
-      display.textContent = selected || placeholder;
-      display.classList.toggle("placeholder", !selected);
-    }
+    let selected = initial;
+    const update = () => (display.textContent = selected);
 
-    function populateList() {
-      list.innerHTML = "";
-      items.forEach(it => {
-  const li = el("li", { class: "custom-option", "data-value": it.value });
+    opts.forEach(o => {
+      const li = el("li", { class: "custom-option", "data-value": o.value });
+      li.append(el("div", { class: "option-name", text: o.value }));
+      if (o.desc) li.append(el("div", { class: "option-desc", text: o.desc }));
 
-  const name = el("div", { class: "option-name", text: it.value });
-  li.appendChild(name);
-
-  if (it.desc) {
-    const desc = el("div", { class: "option-desc", text: it.desc });
-    li.appendChild(desc);
-  }
-
-  li.onclick = () => {
-    selected = it.value;
-    renderDisplay();
-    list.classList.remove("open");
-    onChange(selected);
-  };
-
-  list.appendChild(li);
-});
-    }
+      li.onclick = () => {
+        selected = o.value;
+        update();
+        list.classList.remove("open");
+        onChange(selected);
+      };
+      list.appendChild(li);
+    });
 
     display.onclick = () => list.classList.toggle("open");
-    display.onkeydown = e => { if (["Enter", " "].includes(e.key)) { e.preventDefault(); list.classList.toggle("open"); } };
+    document.addEventListener("click", e => {
+      if (!wrapper.contains(e.target)) list.classList.remove("open");
+    });
 
-    populateList();
-    renderDisplay();
-    wrapper.appendChild(display);
-    wrapper.appendChild(list);
-    return { wrapper, getValue: () => selected, setValue: v => { selected = v; renderDisplay(); } };
+    update();
+    wrapper.append(display, list);
+    return { wrapper };
   }
 
-  /* ---------------------------------------
-     MULTI-SELECT WITH INLINE SEARCH (v3.8)
-  --------------------------------------- */
   function createMultiSelect(options, initial = [], placeholder = "Select", onChange = () => {}, showSearch = true) {
     const wrapper = el("div", { class: "custom-select multi" });
     const display = el("div", { class: "custom-select-display", text: placeholder });
     const list = el("ul", { class: "custom-select-list" });
+
     let selected = new Set(initial || []);
     let searchInput;
 
-    function renderDisplay() {
-      display.textContent = selected.size ? Array.from(selected).join(", ") : placeholder;
+    function updateDisplay() {
+      display.textContent = selected.size ? [...selected].join(", ") : placeholder;
     }
 
-    function renderOptions(filter = "") {
+    function renderOptions(f = "") {
       list.querySelectorAll(".custom-option").forEach(o => o.remove());
-      const filtered = options.filter(o => {
-        const f = filter.toLowerCase();
-        return o.value.toLowerCase().includes(f) || (o.desc || "").toLowerCase().includes(f);
-      });
-      filtered.forEach(o => {
+      const filter = f.toLowerCase();
+      options.filter(o =>
+        o.value.toLowerCase().includes(filter) ||
+        (o.desc || "").toLowerCase().includes(filter)
+      ).forEach(o => {
         const li = el("li", { class: "custom-option" });
         const cb = el("input", { type: "checkbox" });
+
         cb.checked = selected.has(o.value);
         cb.onchange = () => {
           cb.checked ? selected.add(o.value) : selected.delete(o.value);
-          renderDisplay();
-          onChange(Array.from(selected));
+          updateDisplay();
+          onChange([...selected]);
         };
-        li.appendChild(cb);
-        li.appendChild(el("span", { text: o.desc || o.value }));
+
+        li.append(cb, el("span", { text: o.desc || o.value }));
         list.appendChild(li);
       });
     }
 
     if (showSearch) {
-      const searchLi = el("li", { class: "search-container" });
+      const sLi = el("li", { class: "search-container" });
       searchInput = el("input", { type: "text", class: "inline-search", placeholder: "Search..." });
       searchInput.oninput = e => renderOptions(e.target.value);
-      searchLi.appendChild(searchInput);
-      list.appendChild(searchLi);
+      sLi.appendChild(searchInput);
+      list.appendChild(sLi);
     }
 
-    function openDropdown() {
-      list.classList.add("open");
-      openCustomLists.add(list);
-      if (showSearch && searchInput) setTimeout(() => searchInput.focus(), 0);
-    }
-
-    function closeDropdown() {
-      list.classList.remove("open");
-      openCustomLists.delete(list);
-    }
-
-    display.onclick = () => (list.classList.contains("open") ? closeDropdown() : openDropdown());
-    renderOptions();
-    renderDisplay();
-    wrapper.appendChild(display);
-    wrapper.appendChild(list);
-
+    display.onclick = () => list.classList.toggle("open");
     document.addEventListener("click", e => {
-      if (!wrapper.contains(e.target)) closeDropdown();
+      if (!wrapper.contains(e.target)) list.classList.remove("open");
     });
 
-    return { wrapper, getSelected: () => Array.from(selected) };
-  }
-
-  /* ---------------------------------------
-     CORE UTILITIES
-  --------------------------------------- */
-  function addSectionTitle(type, description) {
-    const title = el("div", { class: "schema-section-title" });
-    title.innerHTML = `<strong>${type}</strong> – ${description}`;
-    formArea.appendChild(title);
+    renderOptions();
+    updateDisplay();
+    wrapper.append(display, list);
+    return { wrapper };
   }
 
   function rowInput(label, key, val = "", isUrl = false, onChange = () => {}) {
     const r = el("div", { class: "form-row" });
-    r.appendChild(el("label", { text: label }));
+    r.append(el("label", { text: label }));
     const i = el("input", { class: "input", type: "text", value: val });
     const hint = el("div", { class: "hint", text: "Invalid URL" });
     hint.style.display = "none";
+
     i.oninput = e => {
       const v = e.target.value.trim();
-      if (isUrl && v && !/^https?:\/\/[^\s$.?#].[^\s]*$/i.test(v)) hint.style.display = "block";
+      if (isUrl && v && !/^https?:\/\/[^\s]+$/i.test(v)) hint.style.display = "block";
       else hint.style.display = "none";
       onChange(v);
     };
-    r.appendChild(i);
-    r.appendChild(hint);
+
+    r.append(i, hint);
     return r;
   }
 
-  /* ---------------------------------------
-     REGISTRATION + RENDER + VALIDATION
-  --------------------------------------- */
+  function addSectionTitle(type, desc) {
+    const t = el("div", { class: "schema-section-title" });
+    t.innerHTML = `<strong>${type}</strong> – ${desc}`;
+    formArea.appendChild(t);
+  }
+
+  /* ------------------------------------
+     ✅ Schema Registration
+  ------------------------------------- */
   function registerSchemaType(type, renderFn, buildFn, defaults = {}, validateFn = () => []) {
     schemaModules[type] = { renderFn, buildFn, defaults, validateFn };
   }
 
   function renderForm(type) {
+    currentType = type;
     const mod = schemaModules[type];
-    if (!mod) {
-      formArea.innerHTML = "Schema type not supported.";
-      return;
-    }
-    form = JSON.parse(JSON.stringify(mod.defaults));
+    if (!mod) return;
+
+    form = JSON.parse(JSON.stringify(mod.defaults || {}));
     formArea.innerHTML = "";
     mod.renderFn(form, updatePreview);
     updatePreview();
@@ -201,41 +167,93 @@
     const schema = mod.buildFn(form);
     jsonPreview.textContent = JSON.stringify(schema, null, 2);
 
-    // validation
     const errors = mod.validateFn(schema);
-    errorCount.textContent = `Errors: ${errors.length}`;
+    errorCount.textContent = "Errors: " + errors.length;
     errorCount.classList.toggle("active", errors.length > 0);
+
     hints.innerHTML = "";
-    errors.forEach(msg => {
-      hints.appendChild(el("div", { class: "hint", text: msg }));
+    errors.forEach(m => hints.appendChild(el("div", { class: "hint", text: m })));
+  }
+
+  /* ------------------------------------
+     ✅ Popup Test Menu
+  ------------------------------------- */
+  if (testBtn && testMenu) {
+    testBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      testMenu.classList.toggle("show");
+    });
+
+    document.addEventListener("click", () => testMenu.classList.remove("show"));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") testMenu.classList.remove("show");
     });
   }
 
-  /* ---------------------------------------
-     BUTTON ACTIONS
-  --------------------------------------- */
-  if (schemaType) {
-    schemaType.onchange = () => {
-      currentType = schemaType.value;
-      renderForm(currentType);
+  if (testRichResults) {
+    testRichResults.onclick = () => {
+      window.open("https://search.google.com/test/rich-results", "_blank", "noopener");
+      testMenu?.classList.remove("show");
     };
   }
 
-  if (copyBtn) copyBtn.onclick = () => navigator.clipboard.writeText(jsonPreview.textContent || "");
-  if (downloadBtn) downloadBtn.onclick = () => {
-    const blob = new Blob([jsonPreview.textContent || ""], { type: "application/json" });
-    const a = el("a", { href: URL.createObjectURL(blob), download: (currentType || "schema").toLowerCase() + "-schema.json" });
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-  if (resetBtn) resetBtn.onclick = () => renderForm(currentType);
+  if (testSDTT) {
+    testSDTT.onclick = () => {
+      window.open("https://validator.schema.org/", "_blank", "noopener");
+      testMenu?.classList.remove("show");
+    };
+  }
 
-  /* ---------------------------------------
-     EXPOSE GLOBALLY
-  --------------------------------------- */
+  /* ------------------------------------
+     ✅ Button Actions
+  ------------------------------------- */
+  if (copyBtn && copyMessage) copyBtn.onclick = () => {
+    const txt = (jsonPreview.textContent || "{}").trim();
+    navigator.clipboard.writeText(txt).then(() => {
+      copyMessage.classList.add("show");
+      setTimeout(() => copyMessage.classList.remove("show"), 2000);
+    });
+  };
+
+  if (downloadBtn) downloadBtn.onclick = () => {
+    const txt = (jsonPreview.textContent || "{}").trim();
+    const blob = new Blob([txt], { type: "application/json" });
+    const a = el("a", { href: URL.createObjectURL(blob), download: currentType.toLowerCase() + ".json" });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  if (resetBtn) resetBtn.onclick = () => {
+    if (confirm("Reset all fields?")) renderForm(currentType);
+  };
+
+  /* ------------------------------------
+     ✅ Export + Init
+  ------------------------------------- */
   window.SchemaCore = {
-    q, el, createCustomSelect, createMultiSelect, rowInput, addSectionTitle,
+    q, el,
+    createCustomSelect, createMultiSelect,
+    rowInput, addSectionTitle,
     registerSchemaType, renderForm, updatePreview
   };
 
-  document.addEventListener("DOMContentLoaded", () => renderForm(currentType));
+  window.addEventListener("load", () => {
+    const wrap = q("#schemaTypeCustom");
+    wrap.innerHTML = "";
+
+    const types = [
+      { value: "Article", desc: "Blog posts or news content." },
+      { value: "Organization", desc: "Company identity: logo, socials, contacts." },
+      { value: "LocalBusiness", desc: "Local service, hours, location." },
+      { value: "Product", desc: "SKU, price, reviews, offers." },
+      { value: "FAQ", desc: "Questions & answers for rich results." }
+    ];
+
+    const cs = createCustomSelect(types, currentType, renderForm);
+    wrap.appendChild(cs.wrapper);
+
+    renderForm(currentType);
+  });
+
 })();
