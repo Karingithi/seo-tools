@@ -5,7 +5,7 @@ import { buildMetaTags } from "../utils/metaUtils"
 import { toolsData } from "../data/toolsData"
 import type { Tool } from "../data/toolsData"
 
-// import icons from assets
+// icons
 import copyIcon from "../assets/icons/copy.svg"
 import downloadIcon from "../assets/icons/download.svg"
 import resetIcon from "../assets/icons/reset.svg"
@@ -36,6 +36,7 @@ export default function MetaTagGenerator() {
   const [ogUrlError, setOgUrlError] = useState("")
   const [ogImageError, setOgImageError] = useState("")
 
+  // === UI Feedback States ===
   const [copied, setCopied] = useState(false)
   const [downloadMsgVisible, setDownloadMsgVisible] = useState(false)
   const [resetMsgVisible, setResetMsgVisible] = useState(false)
@@ -46,12 +47,11 @@ export default function MetaTagGenerator() {
   const [robotsFollowOpen, setRobotsFollowOpen] = useState(false)
   const [twitterCardOpen, setTwitterCardOpen] = useState(false)
 
-  // Close custom dropdowns when clicking outside or pressing Escape
+  // Close dropdowns when clicking outside or pressing Escape
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
-      // if the click target is not inside any .custom-select-wrapper, close all dropdowns
       if (!target.closest(".custom-select-wrapper")) {
         setLanguageOpen(false)
         setRobotsIndexOpen(false)
@@ -96,7 +96,6 @@ export default function MetaTagGenerator() {
     robotsFollow === "Yes" ? "follow" : "nofollow"
   }`
 
-  // determine whether the user has provided any meaningful input
   const hasUserInput =
     !!title.trim() ||
     !!description.trim() ||
@@ -110,7 +109,7 @@ export default function MetaTagGenerator() {
     !!twitterCreator.trim() ||
     (includeAuthor && !!authorName.trim())
 
-  // generate meta tags using buildMetaTags utility
+  // === Generate Meta Preview ===
   const metaPreview = useMemo(() => {
     if (!hasUserInput) {
       return buildMetaTags({
@@ -177,7 +176,6 @@ export default function MetaTagGenerator() {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-
     setDownloadMsgVisible(true)
     setTimeout(() => setDownloadMsgVisible(false), 1400)
   }
@@ -202,7 +200,6 @@ export default function MetaTagGenerator() {
     setCanonicalError("")
     setOgUrlError("")
     setOgImageError("")
-
     setResetMsgVisible(true)
     setTimeout(() => setResetMsgVisible(false), 1400)
   }
@@ -234,31 +231,7 @@ export default function MetaTagGenerator() {
 
   const inputStyle = { width: "100%", minWidth: 0 }
 
-  const languageOptions = [
-    { value: "en-US", label: "🇺🇸 English (en-US)" },
-    { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
-    { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
-    { value: "sw-KE", label: "🇰🇪 Swahili (sw-KE)" },
-  ]
-
-  const robotsIndexOptions = [
-    { value: "Yes", label: "✓ Allow (index)" },
-    { value: "No", label: "✗ Disallow (noindex)" },
-  ]
-
-  const robotsFollowOptions = [
-    { value: "Yes", label: "✓ Allow (follow)" },
-    { value: "No", label: "✗ Disallow (nofollow)" },
-  ]
-
-  const twitterCardOptions = [
-    { value: "summary", label: "📋 Summary Card" },
-    { value: "summary_large_image", label: "🖼️ Summary with Large Image" },
-    { value: "app", label: "📱 App Card" },
-    { value: "player", label: "▶️ Player Card" },
-  ]
-
-  // Custom Dropdown Component
+  // === Custom Dropdown Component ===
   const CustomDropdown = ({
     options,
     value,
@@ -290,14 +263,6 @@ export default function MetaTagGenerator() {
               onChange(opt.value)
               setIsOpen(false)
             }}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                onChange(opt.value)
-                setIsOpen(false)
-              }
-            }}
           >
             {opt.label}
           </li>
@@ -305,6 +270,30 @@ export default function MetaTagGenerator() {
       </ul>
     </div>
   )
+
+  const languageOptions = [
+    { value: "en-US", label: "🇺🇸 English (en-US)" },
+    { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
+    { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
+    { value: "sw-KE", label: "🇰🇪 Swahili (sw-KE)" },
+  ]
+
+  const robotsIndexOptions = [
+    { value: "Yes", label: "✓ Allow (index)" },
+    { value: "No", label: "✗ Disallow (noindex)" },
+  ]
+
+  const robotsFollowOptions = [
+    { value: "Yes", label: "✓ Allow (follow)" },
+    { value: "No", label: "✗ Disallow (nofollow)" },
+  ]
+
+  const twitterCardOptions = [
+    { value: "summary", label: "📋 Summary Card" },
+    { value: "summary_large_image", label: "🖼️ Summary with Large Image" },
+    { value: "app", label: "📱 App Card" },
+    { value: "player", label: "▶️ Player Card" },
+  ]
 
   return (
     <>
@@ -317,9 +306,11 @@ export default function MetaTagGenerator() {
 
       <section className="tool-section">
         <div className="tool-grid">
+          {/* === LEFT FORM === */}
           <div className="tool-form" style={{ minWidth: 0 }}>
             <h2 className="tool-h2">Meta Information</h2>
 
+            {/* Page Title */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Page Title</label>
               <input
@@ -333,6 +324,7 @@ export default function MetaTagGenerator() {
               <p className="tool-subtext">Ideal title length: 50–60 characters.</p>
             </div>
 
+            {/* Meta Description */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Meta Description</label>
               <textarea
@@ -345,6 +337,7 @@ export default function MetaTagGenerator() {
               />
             </div>
 
+            {/* Keywords */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Site Keywords</label>
               <input
@@ -357,6 +350,7 @@ export default function MetaTagGenerator() {
               />
             </div>
 
+            {/* Canonical URL */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Canonical URL</label>
               <input
@@ -377,6 +371,7 @@ export default function MetaTagGenerator() {
               )}
             </div>
 
+            {/* Language */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Language</label>
               <CustomDropdown
@@ -388,6 +383,7 @@ export default function MetaTagGenerator() {
               />
             </div>
 
+            {/* Robots */}
             <div>
               <h3 className="text-md font-semibold mb-2">Robots Directives</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -415,6 +411,7 @@ export default function MetaTagGenerator() {
               </div>
             </div>
 
+            {/* Include Author */}
             <div className="flex items-center gap-2 mt-2">
               <input
                 type="checkbox"
@@ -440,6 +437,7 @@ export default function MetaTagGenerator() {
               </div>
             )}
 
+            {/* Open Graph */}
             <h2 className="tool-h2">Open Graph</h2>
             <div className="tool-field" style={{ minWidth: 0 }}>
               <input
@@ -492,6 +490,7 @@ export default function MetaTagGenerator() {
               )}
             </div>
 
+            {/* Twitter Card */}
             <h2 className="tool-h2">Twitter Card</h2>
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Card Type</label>
@@ -515,7 +514,8 @@ export default function MetaTagGenerator() {
                 style={inputStyle}
               />
             </div>
-            <div className="tool-field" style={{ minWidth: 0 }}">
+
+            <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">@Creator</label>
               <input
                 type="text"
@@ -528,6 +528,7 @@ export default function MetaTagGenerator() {
             </div>
           </div>
 
+          {/* === RIGHT PREVIEW === */}
           <div className="tool-preview" style={{ minWidth: 0 }}>
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -576,47 +577,45 @@ export default function MetaTagGenerator() {
               </div>
             </div>
 
-            <div className="toolbar-spacing">
-              <div className="toolbar">
-                <div className="toolbar-wrap">
+            {/* === Toolbar === */}
+            <div className="toolbar-spacing mt-4">
+              <div className="toolbar flex gap-3">
+                <div className="toolbar-wrap relative">
                   <div className={`tooltip ${copied ? "visible msg-fade" : ""}`}>
                     {copied ? "Copied to clipboard" : "Copy"}
                   </div>
-
                   <button
                     onClick={handleCopy}
                     disabled={!metaPreview}
                     aria-label="Copy HTML"
-                    className={`toolbar-btn toolbar-btn--blue`}
+                    className="toolbar-btn toolbar-btn--blue"
                   >
                     <img src={copyIcon} alt="copy" className="toolbar-icon" />
                   </button>
                 </div>
 
-                <div className="toolbar-wrap">
+                <div className="toolbar-wrap relative">
                   <div className={`tooltip ${downloadMsgVisible ? "visible msg-fade" : ""}`}>
                     {downloadMsgVisible ? "Downloaded" : "Download"}
                   </div>
-
                   <button
                     onClick={handleDownload}
                     disabled={!metaPreview}
                     aria-label="Download"
-                    className={`toolbar-btn toolbar-btn--green`}
+                    className="toolbar-btn toolbar-btn--green"
                   >
                     <img src={downloadIcon} alt="download" className="toolbar-icon" />
                   </button>
                 </div>
 
-                <div className="toolbar-wrap">
+                <div className="toolbar-wrap relative">
                   <div className={`tooltip ${resetMsgVisible ? "visible msg-fade" : ""}`}>
                     {resetMsgVisible ? "Form reset" : "Reset"}
                   </div>
-
                   <button
                     onClick={handleReset}
                     aria-label="Reset form"
-                    className={`toolbar-btn toolbar-btn--red`}
+                    className="toolbar-btn toolbar-btn--red"
                   >
                     <img src={resetIcon} alt="reset" className="toolbar-icon" />
                   </button>
@@ -624,6 +623,7 @@ export default function MetaTagGenerator() {
               </div>
             </div>
 
+            {/* === Code Preview === */}
             <pre
               className="tool-code mt-4"
               style={{
@@ -641,6 +641,7 @@ export default function MetaTagGenerator() {
         </div>
       </section>
 
+      {/* === Related Tools Section === */}
       <section className="mt-16">
         <h3 className="text-xl font-semibold mb-6 text-secondary">Related Tools</h3>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
