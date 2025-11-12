@@ -252,7 +252,7 @@ export default function MetaTagGenerator() {
         className="custom-select-trigger"
       >
         <span>{options.find((opt) => opt.value === value)?.label}</span>
-        <span style={{ fontSize: "12px" }}>▼</span>
+        <span style={{ fontSize: "12px" }}>⏷</span>
       </button>
       <ul className={`custom-select-list ${isOpen ? "open" : ""}`}>
         {options.map((opt) => (
@@ -272,27 +272,53 @@ export default function MetaTagGenerator() {
   )
 
   const languageOptions = [
-    { value: "en-US", label: "🇺🇸 English (en-US)" },
-    { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
-    { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
-    { value: "sw-KE", label: "🇰🇪 Swahili (sw-KE)" },
-  ]
+  { value: "en-US", label: "🇺🇸 English (en-US)" },
+  { value: "en-GB", label: "🇬🇧 English (en-GB)" },
+  { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
+  { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
+  { value: "de-DE", label: "🇩🇪 German (de-DE)" },
+  { value: "it-IT", label: "🇮🇹 Italian (it-IT)" },
+  { value: "pt-PT", label: "🇵🇹 Portuguese (pt-PT)" },
+  { value: "pt-BR", label: "🇧🇷 Portuguese (pt-BR)" },
+  { value: "nl-NL", label: "🇳🇱 Dutch (nl-NL)" },
+  { value: "sv-SE", label: "🇸🇪 Swedish (sv-SE)" },
+  { value: "no-NO", label: "🇳🇴 Norwegian (no-NO)" },
+  { value: "da-DK", label: "🇩🇰 Danish (da-DK)" },
+  { value: "fi-FI", label: "🇫🇮 Finnish (fi-FI)" },
+  { value: "pl-PL", label: "🇵🇱 Polish (pl-PL)" },
+  { value: "ru-RU", label: "🇷🇺 Russian (ru-RU)" },
+  { value: "tr-TR", label: "🇹🇷 Turkish (tr-TR)" },
+  { value: "ar-SA", label: "🇸🇦 Arabic (ar-SA)" },
+  { value: "zh-CN", label: "🇨🇳 Chinese Simplified (zh-CN)" },
+  { value: "zh-TW", label: "🇹🇼 Chinese Traditional (zh-TW)" },
+  { value: "ja-JP", label: "🇯🇵 Japanese (ja-JP)" },
+  { value: "ko-KR", label: "🇰🇷 Korean (ko-KR)" },
+  { value: "hi-IN", label: "🇮🇳 Hindi (hi-IN)" },
+  { value: "sw-KE", label: "🇰🇪 Swahili (sw-KE)" },
+  { value: "af-ZA", label: "🇿🇦 Afrikaans (af-ZA)" },
+  { value: "th-TH", label: "🇹🇭 Thai (th-TH)" },
+  { value: "id-ID", label: "🇮🇩 Indonesian (id-ID)" },
+  { value: "ms-MY", label: "🇲🇾 Malay (ms-MY)" },
+  { value: "vi-VN", label: "🇻🇳 Vietnamese (vi-VN)" },
+  { value: "el-GR", label: "🇬🇷 Greek (el-GR)" },
+  { value: "he-IL", label: "🇮🇱 Hebrew (he-IL)" },
+]
 
   const robotsIndexOptions = [
-    { value: "Yes", label: "✓ Allow (index)" },
-    { value: "No", label: "✗ Disallow (noindex)" },
+    { value: "Yes", label: "Allow (index)" },
+    { value: "No", label: "⏷🇻 | Copy & PasteDisallow (noindex)" },
   ]
 
   const robotsFollowOptions = [
-    { value: "Yes", label: "✓ Allow (follow)" },
-    { value: "No", label: "✗ Disallow (nofollow)" },
+    { value: "Yes", label: "Allow (follow)" },
+    { value: "No", label: "Disallow (nofollow)" },
   ]
 
   const twitterCardOptions = [
-    { value: "summary", label: "📋 Summary Card" },
-    { value: "summary_large_image", label: "🖼️ Summary with Large Image" },
-    { value: "app", label: "📱 App Card" },
-    { value: "player", label: "▶️ Player Card" },
+    { value: "summary", label: "Summary Card" },
+    { value: "summary_large_image", label: "Summary with Large Image" },
+    { value: "app", label: "App Card" },
+    { value: "player", label: "Player Card" },
   ]
 
   return (
