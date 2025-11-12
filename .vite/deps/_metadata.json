@@ -1,0 +1,52 @@
+{
+  "hash": "030874b4",
+  "configHash": "262cae54",
+  "lockfileHash": "8826a8c4",
+  "browserHash": "a1630bba",
+  "optimized": {
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "ab22cb41",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "d9b28c9c",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "12048114",
+      "needsInterop": true
+    },
+    "react-helmet-async": {
+      "src": "../../node_modules/react-helmet-async/lib/index.esm.js",
+      "file": "react-helmet-async.js",
+      "fileHash": "9c18e609",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "235edeeb",
+      "needsInterop": false
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "cb79b426",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-N72R2AK4": {
+      "file": "chunk-N72R2AK4.js"
+    },
+    "chunk-PSOOE7CE": {
+      "file": "chunk-PSOOE7CE.js"
+    }
+  }
+}

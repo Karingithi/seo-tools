@@ -1,0 +1,387 @@
+/* Combined and de-duplicated tools.css
+   Notes:
+   - Rules that appear later in this file intentionally override earlier rules.
+   - Kept Tailwind @apply usages where present.
+*/
+
+/* ==============================
+   Layout / Container
+   ============================== */
+.tool-section {
+  @apply container bg-white p-8 rounded-[10px] shadow-sm mt-10;
+}
+
+.tool-grid {
+  @apply grid md:grid-cols-2 gap-6 md:gap-8;
+}
+
+/* ==============================
+   Form Layout and Fields
+   ============================== */
+.tool-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* 16px */
+}
+
+.tool-field {
+  @apply flex flex-col gap-1;
+}
+
+/* Label */
+.tool-label {
+  @apply text-sm font-medium text-black;
+}
+
+/* ==============================
+   Inputs, Selects, Textareas (base)
+   ============================== */
+.tool-input,
+.tool-select,
+.tool-textarea {
+  font-size: 14px;
+  padding: 0.5rem 0.75rem; /* 8px top/bottom, 12px sides */
+  color: #070026;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  width: 100%;
+  transition: all 0.2s ease;
+  outline: none;
+  background-color: #fff;
+}
+
+/* Unified Focus Style for all fields (softer yellow ring) */
+.tool-input:focus,
+.tool-textarea:focus,
+.tool-select:focus {
+  border-color: #ffc50c; /* Cralite yellow */
+  --tw-ring-inset: var(--tw-empty,/*!*/ /*!*/);
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgba(255, 197, 12, 0.3); /* softer glow */
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+/* --- Dropdown (native select) Styling --- */
+.tool-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-size: 14px;
+  color: #070026; /* Cralite dark navy */
+  background-color: #fff;
+  border-radius: 0.25rem;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem; /* add right space for arrow */
+  line-height: 1.5;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg fill='%23070026' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+/* Hover */
+.tool-select:hover,
+.tool-input:hover,
+.tool-textarea:hover {
+  background-color: #fafafa;
+  border-color: #b7b7b7;
+}
+
+/* Dropdown Options (native select fallback) */
+.tool-select option {
+  background-color: #fff;
+  color: #070026;
+  font-family: "Sofia Pro", sans-serif;
+  padding: 10px;
+}
+
+.tool-select option:hover,
+.tool-select option:checked {
+  background-color: #ffc50c !important;
+  color: #070026 !important;
+}
+
+/* ==============================
+   Hint Text
+   ============================== */
+.tool-subtext {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+/* ==============================
+   Section Headings
+   ============================== */
+.tool-h2 {
+  @apply text-lg md:text-xl font-semibold text-secondary mt-5;
+  margin-bottom: 0;
+}
+
+/* ==============================
+   Preview + Code Area
+   ============================== */
+.tool-preview {
+  @apply md:sticky md:top-[100px] h-fit space-y-6;
+}
+
+.tool-serp {
+  @apply border p-4 rounded-[10px] bg-gray-50 shadow-sm;
+}
+
+/* Replace fixed height with responsive max-height and ensure scrollability */
+.tool-code {
+  @apply bg-black text-green-400 p-4 rounded-[10px] text-xs overflow-auto;
+  max-height: 60vh;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre; /* preserve formatting, allow horizontal scroll if needed */
+}
+
+/* ==============================
+   Buttons
+   ============================== */
+.tool-btn {
+  @apply bg-primary text-white px-4 py-2 rounded-[10px] hover:bg-primary-dark transition;
+}
+
+/* ==============================
+   Responsive Tweaks
+   ============================== */
+@media (max-width: 768px) {
+  .tool-section {
+    @apply p-4;
+  }
+
+  .tool-input,
+  .tool-select,
+  .tool-textarea {
+    font-size: 14px;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .tool-select {
+    padding-right: 1.75rem;
+    background-position: right 0.65rem center;
+  }
+
+  .tool-h2 {
+    @apply text-base mt-4;
+    margin-bottom: 0;
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .tool-preview {
+    position: static !important;
+    top: auto !important;
+    margin-top: 0.5rem;
+  }
+
+  .tool-code {
+    max-height: 40vh;
+    font-size: 13px;
+  }
+}
+
+/* ==============================
+   Global fixes to prevent overflow
+   ============================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Make form fields and preview respect container width */
+.tool-form,
+.tool-preview,
+.tool-field,
+.tool-input,
+.tool-select,
+.tool-textarea,
+.tool-code,
+pre,
+code {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .tool-code {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .tool-code code,
+  .tool-code pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ==============================
+   Toolbar styles
+   ============================== */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.toolbar-wrap { position: relative; display: inline-block; }
+
+.toolbar-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms;
+  will-change: transform;
+  padding: 0;
+}
+.toolbar-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+.toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.toolbar-icon { width: 18px; height: 18px; display: block; }
+
+.tooltip {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: rgba(0,0,0,0.85);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 60;
+  transition: opacity 220ms cubic-bezier(.2,.9,.3,1), transform 220ms cubic-bezier(.2,.9,.3,1);
+}
+.toolbar-wrap:hover .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.msg-fade { animation: msgOut 1.4s forwards; }
+@keyframes msgOut {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; transform: translateY(-4px); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.toolbar-btn--blue { background: #0b2447; }
+.toolbar-btn--green { background: #10b981; }
+.toolbar-btn--red { background: #ef4444; }
+
+.toolbar-spacing { margin-top: 14px; }
+
+.code-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6b7280; /* gray-500 */
+  line-height: 1.3;
+}
+
+/* ==============================
+   Custom Dropdown Styles (overrides / higher priority)
+   ------------------------------
+   Placed after base select styles so these rules win
+   when both apply.
+   ============================== */
+.custom-select-wrapper {
+  position: relative;
+}
+
+/* Use .custom-select-trigger for custom faux-select button.
+   This intentionally mirrors .tool-select visual language but
+   uses slightly larger radius and padding to match the design.
+*/
+.custom-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  background: #fff;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1f2937;
+  transition: border-color 150ms;
+}
+
+/* Hover state for the trigger */
+.custom-select-trigger:hover {
+  border-color: #fbbf24;
+}
+
+/* Popup list */
+.custom-select-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+}
+
+/* Visible/open state (keeps higher priority ordering) */
+.custom-select-list.open {
+  display: block;
+}
+
+.custom-select-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #1f2937;
+  background: #fff;
+  transition: all 150ms;
+  font-size: 14px;
+}
+
+.custom-select-list li:hover {
+  background: #f3f4f6;
+}
+
+/* selected value */
+.custom-select-list li.selected {
+  color: #fff;
+  background: #fbbf24;
+}

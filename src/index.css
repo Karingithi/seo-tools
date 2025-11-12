@@ -1,0 +1,40 @@
+@import url('./assets/fonts/fonts.css');
+@import "./styles/tools.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global typography & layout */
+body {
+  @apply bg-gray-50 text-slate-800;
+  font-family: 'Sofia Pro', sans-serif;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sofia Pro', sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-[1240px] mx-auto px-4 sm:px-6;
+  }
+  .section {
+    @apply py-16 md:py-20;
+  }
+
+  .btn {
+    @apply text-[16px] font-normal rounded-full inline-flex items-center justify-center;
+    padding: 14.4px 26px;
+    transition: all 0.2s cubic-bezier(.68, .01, .58, .75);
+    transform: translateY(0);
+  }
+
+  .btn:hover {
+    transform: translateY(-10px);
+    color: white;
+  }
+}
