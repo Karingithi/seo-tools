@@ -1,16 +1,23 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
 import { buildMetaTags } from "../utils/metaUtils"
 import { toolsData } from "../data/toolsData"
 import type { Tool } from "../data/toolsData"
 
-// icons
-import copyIcon from "../assets/icons/copy.svg"
-import downloadIcon from "../assets/icons/download.svg"
-import resetIcon from "../assets/icons/reset.svg"
+// icons (assumes these exist in your assets folder)
+import { ReactComponent as CopyIcon } from "../assets/icons/copy.svg"
+import { ReactComponent as DownloadIcon } from "../assets/icons/download.svg"
+import { ReactComponent as ResetIcon } from "../assets/icons/reset.svg"
 
-export default function MetaTagGenerator() {
+type DropdownKey =
+  | "language"
+  | "robotsIndex"
+  | "robotsFollow"
+  | "twitterCard"
+  | null
+
+export default function MetaTagGenerator(): JSX.Element {
   // === Meta Information State ===
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -41,37 +48,152 @@ export default function MetaTagGenerator() {
   const [downloadMsgVisible, setDownloadMsgVisible] = useState(false)
   const [resetMsgVisible, setResetMsgVisible] = useState(false)
 
-  // === Custom Dropdown States ===
-  const [languageOpen, setLanguageOpen] = useState(false)
-  const [robotsIndexOpen, setRobotsIndexOpen] = useState(false)
-  const [robotsFollowOpen, setRobotsFollowOpen] = useState(false)
-  const [twitterCardOpen, setTwitterCardOpen] = useState(false)
+  // === Dropdown Management ===
+  const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null)
 
-  // Close dropdowns when clicking outside or pressing Escape
+  // === Canvas for accurate pixel measurements ===
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
+    if (!canvasRef.current) canvasRef.current = document.createElement("canvas")
+  }, [])
+
+  const measureTextPx = (text: string, font: string) => {
+    if (!canvasRef.current) return 0
+    const ctx = canvasRef.current.getContext("2d")
+    if (!ctx) return 0
+    ctx.font = font
+    return Math.ceil(ctx.measureText(text).width)
+  }
+
+  // Google-like pixel limits
+  const TITLE_MAX_PX = 600
+  const DESC_MAX_PX = 960
+
+  // Character limits requested
+  const TITLE_CHAR_MAX = 60
+  const DESC_CHAR_MAX = 145
+
+  // Fonts (approximate to SERP visual)
+  const titleFont =
+    "500 18px Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
+  const descFont =
+    "400 14px Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
+
+  // inline style helper used by inputs/textareas to avoid layout overflow
+  const inputStyle = { width: "100%", minWidth: 0 } as React.CSSProperties
+
+  const truncateByPx = (text: string, maxPx: number, font: string) => {
+    if (!text) return ""
+    const ell = "…"
+    if (measureTextPx(text, font) <= maxPx) return text
+
+    // binary search for the longest substring that fits with ellipsis
+    let low = 0
+    let high = text.length
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2)
+      const candidate = text.slice(0, mid) + ell
+      if (measureTextPx(candidate, font) <= maxPx) {
+        low = mid
+      } else {
+        high = mid - 1
+      }
+    }
+
+    // final check / trim
+    let result = text.slice(0, low)
+    while (measureTextPx(result + ell, font) > maxPx && result.length > 0) {
+      result = result.slice(0, -1)
+    }
+    return result + ell
+  }
+
+  const truncateText = (text: string, charMax: number, pxMax: number, font: string) => {
+    if (!text) return ""
+    const ell = "…"
+
+    // If text exceeds char limit, trim to char limit then ellipsize.
+    if (text.length > charMax) {
+      let candidate = text.slice(0, charMax).replace(/\s+$/u, "")
+      // if candidate + ellipsis still exceeds px limit, run pixel-based truncation on candidate
+      if (measureTextPx(candidate + ell, font) > pxMax) {
+        return truncateByPx(candidate, pxMax, font)
+      }
+      return candidate + ell
+    }
+
+    // If within char limit but exceeds px limit, use pixel truncation
+    if (measureTextPx(text, font) > pxMax) {
+      return truncateByPx(text, pxMax, font)
+    }
+
+    return text
+  }
+
+  // Counters and truncated preview strings (memoized)
+  const {
+    titleChars,
+    titlePx,
+    titleCounter,
+    truncatedTitle,
+    descChars,
+    descPx,
+    descCounter,
+    truncatedDescription,
+  } = useMemo(() => {
+    // count all characters including spaces
+    const tChars = title.length
+    const tPx = title ? measureTextPx(title, titleFont) : 0
+    const tCounter = `${tChars} chars (${tPx} / ${TITLE_MAX_PX}px)`
+    const tTruncated =
+      title.length > 0
+        ? truncateText(title, TITLE_CHAR_MAX, TITLE_MAX_PX, titleFont)
+        : truncateText("Your Page Title Here", TITLE_CHAR_MAX, TITLE_MAX_PX, titleFont)
+
+    const dChars = description.length
+    const dPx = description ? measureTextPx(description, descFont) : 0
+    const dCounter = `${dChars} chars (${dPx} / ${DESC_MAX_PX}px)`
+    const dTruncated =
+      description.length > 0
+        ? truncateText(description, DESC_CHAR_MAX, DESC_MAX_PX, descFont)
+        : truncateText(
+            "Your meta description will appear here — ideally under 160 characters for best SEO results.",
+            DESC_CHAR_MAX,
+            DESC_MAX_PX,
+            descFont
+          )
+
+    return {
+      titleChars: tChars,
+      titlePx: tPx,
+      titleCounter: tCounter,
+      truncatedTitle: tTruncated,
+      descChars: dChars,
+      descPx: dPx,
+      descCounter: dCounter,
+      truncatedDescription: dTruncated,
+    }
+  }, [title, description /* canvasRef not needed directly */])
+
+  // === Global outside click + Escape handler for dropdowns ===
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
       if (!target.closest(".custom-select-wrapper")) {
-        setLanguageOpen(false)
-        setRobotsIndexOpen(false)
-        setRobotsFollowOpen(false)
-        setTwitterCardOpen(false)
+        setOpenDropdown(null)
       }
     }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setLanguageOpen(false)
-        setRobotsIndexOpen(false)
-        setRobotsFollowOpen(false)
-        setTwitterCardOpen(false)
-      }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenDropdown(null)
     }
-    document.addEventListener("mousedown", onDocClick)
-    document.addEventListener("keydown", onKey)
+
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleEscape)
     return () => {
-      document.removeEventListener("mousedown", onDocClick)
-      document.removeEventListener("keydown", onKey)
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
     }
   }, [])
 
@@ -204,9 +326,7 @@ export default function MetaTagGenerator() {
     setTimeout(() => setResetMsgVisible(false), 1400)
   }
 
-  const related: Tool[] = toolsData.filter(
-    (tool) => tool.name !== "Meta Tag Generator"
-  )
+  const related: Tool[] = toolsData.filter((tool) => tool.name !== "Meta Tag Generator")
 
   const getFaviconUrl = (url?: string) => {
     if (!url) return "/favicon.ico"
@@ -229,84 +349,99 @@ export default function MetaTagGenerator() {
     }
   })()
 
-  const inputStyle = { width: "100%", minWidth: 0 }
-
   // === Custom Dropdown Component ===
   const CustomDropdown = ({
+    id,
     options,
     value,
     onChange,
-    isOpen,
-    setIsOpen,
+    openDropdown,
+    setOpenDropdown,
+    enableSearch = false,
   }: {
+    id: DropdownKey
     options: Array<{ value: string; label: string }>
     value: string
     onChange: (val: string) => void
-    isOpen: boolean
-    setIsOpen: (open: boolean) => void
-  }) => (
-    <div className="custom-select-wrapper">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="custom-select-trigger"
-      >
-        <span>{options.find((opt) => opt.value === value)?.label}</span>
-        <span style={{ fontSize: "12px" }}>⏷</span>
-      </button>
-      <ul className={`custom-select-list ${isOpen ? "open" : ""}`}>
-        {options.map((opt) => (
-          <li
-            key={opt.value}
-            className={opt.value === value ? "selected" : ""}
-            onClick={() => {
-              onChange(opt.value)
-              setIsOpen(false)
-            }}
-          >
-            {opt.label}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+    openDropdown: DropdownKey
+    setOpenDropdown: (k: DropdownKey) => void
+    enableSearch?: boolean
+  }) => {
+    const [searchTerm, setSearchTerm] = useState("")
+    const isOpen = openDropdown === id
 
+    const filteredOptions = useMemo(() => {
+      if (!enableSearch || !searchTerm.trim()) return options
+      return options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }, [options, searchTerm, enableSearch])
+
+    return (
+      <div className="custom-select-wrapper">
+        <button
+          type="button"
+          onClick={() => setOpenDropdown(isOpen ? null : id)}
+          className="custom-select-trigger"
+        >
+          <span>{options.find((opt) => opt.value === value)?.label}</span>
+          <span className="text-xs">⏷</span>
+        </button>
+
+        {isOpen && (
+          <div className="custom-select-list">
+            {enableSearch && (
+              <div className="custom-select-search">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            )}
+
+            <ul>
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((opt) => (
+                  <li
+                    key={opt.value}
+                    onClick={() => {
+                      onChange(opt.value)
+                      setOpenDropdown(null)
+                      setSearchTerm("")
+                    }}
+                    className={opt.value === value ? "selected" : ""}
+                  >
+                    {opt.label}
+                  </li>
+                ))
+              ) : (
+                <li className="custom-select-no-results">No matches found</li>
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // === Dropdown Options ===
   const languageOptions = [
-  { value: "en-US", label: "🇺🇸 English (en-US)" },
-  { value: "en-GB", label: "🇬🇧 English (en-GB)" },
-  { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
-  { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
-  { value: "de-DE", label: "🇩🇪 German (de-DE)" },
-  { value: "it-IT", label: "🇮🇹 Italian (it-IT)" },
-  { value: "pt-PT", label: "🇵🇹 Portuguese (pt-PT)" },
-  { value: "pt-BR", label: "🇧🇷 Portuguese (pt-BR)" },
-  { value: "nl-NL", label: "🇳🇱 Dutch (nl-NL)" },
-  { value: "sv-SE", label: "🇸🇪 Swedish (sv-SE)" },
-  { value: "no-NO", label: "🇳🇴 Norwegian (no-NO)" },
-  { value: "da-DK", label: "🇩🇰 Danish (da-DK)" },
-  { value: "fi-FI", label: "🇫🇮 Finnish (fi-FI)" },
-  { value: "pl-PL", label: "🇵🇱 Polish (pl-PL)" },
-  { value: "ru-RU", label: "🇷🇺 Russian (ru-RU)" },
-  { value: "tr-TR", label: "🇹🇷 Turkish (tr-TR)" },
-  { value: "ar-SA", label: "🇸🇦 Arabic (ar-SA)" },
-  { value: "zh-CN", label: "🇨🇳 Chinese Simplified (zh-CN)" },
-  { value: "zh-TW", label: "🇹🇼 Chinese Traditional (zh-TW)" },
-  { value: "ja-JP", label: "🇯🇵 Japanese (ja-JP)" },
-  { value: "ko-KR", label: "🇰🇷 Korean (ko-KR)" },
-  { value: "hi-IN", label: "🇮🇳 Hindi (hi-IN)" },
-  { value: "sw-KE", label: "🇰🇪 Swahili (sw-KE)" },
-  { value: "af-ZA", label: "🇿🇦 Afrikaans (af-ZA)" },
-  { value: "th-TH", label: "🇹🇭 Thai (th-TH)" },
-  { value: "id-ID", label: "🇮🇩 Indonesian (id-ID)" },
-  { value: "ms-MY", label: "🇲🇾 Malay (ms-MY)" },
-  { value: "vi-VN", label: "🇻🇳 Vietnamese (vi-VN)" },
-  { value: "el-GR", label: "🇬🇷 Greek (el-GR)" },
-  { value: "he-IL", label: "🇮🇱 Hebrew (he-IL)" },
-]
+    { value: "en-US", label: "🇺🇸 English (en-US)" },
+    { value: "en-GB", label: "🇬🇧 English (en-GB)" },
+    { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
+    { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
+    { value: "de-DE", label: "🇩🇪 German (de-DE)" },
+    { value: "zh-CN", label: "🇨🇳 Chinese Simplified (zh-CN)" },
+    { value: "ja-JP", label: "🇯🇵 Japanese (ja-JP)" },
+    { value: "ko-KR", label: "🇰🇷 Korean (ko-KR)" },
+    // ...add more as needed
+  ]
 
   const robotsIndexOptions = [
     { value: "Yes", label: "Allow (index)" },
-    { value: "No", label: "⏷🇻 | Copy & PasteDisallow (noindex)" },
+    { value: "No", label: "Disallow (noindex)" },
   ]
 
   const robotsFollowOptions = [
@@ -324,10 +459,10 @@ export default function MetaTagGenerator() {
   return (
     <>
       <Seo
-        title="Meta Tag Generator"
+        title="Free Meta Tag Generator"
         description="Generate optimized meta tags including title, description, canonical URL, robots, Open Graph, and Twitter Card — with a live preview."
         keywords="meta tag generator, seo tools, canonical, open graph, twitter card"
-        url="https://cralite.com/meta-tag-generator"
+        url="https://cralite.com/tools/meta-tag-generator"
       />
 
       <section className="tool-section">
@@ -347,7 +482,9 @@ export default function MetaTagGenerator() {
                 placeholder="Try to keep it under 60 characters"
                 style={inputStyle}
               />
-              <p className="tool-subtext">Ideal title length: 50–60 characters.</p>
+
+              {/* Title counter (chars + pixel) */}
+              <div className="text-xs text-gray-500 mt-1">{titleCounter}</div>
             </div>
 
             {/* Meta Description */}
@@ -361,6 +498,8 @@ export default function MetaTagGenerator() {
                 placeholder="Under 160 characters for best results"
                 style={inputStyle}
               />
+              {/* Description counter */}
+              <div className="text-xs text-gray-500 mt-1">{descCounter}</div>
             </div>
 
             {/* Keywords */}
@@ -391,7 +530,7 @@ export default function MetaTagGenerator() {
                 style={inputStyle}
               />
               {canonicalError && (
-                <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-3">
+                <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">
                   {canonicalError}
                 </div>
               )}
@@ -401,37 +540,41 @@ export default function MetaTagGenerator() {
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Language</label>
               <CustomDropdown
+                id="language"
                 options={languageOptions}
                 value={language}
                 onChange={setLanguage}
-                isOpen={languageOpen}
-                setIsOpen={setLanguageOpen}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+                enableSearch={true}
               />
             </div>
 
             {/* Robots */}
             <div>
-              <h3 className="text-md font-semibold mb-2">Robots Directives</h3>
+              <h3 className="tool-section-title">Robots Directives</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="tool-field" style={{ minWidth: 0 }}>
                   <label className="tool-label">Allow robots to index?</label>
                   <CustomDropdown
+                    id="robotsIndex"
                     options={robotsIndexOptions}
                     value={robotsIndex}
                     onChange={setRobotsIndex}
-                    isOpen={robotsIndexOpen}
-                    setIsOpen={setRobotsIndexOpen}
+                    openDropdown={openDropdown}
+                    setOpenDropdown={setOpenDropdown}
                   />
                 </div>
 
                 <div className="tool-field" style={{ minWidth: 0 }}>
                   <label className="tool-label">Allow robots to follow links?</label>
                   <CustomDropdown
+                    id="robotsFollow"
                     options={robotsFollowOptions}
                     value={robotsFollow}
                     onChange={setRobotsFollow}
-                    isOpen={robotsFollowOpen}
-                    setIsOpen={setRobotsFollowOpen}
+                    openDropdown={openDropdown}
+                    setOpenDropdown={setOpenDropdown}
                   />
                 </div>
               </div>
@@ -464,7 +607,7 @@ export default function MetaTagGenerator() {
             )}
 
             {/* Open Graph */}
-            <h2 className="tool-h2">Open Graph</h2>
+            <h3 className="tool-section-title">Open Graph</h3>
             <div className="tool-field" style={{ minWidth: 0 }}>
               <input
                 type="text"
@@ -494,7 +637,7 @@ export default function MetaTagGenerator() {
                 style={inputStyle}
               />
               {ogUrlError && (
-                <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-3">
+                <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">
                   {ogUrlError}
                 </div>
               )}
@@ -510,22 +653,23 @@ export default function MetaTagGenerator() {
                 style={inputStyle}
               />
               {ogImageError && (
-                <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-3">
+                <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">
                   {ogImageError}
                 </div>
               )}
             </div>
 
             {/* Twitter Card */}
-            <h2 className="tool-h2">Twitter Card</h2>
+            <h3 className="tool-section-title">Twitter Card</h3>
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Card Type</label>
               <CustomDropdown
+                id="twitterCard"
                 options={twitterCardOptions}
                 value={twitterCard}
                 onChange={setTwitterCard}
-                isOpen={twitterCardOpen}
-                setIsOpen={setTwitterCardOpen}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
               />
             </div>
 
@@ -592,11 +736,14 @@ export default function MetaTagGenerator() {
                 </div>
 
                 <div className="mt-1">
-                  <div className="text-[#1a0dab] text-lg font-medium truncate">
-                    {title || "Your Page Title Here"}
+                  <div
+                    className="text-[#1a0dab] text-lg font-medium truncate"
+                    title={title || "Your Page Title Here"}
+                  >
+                    {truncatedTitle || "Your Page Title Here"}
                   </div>
                   <div className="text-gray-700 mt-1 text-sm leading-relaxed break-words">
-                    {description ||
+                    {truncatedDescription ||
                       "Your meta description will appear here — ideally under 160 characters for best SEO results."}
                   </div>
                 </div>
@@ -604,9 +751,9 @@ export default function MetaTagGenerator() {
             </div>
 
             {/* === Toolbar === */}
-            <div className="toolbar-spacing mt-4">
-              <div className="toolbar flex gap-3">
-                <div className="toolbar-wrap relative">
+            <div className="toolbar-spacing">
+              <div className="toolbar">
+                <div className="toolbar-wrap">
                   <div className={`tooltip ${copied ? "visible msg-fade" : ""}`}>
                     {copied ? "Copied to clipboard" : "Copy"}
                   </div>
@@ -616,11 +763,11 @@ export default function MetaTagGenerator() {
                     aria-label="Copy HTML"
                     className="toolbar-btn toolbar-btn--blue"
                   >
-                    <img src={copyIcon} alt="copy" className="toolbar-icon" />
+                    <CopyIcon className="toolbar-icon" title="copy" />
                   </button>
                 </div>
 
-                <div className="toolbar-wrap relative">
+                <div className="toolbar-wrap">
                   <div className={`tooltip ${downloadMsgVisible ? "visible msg-fade" : ""}`}>
                     {downloadMsgVisible ? "Downloaded" : "Download"}
                   </div>
@@ -630,11 +777,11 @@ export default function MetaTagGenerator() {
                     aria-label="Download"
                     className="toolbar-btn toolbar-btn--green"
                   >
-                    <img src={downloadIcon} alt="download" className="toolbar-icon" />
+                    <DownloadIcon className="toolbar-icon" title="download" />
                   </button>
                 </div>
 
-                <div className="toolbar-wrap relative">
+                <div className="toolbar-wrap">
                   <div className={`tooltip ${resetMsgVisible ? "visible msg-fade" : ""}`}>
                     {resetMsgVisible ? "Form reset" : "Reset"}
                   </div>
@@ -643,7 +790,7 @@ export default function MetaTagGenerator() {
                     aria-label="Reset form"
                     className="toolbar-btn toolbar-btn--red"
                   >
-                    <img src={resetIcon} alt="reset" className="toolbar-icon" />
+                    <ResetIcon className="toolbar-icon" title="reset" />
                   </button>
                 </div>
               </div>
@@ -669,20 +816,27 @@ export default function MetaTagGenerator() {
 
       {/* === Related Tools Section === */}
       <section className="mt-16">
-        <h3 className="text-xl font-semibold mb-6 text-secondary">Related Tools</h3>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <h2 className="mb-6">Related Tools</h2>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {related.map((tool) => (
             <Link
               key={tool.name}
               to={tool.link}
               className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
             >
-              <div className="text-3xl">{tool.icon}</div>
+              <div className="text-3xl">
+  <img
+    src={tool.icon}
+    alt={tool.name}
+    className="w-8 h-8 object-contain"
+  />
+</div>
+
               <h4 className="text-[18px] font-medium text-gray-800">{tool.name}</h4>
             </Link>
           ))}
         </div>
-      </section>
+      </section> 
     </>
   )
 }

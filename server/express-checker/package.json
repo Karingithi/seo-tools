@@ -1,0 +1,17 @@
+{
+  "name": "seo-tools-checker-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simple Express server to check URL status for sitemap checking (example scaffold)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5"
+  }
+}

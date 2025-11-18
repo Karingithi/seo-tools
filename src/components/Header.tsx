@@ -1,125 +1,341 @@
-import { Link, useLocation } from "react-router-dom"
-import { useState, useEffect } from "react"
+// ==============================
+// Optimized Header.tsx
+// Smooth hover animation + color control + DRY principles
+// ==============================
 
+import { Link, useLocation } from "react-router-dom"
+import { useState, useEffect, useRef, useCallback } from "react"
+import MobileMenu from "./MobileMenu"
+
+// -------------------------------------------------
+// Type Definitions
+// -------------------------------------------------
+interface MenuItem {
+  label: string
+  href?: string
+}
+
+interface MenuData {
+  label: string
+  items: MenuItem[]
+}
+
+// -------------------------------------------------
+// Menu Data Configuration
+// -------------------------------------------------
+const MENU_DATA: Record<string, MenuData> = {
+  services: {
+    label: "Services",
+    items: [
+      { label: "SEO" },
+      { label: "Web Design" },
+      { label: "Marketing" },
+    ],
+  },
+  portfolio: {
+    label: "Portfolio",
+    items: [
+      { label: "Case Studies" },
+      { label: "Featured" },
+      { label: "All Projects" },
+    ],
+  },
+  resources: {
+    label: "Resources",
+    items: [
+      { label: "Blog", href: "https://cralite.com/blog/" },
+      { label: "Free SEO Tools" },
+    ],
+  },
+}
+
+// -------------------------------------------------
+// HoverLabel – Slide-up animation with optional fixed hover color
+// -------------------------------------------------
+function HoverLabel({
+  label,
+  color = "text-white",
+  hoverColor,
+}: {
+  label: string
+  color?: string
+  hoverColor?: string
+}) {
+  return (
+    <span className="group relative inline-block overflow-hidden h-[1.2em] leading-none">
+      {/* Top label */}
+      <span className="block transition-transform duration-300 ease-[cubic-bezier(.25,1,.25,1)] group-hover:-translate-y-full">
+        <span className={`${color} block transition-all duration-300`}>
+          {label}
+        </span>
+        {/* Bottom (ghost) label */}
+        <span
+          className={`
+            block absolute left-0 top-full 
+            ${hoverColor || color}
+          `}
+        >
+          {label}
+        </span>
+      </span>
+    </span>
+  )
+}
+
+// -------------------------------------------------
+// A reusable dropdown link item
+// Keeps animation + color logic consistent
+// -------------------------------------------------
+function DropdownItem({
+  label,
+  href,
+  firstRef,
+}: {
+  label: string
+  href?: string
+  firstRef?: React.RefObject<HTMLAnchorElement>
+}) {
+  // If no href provided, render as a span (non-clickable)
+  if (!href) {
+    return (
+      <span
+        ref={firstRef as any}
+        className="nav-dropdown-item group"
+      >
+        <HoverLabel label={label} color="text-[#070026]" hoverColor="text-[#070026]" />
+      </span>
+    )
+  }
+
+  return (
+    <a
+      ref={firstRef}
+      href={href}
+      className="nav-dropdown-item group"
+    >
+      <HoverLabel label={label} color="text-[#070026]" hoverColor="text-[#070026]" />
+    </a>
+  )
+}
+
+// -------------------------------------------------
+// Reusable Menu Button Component
+// -------------------------------------------------
+function MenuButton({
+  menuKey,
+  isOpen,
+  onToggle,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  menuKey: string
+  isOpen: boolean
+  onToggle: () => void
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+}) {
+  const menu = MENU_DATA[menuKey]
+
+  return (
+    <div
+      className="nav-dropdown-wrapper"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <button
+        className={`nav-dropdown-button ${isOpen ? "text-primary" : ""}`}
+        onClick={onToggle}
+      >
+        <HoverLabel
+          label={menu.label}
+          color={isOpen ? "text-primary" : "text-white"}
+          hoverColor="text-primary"
+        />
+        <svg className={`nav-dropdown-chevron ${isOpen ? "text-primary" : ""}`} viewBox="0 0 20 20">
+          <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+// -------------------------------------------------
+// MAIN HEADER
+// -------------------------------------------------
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [animateMenu, setAnimateMenu] = useState<string | null>(null)
+
+  const [mobileSubmenu, setMobileSubmenu] = useState<string | null>(null)
+  const headerRef = useRef<HTMLHeadingElement | null>(null)
+
+  // refs for keyboard accessibility
+  const servicesFirstRef = useRef<HTMLAnchorElement | null>(null)
+  const portfolioFirstRef = useRef<HTMLAnchorElement | null>(null)
+  const resourcesFirstRef = useRef<HTMLAnchorElement | null>(null)
+
+  const closeTimerRef = useRef<number | null>(null)
   const location = useLocation()
 
-  // Detect scroll to toggle header background
+  // Combined event listeners for better performance
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setOpenMenu(null)
+      }
+    }
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenMenu(null)
+        setMenuOpen(false)
+      }
     }
 
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
   }, [])
 
+  // Autofocus first item
+  useEffect(() => {
+    if (openMenu === "services") setTimeout(() => servicesFirstRef.current?.focus(), 0)
+    if (openMenu === "portfolio") setTimeout(() => portfolioFirstRef.current?.focus(), 0)
+    if (openMenu === "resources") setTimeout(() => resourcesFirstRef.current?.focus(), 0)
+  }, [openMenu])
+
+  // Memoized handlers for better performance
+  const toggleMenu = useCallback((name: string) => {
+    setOpenMenu(prev => (prev === name ? null : name))
+    setAnimateMenu(name)
+  }, [])
+
+  const handleMouseEnter = useCallback((name: string) => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    setOpenMenu(name)
+    setAnimateMenu(name)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    closeTimerRef.current = window.setTimeout(() => {
+      setOpenMenu(null)
+      setAnimateMenu(null)
+    }, 200)
+  }, [])
+
+  // Contact nav link
   const navLink = (path: string, label: string) => (
     <Link
       to={path}
-      className={`${
-        location.pathname === path
-          ? "text-primary"
-          : "text-gray-100 hover:text-primary"
-      } transition-colors duration-200`}
+      className={`nav-dropdown-button ${location.pathname === path ? "!text-primary" : ""}`}
       onClick={() => setMenuOpen(false)}
     >
-      {label}
+      <HoverLabel label={label} hoverColor="text-primary" />
     </Link>
   )
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-secondary shadow-md" : "bg-transparent"
-      } text-white`}
+      ref={headerRef as any}
+      className={`site-header fixed top-0 left-0 w-full transition-all duration-300 
+      ${isScrolled ? "scrolled bg-secondary shadow-md z-[999999]" : "bg-transparent z-50"}
+      ${menuOpen ? "menu-open" : ""} text-white`}
     >
       <div className="container flex items-center justify-between py-[14px] md:py-[25px]">
-        {/* === Logo === */}
-        <Link to="/" className="flex items-center space-x-2">
+        
+        {/* LOGO */}
+        <a href="https://cralite.com/" className="flex items-center">
           <img
             src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg"
-            alt="Cralite Logo"
-            className="h-[40px] md:h-[50px] w-auto object-contain transition-transform duration-200 hover:scale-[1.02]"
+            className="h-[40px] md:h-[50px]"
           />
-        </Link>
+        </a>
 
-        {/* === Desktop Nav === */}
-        <nav className="hidden md:flex items-center space-x-10 text-[17px] font-normal">
-          {navLink("/", "Home")}
-          {navLink("/meta-tag-generator", "Meta Tag Generator")}
-          {navLink("/schema-builder", "Schema Builder")}
-          <a
-            href="https://cralite.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-100 hover:text-primary transition"
-          >
-            Contact
-          </a>
+        {/* MOBILE BURGER */}
+        <button className="text-white md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor">
+            {menuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+
+        {/* DESKTOP NAV */}
+        <nav className="hidden md:flex md:items-center md:space-x-6">
+          {Object.keys(MENU_DATA).map((menuKey) => {
+            const menu = MENU_DATA[menuKey]
+            const isOpen = openMenu === menuKey
+            const firstRef = menuKey === "services" ? servicesFirstRef : menuKey === "portfolio" ? portfolioFirstRef : resourcesFirstRef
+
+            return (
+              <div
+                key={menuKey}
+                className="nav-dropdown-wrapper"
+                onMouseEnter={() => handleMouseEnter(menuKey)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  className={`nav-dropdown-button ${isOpen ? "text-primary" : ""}`}
+                  onClick={() => toggleMenu(menuKey)}
+                >
+                  <HoverLabel
+                    label={menu.label}
+                    color={isOpen ? "text-primary" : "text-white"}
+                    hoverColor="text-primary"
+                  />
+                  <svg className={`nav-dropdown-chevron ${isOpen ? "text-primary" : ""}`} viewBox="0 0 20 20">
+                    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.6" />
+                  </svg>
+                </button>
+
+                {isOpen && (
+                  <div className={`nav-dropdown-panel ${animateMenu === menuKey ? "animate" : ""}`}>
+                    {menu.items.map((item, idx) => (
+                      <DropdownItem
+                        key={item.label}
+                        label={item.label}
+                        href={item.href}
+                        firstRef={idx === 0 ? firstRef : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {navLink("/contact", "Contact")}
         </nav>
 
-        {/* === CTA Button === */}
+        {/* DESKTOP CTA */}
         <a
           href="https://cralite.com/contact/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden md:inline-block btn bg-primary text-secondary hover:opacity-90"
+          className="hidden md:inline-flex btn bg-primary text-secondary hover:opacity-90"
         >
           Get Started
         </a>
-
-        {/* === Mobile Menu Button === */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden text-white focus:outline-none"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
       </div>
 
-      {/* === Mobile Menu === */}
-      {menuOpen && (
-        <div className="md:hidden bg-secondary border-t border-gray-700">
-          <div className="flex flex-col space-y-3 py-4 px-6 text-base">
-            {navLink("/", "Home")}
-            {navLink("/meta-tag-generator", "Meta Tag Generator")}
-            {navLink("/schema-builder", "Schema Builder")}
-            <a
-              href="https://cralite.com/contact"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary"
-            >
-              Contact
-            </a>
-<a
-  href="https://cralite.com/contact/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="hidden md:inline-block btn bg-primary text-secondary"
->
-  Get Started
-</a>
+      {/* MOBILE MENU */}
+      <MobileMenu
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        mobileSubmenu={mobileSubmenu}
+        onSubmenuChange={setMobileSubmenu}
+      />
 
-          </div>
-        </div>
-      )}
     </header>
   )
 }
