@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState, useRef } from "react"
-import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
 import { buildMetaTags } from "../utils/metaUtils"
-import { toolsData } from "../data/toolsData"
-import type { Tool } from "../data/toolsData"
+import RelatedTools from "../components/RelatedTools"
 
 // icons (assumes these exist in your assets folder)
-import { ReactComponent as CopyIcon } from "../assets/icons/copy.svg"
-import { ReactComponent as DownloadIcon } from "../assets/icons/download.svg"
-import { ReactComponent as ResetIcon } from "../assets/icons/reset.svg"
+import CopyIcon from "../assets/icons/copy.svg?react"
+import DownloadIcon from "../assets/icons/download.svg?react"
+import ResetIcon from "../assets/icons/reset.svg?react"
+// default placeholder favicon for preview
+import DefaultFavicon from "../assets/icons/favicon.svg?url"
 
 type DropdownKey =
   | "language"
@@ -132,12 +132,8 @@ export default function MetaTagGenerator(): JSX.Element {
 
   // Counters and truncated preview strings (memoized)
   const {
-    titleChars,
-    titlePx,
     titleCounter,
     truncatedTitle,
-    descChars,
-    descPx,
     descCounter,
     truncatedDescription,
   } = useMemo(() => {
@@ -326,15 +322,15 @@ export default function MetaTagGenerator(): JSX.Element {
     setTimeout(() => setResetMsgVisible(false), 1400)
   }
 
-  const related: Tool[] = toolsData.filter((tool) => tool.name !== "Meta Tag Generator")
+  
 
   const getFaviconUrl = (url?: string) => {
-    if (!url) return "/favicon.ico"
+    if (!url) return DefaultFavicon
     try {
       const hostname = new URL(url).hostname
       return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`
     } catch {
-      return "/favicon.ico"
+      return DefaultFavicon
     }
   }
   const faviconUrl = getFaviconUrl(canonical || ogUrl || undefined)
@@ -710,10 +706,10 @@ export default function MetaTagGenerator(): JSX.Element {
                   <img
                     src={faviconUrl}
                     alt="site favicon"
-                    className="w-6 h-6 rounded-sm flex-shrink-0"
+                    className="w-6 h-6 rounded-sm shrink-0"
                     onError={(e) => {
                       const img = e.currentTarget as HTMLImageElement
-                      if (!img.src.endsWith("/favicon.ico")) img.src = "/favicon.ico"
+                      if (img.src !== DefaultFavicon) img.src = DefaultFavicon
                     }}
                   />
                   <div className="min-w-0">
@@ -722,7 +718,7 @@ export default function MetaTagGenerator(): JSX.Element {
                         href={canonical || ogUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#202124] text-sm truncate block"
+                        className="text-[#202124]! text-sm truncate block"
                       >
                         {siteName}
                       </a>
@@ -742,7 +738,7 @@ export default function MetaTagGenerator(): JSX.Element {
                   >
                     {truncatedTitle || "Your Page Title Here"}
                   </div>
-                  <div className="text-gray-700 mt-1 text-sm leading-relaxed break-words">
+                  <div className="text-gray-700 mt-1 text-sm leading-relaxed wrap-break-word">
                     {truncatedDescription ||
                       "Your meta description will appear here — ideally under 160 characters for best SEO results."}
                   </div>
@@ -763,7 +759,7 @@ export default function MetaTagGenerator(): JSX.Element {
                     aria-label="Copy HTML"
                     className="toolbar-btn toolbar-btn--blue"
                   >
-                    <CopyIcon className="toolbar-icon" title="copy" />
+                    <CopyIcon className="toolbar-icon" />
                   </button>
                 </div>
 
@@ -777,7 +773,7 @@ export default function MetaTagGenerator(): JSX.Element {
                     aria-label="Download"
                     className="toolbar-btn toolbar-btn--green"
                   >
-                    <DownloadIcon className="toolbar-icon" title="download" />
+                    <DownloadIcon className="toolbar-icon" />
                   </button>
                 </div>
 
@@ -790,7 +786,7 @@ export default function MetaTagGenerator(): JSX.Element {
                     aria-label="Reset form"
                     className="toolbar-btn toolbar-btn--red"
                   >
-                    <ResetIcon className="toolbar-icon" title="reset" />
+                    <ResetIcon className="toolbar-icon" />
                   </button>
                 </div>
               </div>
@@ -814,29 +810,7 @@ export default function MetaTagGenerator(): JSX.Element {
         </div>
       </section>
 
-      {/* === Related Tools Section === */}
-      <section className="mt-16">
-        <h2 className="mb-6">Related Tools</h2>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {related.map((tool) => (
-            <Link
-              key={tool.name}
-              to={tool.link}
-              className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
-            >
-              <div className="text-3xl">
-  <img
-    src={tool.icon}
-    alt={tool.name}
-    className="w-8 h-8 object-contain"
-  />
-</div>
-
-              <h4 className="text-[18px] font-medium text-gray-800">{tool.name}</h4>
-            </Link>
-          ))}
-        </div>
-      </section> 
+      <RelatedTools exclude="/meta-tag-generator" />
     </>
   )
 }

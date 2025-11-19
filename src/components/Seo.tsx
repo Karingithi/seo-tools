@@ -6,6 +6,8 @@ interface SeoProps {
   keywords?: string
   image?: string
   url?: string
+  siteName?: string
+  locale?: string
 }
 
 export default function Seo({
@@ -14,31 +16,44 @@ export default function Seo({
   keywords,
   image = "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
   url = "https://cralite.com",
+  siteName = "Cralite Digital",
+  locale = "en_US",
 }: SeoProps) {
-  const fullTitle = `${title} | Free SEO Tools by Cralite`
+  const fullTitle = `${title} | Cralite Digital`
 
   return (
     <Helmet>
       {/* === Basic Meta === */}
+       <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-
       {/* === Open Graph === */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
       <meta property="og:type" content="website" />
       <meta property="og:url" content={url} />
+      <meta property="og:site_name" content={siteName} />
+      <meta property="og:locale" content={locale} />
 
       {/* === Twitter Card === */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+      <meta name="twitter:site" content="@cralitedigital" />
+
+      {/* Canonical link */}
+      <link rel="canonical" href={url} />
 
       {/* === Favicon === */}
-      <link rel="icon" href="https://cralite.com/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="https://cralite.com/wp-content/uploads/2023/12/Cralite_Favicon.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cralite.com/wp-content/uploads/2023/12/Cralite_Favicon.svg" />
+    <link rel="apple-touch-icon" sizes="120x120" href="https://cralite.com/wp-content/uploads/2023/12/Cralite_Favicon.svg" />
+    <link rel="apple-touch-icon" sizes="76x76" href="https://cralite.com/wp-content/uploads/2023/12/Cralite_Favicon.svg" />
+    <link rel="apple-touch-icon" href="https://cralite.com/wp-content/uploads/2023/12/Cralite_Favicon.svg" />
     </Helmet>
   )
 }

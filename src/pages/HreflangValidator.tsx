@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
 import Seo from "../components/Seo"
 import { isValidUrl } from "../utils/url"
-import { toolsData } from "../data/toolsData"
-import type { Tool } from "../data/toolsData"
+import RelatedTools from "../components/RelatedTools"
 import { copyToClipboard } from "../utils"
 
 export default function HreflangValidator(): JSX.Element {
   const [input, setInput] = useState<string>("")
   const [baseUrl, setBaseUrl] = useState<string>("")
-  const [locales, setLocales] = useState<string>("en-US\nfr\nes")
+  
   const [generated, setGenerated] = useState<string[]>([])
   const [pairs, setPairs] = useState<{ code: string; href: string }[]>([{ code: "en", href: "" }])
   const [parsed, setParsed] = useState<{ hreflang: string; href: string }[]>([])
@@ -251,10 +249,7 @@ export default function HreflangValidator(): JSX.Element {
   const addPair = () => setPairs((p) => [...p, { code: "", href: "" }])
   const removePair = (i: number) => setPairs((p) => p.filter((_, idx) => idx !== i))
 
-  // Exclude this page from its own related list. Use the `link` field to avoid
-  // mismatches if the display `name` changes elsewhere.
-  const related: Tool[] = toolsData.filter((t) => t.link !== "/hreflang-validator")
-  const navigate = useNavigate()
+ 
 
   // derive defaults when baseUrl changes
   // do not overwrite user-edited selfUrl/xDefaultUrl if they differ from previous derived values
@@ -275,7 +270,7 @@ export default function HreflangValidator(): JSX.Element {
       const key = (p.code || "").toLowerCase()
       counts[key] = (counts[key] || 0) + 1
     })
-    const results = pairs.map((p, i) => {
+    const results = pairs.map((p) => {
       const code = p.code || ""
       const href = p.href || ""
       const codeValid = codeIsValid(code)
@@ -402,30 +397,8 @@ export default function HreflangValidator(): JSX.Element {
           </div>
         </div>
       </section>
-      
-      {/* RELATED TOOLS */}
-      <section className="mt-16">
-        <h2 className="mb-6">Related Tools</h2>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {related.map((tool) => (
-            <a
-              key={tool.name}
-              href={tool.link}
-              onClick={(e) => {
-                e.preventDefault()
-                navigate(tool.link)
-                setTimeout(() => window.scrollTo(0, 0), 10)
-              }}
-              className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
-            >
-              <div className="text-3xl">
-                <img src={tool.icon} alt={tool.name} className="w-8 h-8 object-contain" />
-              </div>
-              <h4 className="text-[18px] font-medium text-gray-800">{tool.name}</h4>
-            </a>
-          ))}
-        </div>
-      </section>
+
+      <RelatedTools exclude="/hreflang-validator" />
     </>
   )
 }

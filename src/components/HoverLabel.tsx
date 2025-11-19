@@ -21,7 +21,7 @@ function HoverLabel({
         className={`
           absolute inset-0 flex items-center
           transition-all duration-500 ease-[cubic-bezier(.25,1,.25,1)]
-          text-[inherit] ${color}
+          text-inherit ${color}
 
           group-hover:-translate-y-full
           group-hover:opacity-0
@@ -38,7 +38,7 @@ function HoverLabel({
           absolute inset-0 flex items-center
           translate-y-full opacity-0 
           transition-all duration-500 ease-[cubic-bezier(.25,1,.25,1)]
-          text-[inherit] ${hoverColor}
+          text-inherit ${hoverColor}
 
           group-hover:translate-y-0
           group-hover:opacity-100

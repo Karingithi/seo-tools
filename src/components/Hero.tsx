@@ -12,7 +12,7 @@ export default function Hero({
   showBackLink = true,
 }: HeroProps) {
   return (
-    <section className="hero-section relative overflow-hidden bg-secondary text-white pt-[6.5rem] md:pt-[10rem] pb-[4.5rem] md:pb-[6rem]">
+    <section className="hero-section relative overflow-hidden bg-secondary text-white pt-26 md:pt-40 pb-18 md:pb-24">
       {/* === Background Image === */}
       <div
         className="absolute inset-0 z-0 bg-no-repeat bg-center opacity-70"
@@ -37,7 +37,7 @@ export default function Hero({
       </style>
 
       {/* === Hero Content === */}
-      <div className="container relative z-[2] py-[25px] text-center md:text-left">
+      <div className="container relative z-2 py-[25px] text-center">
         {/* Back to Tools Link */}
         {showBackLink && (
           <div className="mb-5 md:mb-0">
@@ -62,14 +62,18 @@ export default function Hero({
           </div>
         )}
 
-        {/* Title */}
-        <h1 className="mt-8 mb-4 text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">
+        {/* Title + Subtitle wrapper */}
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="mt-4! mb-4! text-4xl md:text-5xl font-extrabold">
           {(() => {
             const highlightPhrases = [
               "SEO Tools",
-              "Tag Generator",
-              "Schema Markup Generator",
-              "Schema Builder",
+              "Business Growth and Visibility",
+              "Robots.txt File in Seconds",
+              "Robots.txt Validator",
+              "Meta Tag Generator",
+              "Robots.txt Generator",
+              "LLMs.txt Generator",
             ]
             const match = highlightPhrases.find((phrase) =>
               title.toLowerCase().includes(phrase.toLowerCase())
@@ -78,21 +82,20 @@ export default function Hero({
               const parts = title.split(new RegExp(match, "i"))
               return (
                 <>
-                  {parts[0]}
+                  <span className="text-white">{parts[0]}</span>
                   <span className="text-primary">{match}</span>
-                  {parts[1]}
+                  <span className="text-white">{parts[1]}</span>
                 </>
               )
             }
-            return title
+            return <span className="text-white">{title}</span>
           })()}
-        </h1>
+          </h1>
 
-        {/* Subtitle */}
-        <p className="my-[18px] text-lg text-gray-300 max-w-2xl mx-auto md:mx-0">
-          {subtitle}
-        </p>
-      </div>
+          {/* Subtitle */}
+          <p className="my-[18px] text-lg text-white! px-4">{subtitle}</p>
+        </div>
+        </div>
     </section>
   )
 }

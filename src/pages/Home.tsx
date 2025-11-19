@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { Link } from "react-router-dom"
 import { toolsData, type Tool } from "../data/toolsData" // ✅ Import shared tools
+import ToolTitle from "../components/ToolTitle"
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -12,6 +13,7 @@ export default function Home() {
   )
 
   return (
+    <>
     <section className="container section flex flex-col lg:flex-row gap-10 px-0 sm:px-0 md:px-0">
       {/* === Search + Tools === */}
       <div className="flex-1">
@@ -22,27 +24,17 @@ export default function Home() {
             placeholder="Search tools..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 text-[16px] rounded-full bg-white border border-gray-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full pl-11 pr-4 py-3 text-[16px] rounded-full bg-white border border-gray-200 search-input"
           />
         </div>
 
         {/* === Tools Grid === */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="tools-grid-cards">
           {toolsData.map((tool) => (
-            <Link
-              key={tool.name}
-              to={tool.link}
-              className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm transition-all duration-150 ease-[cubic-bezier(0.68,0.01,0.58,0.75)] will-change-transform hover:-translate-y-[5px] hover:shadow-lg"
-            >
-              <img
-                src={tool.icon}
-                alt={`${tool.name} icon`}
-                className="w-8 h-8 flex-shrink-0"
-              />
-              <div className="ml-3">
-                <h3 className="text-[18px] font-medium text-gray-800">
-                {tool.name}
-              </h3>
+            <Link key={tool.name} to={tool.link} className="tool-item shadow-sm">
+              <img src={tool.icon} alt={`${tool.name} icon`} className="tool-icon" />
+              <div className="ml-3 flex-1">
+                <ToolTitle className="tool-title">{tool.name}</ToolTitle>
               </div>
             </Link>
           ))}
@@ -56,7 +48,7 @@ export default function Home() {
             <div className="text-sm text-gray-400 mb-2 font-semibold">
               Cralite Tools Banner
             </div>
-            <h3 className="text-lg font-bold mb-3">Discover More Tools</h3>
+            <h3 className="text-[18px] font-medium mb-3">Discover More Tools</h3>
             <p className="text-sm text-gray-300 mb-6 leading-relaxed">
               Stay ahead in SEO, schema, and digital marketing.
               <br />New tools are coming soon.
@@ -69,5 +61,38 @@ export default function Home() {
         </div>
       </div>
     </section>
+    {/* === How To Use Steps === */}
+    <section className="section">
+      <div className="container">
+        <h2 className="text-3xl md:text-4xl font-extrabold mb-8! text-center">How to Use Cralite Free Tools</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          <div className="flex items-start gap-6">
+            <div className="flex-none text-[64px] font-extrabold text-primary leading-none">1</div>
+            <div>
+              <h3 className="text-lg font-semibold mt-1">Choose the free tool</h3>
+              <p className="mt-2 text-secondary">Choose the free tool you need to achieve your task or goal</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-6">
+            <div className="flex-none text-[64px] font-extrabold text-primary leading-none">2</div>
+            <div>
+              <h3 className="text-lg font-semibold mt-1">Enter the required info</h3>
+              <p className="mt-2 text-secondary">Enter the required info and run the tool for instant results</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-6">
+            <div className="flex-none text-[64px] font-extrabold text-primary leading-none">3</div>
+            <div>
+              <h3 className="text-lg font-semibold mt-1">Use the reports</h3>
+              <p className="mt-2 text-secondary">Use the reports and insights to scale your business</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </>
   )
 }

@@ -3,6 +3,11 @@ import Layout from "./layouts/Layout"
 import Home from "./pages/Home"
 import MetaTagGenerator from "./pages/MetaTagGenerator"
 import SchemaBuilder from "./pages/SchemaBuilder"
+import KeywordGenerator from "./pages/KeywordGenerator"
+import RobotsTxtGenerator from "./pages/RobotsTxtGenerator"
+import RobotsTxtValidator from "./pages/RobotsTxtValidator"
+import SitemapChecker from "./pages/SitemapChecker"
+import HreflangValidator from "./pages/HreflangValidator"
 
 export default function App() {
   return (
@@ -13,8 +18,8 @@ export default function App() {
           path="/"
           element={
             <Layout
-              title="Free SEO Tools"
-              subtitle="Build, test, and optimize your website with our free SEO utilities — designed to help your pages perform better and rank higher."
+              title="Free Tools to Scale Business Growth and Visibility"
+              subtitle="Check traffic and competitors, find high‑value keywords, audit on‑page and technical SEO, generate AI‑powered content, and improve AI search visibility with our powerful free tools. No sign‑up required."
               >
               <Home />
             </Layout>
@@ -26,7 +31,7 @@ export default function App() {
           path="/meta-tag-generator"
           element={
             <Layout
-              title="Meta Tag Generator"
+              title="Free Meta Tag Generator"
               subtitle="Create optimized meta title, description, and keywords for your pages. View a live Google SERP-style preview and copy clean HTML instantly."
               showBackLink={true}
             >
@@ -45,6 +50,56 @@ export default function App() {
               showBackLink={true}
             >
               <SchemaBuilder />
+            </Layout>
+          }
+        />
+
+        {/* === Keyword Generator === */}
+        <Route
+          path="/keyword-generator"
+          element={
+            <Layout title="Keyword Generator" subtitle="Generate keyword suggestions and variations." showBackLink={true}>
+              <KeywordGenerator />
+            </Layout>
+          }
+        />
+
+        {/* === Robots.txt Generator === */}
+        <Route
+          path="/robots-txt-generator"
+          element={
+            <Layout title="Free Robots.txt Generator" subtitle="Create a clean, optimized robots.txt file that guides search engines, improves crawling efficiency, and protects sensitive pages. Simple, fast, and ready to copy." showBackLink={true}>
+              <RobotsTxtGenerator />
+            </Layout>
+          }
+        />
+
+        {/* === Robots.txt Validator === */}
+        <Route
+          path="/robots-txt-validator"
+          element={
+            <Layout title="Free Robots.txt Validator" subtitle="Scan your robots.txt file, detect errors, and ensure search engines can crawl your site correctly and safely." showBackLink={true}>
+              <RobotsTxtValidator />
+            </Layout>
+          }
+        />
+
+        {/* === Sitemap Checker === */}
+        <Route
+          path="/sitemap-checker"
+          element={
+            <Layout title="Sitemap Checker" subtitle="Validate and inspect XML sitemaps." showBackLink={true}>
+              <SitemapChecker />
+            </Layout>
+          }
+        />
+
+        {/* === Hreflang Validator === */}
+        <Route
+          path="/hreflang-validator"
+          element={
+            <Layout title="Hreflang Validator" subtitle="Validate and generate hreflang link tags." showBackLink={true}>
+              <HreflangValidator />
             </Layout>
           }
         />

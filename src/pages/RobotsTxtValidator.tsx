@@ -1,8 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
 import Seo from "../components/Seo"
-import { toolsData } from "../data/toolsData"
-import type { Tool } from "../data/toolsData"
+import RelatedTools from "../components/RelatedTools"
 
 // --- FULL USER-AGENT DATABASE (cleaned) ---
 const USER_AGENTS: Record<string, { display: string; value: string }[]> = {
@@ -78,10 +76,23 @@ const USER_AGENTS: Record<string, { display: string; value: string }[]> = {
 }
 
 export default function RobotsTxtValidator(): JSX.Element {
+    // Simple inline spinner component (small and dependency-free)
+    const Spinner = ({ size = 16 }: { size?: number }) => (
+      <svg
+        className="spinner"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="10" strokeWidth="2" fill="none" stroke="currentColor" style={{ opacity: 0 }} />
+      </svg>
+    )
   const [robotsContent, setRobotsContent] = useState("")
   const [robotsUrl, setRobotsUrl] = useState("")
   const [robotsUrlError, setRobotsUrlError] = useState("")
-  const [serverFetchEndpoint, setServerFetchEndpoint] = useState("http://localhost:3001/fetch-robots")
+  const serverFetchEndpoint = "http://localhost:3001/fetch-robots"
   const [userAgent, setUserAgent] = useState("-- Generic User-Agent (* Default) --")
   const [urlToTest, setUrlToTest] = useState("/blog/post-123")
   const [validationResult, setValidationResult] = useState("")
@@ -92,8 +103,7 @@ export default function RobotsTxtValidator(): JSX.Element {
 
   // Exclude this page from its own related list. Use the tool `link` to avoid
   // mismatches if the display `name` differs (e.g. "Robots.txt Tester and Validator").
-  const related: Tool[] = toolsData.filter((tool) => tool.link !== "/robots-txt-validator")
-  const navigate = useNavigate()
+  
 
   // === Normalize URL ===
   const normalizeToRobotsUrl = useCallback((input: string): string | null => {
@@ -119,14 +129,40 @@ export default function RobotsTxtValidator(): JSX.Element {
   const fetchRobots = useCallback(async (url: string) => {
     const tryFetch = async (u: string) => {
       const res = await fetch(u, { headers: { Accept: "text/plain, */*" } })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status} when fetching ${u}`)
       return await res.text()
     }
+
+    const tried: string[] = []
+
+    // 1) try original URL
     try {
+      tried.push(url)
       return await tryFetch(url)
-    } catch {
+    } catch (err) {
+      // continue to fallbacks
+    }
+
+    // 2) if HTTPS failed, try HTTP (some sites serve robots only on http)
+    try {
+      if (/^https:\/\//i.test(url)) {
+        const httpUrl = url.replace(/^https:/i, "http:")
+        tried.push(httpUrl)
+        return await tryFetch(httpUrl)
+      }
+    } catch (err) {
+      // continue
+    }
+
+    // 3) try a public CORS proxy (best-effort)
+    try {
       const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+      tried.push(proxied)
       return await tryFetch(proxied)
+    } catch (err) {
+      // all attempts failed — include tried urls in error
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`All fetch attempts failed (${tried.join(', ')}): ${message}`)
     }
   }, [])
 
@@ -172,8 +208,11 @@ export default function RobotsTxtValidator(): JSX.Element {
 
       const text = await fetchRobots(url)
       setRobotsContent(text || "# Empty robots.txt")
-    } catch {
-      setFetchError("❌ Could not load robots.txt for that URL.")
+    } catch (err) {
+      // capture and display the detailed error from fetchRobots
+      const message = err instanceof Error ? err.message : String(err)
+      console.error("Robots fetch failed:", err)
+      setFetchError(`❌ Could not load robots.txt for that URL. ${message}`)
     } finally {
       setFetching(false)
     }
@@ -353,8 +392,13 @@ export default function RobotsTxtValidator(): JSX.Element {
                   {robotsUrlError}
                 </div>
               )}
-              {fetching && <p className="text-xs text-blue-500 mt-1">Fetching...</p>}
               {fetchError && <p className="text-xs text-red-500 mt-1">{fetchError}</p>}
+                {fetching && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Spinner size={16} />
+                    <div className="text-sm text-blue-500">Fetching robots.txt…</div>
+                  </div>
+                )}
             </div>
 
             {/* Paste Content */}
@@ -394,12 +438,20 @@ export default function RobotsTxtValidator(): JSX.Element {
 
             {/* Buttons */}
             <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mt-4">
-<button
-  onClick={handleValidate}
-  className="action-btn w-full md:w-auto" disabled={isValidating || fetching}
->
-  {isValidating || fetching ? "Processing..." : "Run Validation"}
-</button>
+            <button
+              onClick={handleValidate}
+              className="action-btn w-full md:w-auto"
+              disabled={isValidating || fetching}
+              aria-busy={isValidating || fetching}
+            >
+              {isValidating || fetching ? (
+                <span className="flex items-center">
+                  <span className="btn-spinner" aria-hidden="true" /> Processing…
+                </span>
+              ) : (
+                "Run Validation"
+              )}
+            </button>
 
               <button
                 onClick={handleClear}
@@ -413,7 +465,7 @@ export default function RobotsTxtValidator(): JSX.Element {
             <div className="tool-field mt-2">
               <h3 className="tool-section-title">Validation Result</h3>
               <div
-                className="tool-serp min-h-[80px] flex items-center justify-center text-gray-800 text-sm rounded-md border text-center px-4"
+                className="tool-serp min-h-20 flex items-center justify-center text-gray-800 text-base font-medium rounded-md border text-center px-4"
                 style={{
                   backgroundColor: resultBg || "#f9fafb",
                   transition: "background-color 0.3s ease",
@@ -426,11 +478,9 @@ export default function RobotsTxtValidator(): JSX.Element {
 
           {/* RIGHT INFO */}
           <div className="tool-preview">
-            <h3 className="tool-h2">About the Validator</h3>
-            <p className="text-sm text-gray-700 leading-relaxed mb-3">
-              Automatically fetch and test robots.txt rules for any domain. Simulate
-              how Googlebot, Bingbot, GPTBot, and other crawlers interpret your site’s
-              directives.
+            <h2 className="tool-h2">About the Validator</h2>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Automatically fetch and test robots.txt rules for any domain. Simulate how Googlebot, Bingbot, GPTBot, and other crawlers interpret your site’s directives.
             </p>
             <p className="text-sm text-gray-700 leading-relaxed">
               Supports wildcard patterns (<code>*</code>), end anchors (<code>$</code>),
@@ -440,29 +490,7 @@ export default function RobotsTxtValidator(): JSX.Element {
         </div>
       </section>
 
-      {/* RELATED TOOLS */}
-      <section className="mt-16">
-        <h2 className="mb-6">Related Tools</h2>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {related.map((tool) => (
-            <a
-              key={tool.name}
-              href={tool.link}
-              onClick={(e) => {
-                e.preventDefault()
-                navigate(tool.link)
-                setTimeout(() => window.scrollTo(0, 0), 10)
-              }}
-              className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
-            >
-              <div className="text-3xl">
-                <img src={tool.icon} alt={tool.name} className="w-8 h-8 object-contain" />
-              </div>
-              <h4 className="text-[18px] font-medium text-gray-800">{tool.name}</h4>
-            </a>
-          ))}
-        </div>
-      </section>
+      <RelatedTools exclude="/robots-txt-validator" />
     </>
   )
 }

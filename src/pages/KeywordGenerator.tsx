@@ -1,12 +1,11 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
-import { toolsData } from "../data/toolsData"
-import type { Tool } from "../data/toolsData"
+import RelatedTools from "../components/RelatedTools"
 
 // SVGs imported correctly (SVGR)
-import { ReactComponent as CopyIcon } from "../assets/icons/copy.svg"
-import { ReactComponent as DownloadIcon } from "../assets/icons/download.svg"
+import CopyIcon from "../assets/icons/copy.svg?react"
+import DownloadIcon from "../assets/icons/download.svg?react"
 
 type Intent =
   | "Informational"
@@ -23,11 +22,7 @@ export default function KeywordGenerator() {
   const [downloaded, setDownloaded] = useState(false)
   const [aiMode, setAiMode] = useState(false)
 
-  const related: Tool[] = toolsData.filter(
-    (tool) => tool.name !== "Keyword Generator"
-  )
 
-  const navigate = useNavigate()
 
   // ---- Intent Detection ----
   const classifyIntent = (kw: string): Intent => {
@@ -463,37 +458,7 @@ export default function KeywordGenerator() {
         </div>
       </section>
 
-      {/* RELATED TOOLS */}
-      <section className="mt-16">
-        <h2 className="mb-6">Related Tools</h2>
-
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {related.map((tool) => (
-            <a
-              key={tool.name}
-              href={tool.link}
-              onClick={(e) => {
-                e.preventDefault()
-                navigate(tool.link)
-                setTimeout(() => window.scrollTo(0, 0), 10)
-              }}
-              className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
-            >
-              <div className="text-3xl">
-                <img
-                  src={tool.icon}
-                  alt={tool.name}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-
-              <h4 className="text-[18px] font-medium text-gray-800">
-                {tool.name}
-              </h4>
-            </a>
-          ))}
-        </div>
-      </section>
+      <RelatedTools exclude="/keyword-generator" />
     </>
   )
 }

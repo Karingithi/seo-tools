@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
 import copyIconUrl from "../assets/icons/copy.svg?url"
 import downloadIconUrl from "../assets/icons/download.svg?url"
 import resetIconUrl from "../assets/icons/reset.svg?url"
-import type { Tool } from "../data/toolsData"
-import { toolsData } from "../data/toolsData"
+import RelatedTools from "../components/RelatedTools"
 import { ensureLeadingSlash, downloadText, copyToClipboard } from "../utils"
 
 type RobotSetting = "Same as Default" | "Allow" | "Disallow"
@@ -149,8 +147,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
     setDownloadMsgVisible(true)
   }
 
-  const related: Tool[] = toolsData.filter((t) => t.name !== "Robots.txt Generator")
-
+  
   // ---- CustomDropdown (matches MetaTagGenerator styling in tools.css) ----
   const CustomDropdown = ({
     options,
@@ -257,23 +254,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
     { value: "Disallow", label: "Disallow" },
   ]
 
-  // Tooltip wrapper component (reuse exact same structure as MetaTagGenerator)
-  const BtnWithTooltip = ({
-    children,
-    tooltip,
-    visible,
-  }: {
-    children: React.ReactNode
-    tooltip: string
-    visible?: boolean
-  }) => {
-    return (
-      <div className="toolbar-btn-wrapper">
-        <div className={`tooltip ${visible ? "visible msg-fade" : ""}`}>{tooltip}</div>
-        {children}
-      </div>
-    )
-  }
+  
 
   return (
     <>
@@ -476,27 +457,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
         </div>
       </section>
 
-      <section className="mt-16">
-        <h2 className="mb-6">Related Tools</h2>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {related.map((tool) => (
-            <Link
-              key={tool.name}
-              to={tool.link}
-              className="flex items-center gap-4 bg-white p-6 rounded-[10px] shadow-sm hover:-translate-y-[4px] hover:shadow-md transition-all duration-150"
-            >
-              <div className="text-3xl">
-  <img
-    src={tool.icon}
-    alt={tool.name}
-    className="w-8 h-8 object-contain"
-  />
-</div>
-              <h4 className="text-[18px] font-medium text-gray-800">{tool.name}</h4>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <RelatedTools exclude="/robots-txt-generator" />
     </>
   )
 }

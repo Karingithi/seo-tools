@@ -1,6 +1,7 @@
 import Header from "../components/Header"
 import Footer from "../components/Footer"
 import Hero from "../components/Hero"
+import Seo from "../components/Seo"
 import { ReactNode } from "react"
 import { useLocation } from "react-router-dom"
 
@@ -22,6 +23,11 @@ export default function Layout({
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-slate-800">
+      <Seo
+        title={title}
+        description={subtitle}
+        keywords="seo tools, free seo tools, meta tag generator, sitemap checker"
+      />
       {/* === HEADER === */}
       <Header />
 
@@ -29,8 +35,10 @@ export default function Layout({
       <Hero title={title} subtitle={subtitle} showBackLink={showBackLink} />
 
       {/* === MAIN CONTENT === */}
-      <main className="flex-grow bg-[#f8fafc] text-gray-800">
-        <div className={`container ${isHome ? "" : "py-12"}`}>{children}</div>
+      <main className="grow bg-[#f8fafc] text-gray-800">
+        <div className={`container ${isHome ? "" : "py-12"}`}>
+          {children}
+        </div>
       </main>
 
       {/* === FOOTER === */}

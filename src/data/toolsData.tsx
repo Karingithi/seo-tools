@@ -9,6 +9,7 @@ import KeywordIconUrl from "../assets/icons/keyword.svg?url"
 import SchemaIconUrl from "../assets/icons/schema.svg?url"
 import SitemapIconUrl from "../assets/icons/sitemap.svg?url"
 import HreflangIconUrl from "../assets/icons/hreflang-checker.svg?url"
+import LlmIconUrl from "../assets/icons/llms-txt.svg?url"
 
 // Type definition for each tool
 export type Tool = {
@@ -53,5 +54,10 @@ export const toolsData: Tool[] = [
     name: "Hreflang Tag Validator",
     icon: HreflangIconUrl,
     link: "/hreflang-validator",
+  },
+  {
+    name: "LLMs TXT Generator",
+    icon: LlmIconUrl,
+    link: "/llms-txt-generator",
   },
 ]
