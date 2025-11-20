@@ -8,6 +8,7 @@ import RobotsTxtGenerator from "./pages/RobotsTxtGenerator"
 import RobotsTxtValidator from "./pages/RobotsTxtValidator"
 import SitemapChecker from "./pages/SitemapChecker"
 import HreflangValidator from "./pages/HreflangValidator"
+import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
 
 export default function App() {
   return (
@@ -18,8 +19,8 @@ export default function App() {
           path="/"
           element={
             <Layout
-              title="Free Tools to Scale Business Growth and Visibility"
-              subtitle="Check traffic and competitors, find high‑value keywords, audit on‑page and technical SEO, generate AI‑powered content, and improve AI search visibility with our powerful free tools. No sign‑up required."
+              title="Free SEO Tools to Boost Visibility, Rankings, and Business Growth"
+              subtitle="Analyze your website, optimize metadata, generate clean schema, validate technical SEO files, find high value keywords, and strengthen your visibility in AI search with our powerful free tools. No sign up required."
               >
               <Home />
             </Layout>
@@ -100,6 +101,20 @@ export default function App() {
           element={
             <Layout title="Hreflang Validator" subtitle="Validate and generate hreflang link tags." showBackLink={true}>
               <HreflangValidator />
+            </Layout>
+          }
+        />
+
+        {/* === LLMs.txt Generator === */}
+        <Route
+          path="/llms-txt-generator"
+          element={
+            <Layout
+              title="LLMs.txt Generator"
+              subtitle="Make your website AI-friendly in seconds. Generate LLM.txt files that help AI models like ChatGPT, Claude, and Perplexity understand and cite your content accurately."
+              showBackLink={true}
+            >
+              <LlmsTxtGenerator />
             </Layout>
           }
         />

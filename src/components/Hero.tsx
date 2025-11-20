@@ -67,7 +67,7 @@ export default function Hero({
           <h1 className="mt-4! mb-4! text-4xl md:text-5xl font-extrabold">
           {(() => {
             const highlightPhrases = [
-              "SEO Tools",
+              "Boost Visibility, Rankings, and Business Growth",
               "Business Growth and Visibility",
               "Robots.txt File in Seconds",
               "Robots.txt Validator",

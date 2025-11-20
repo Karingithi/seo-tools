@@ -72,10 +72,9 @@
 }
 
 .tool-title {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--secondary, #070026);
-  max-width: 10rem;
 }
 
 /* Responsive grid for the Home page tool cards */
@@ -93,7 +92,7 @@
 
 @media (min-width: 1024px) {
   .tools-grid-cards {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
