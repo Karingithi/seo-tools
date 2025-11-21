@@ -6,6 +6,7 @@ import { HelmetProvider } from "react-helmet-async"
 // ✅ Import both global style layers directly
 import "./index.css"
 import "./styles/tools.css"
+import "./lib/fontawesome"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

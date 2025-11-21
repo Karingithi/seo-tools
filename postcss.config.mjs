@@ -1,4 +1,5 @@
-import tailwindcss from 'tailwindcss'
+// Use the PostCSS adapter package for Tailwind
+import tailwindcss from '@tailwindcss/postcss'
 import autoprefixer from 'autoprefixer'
 
 export default {

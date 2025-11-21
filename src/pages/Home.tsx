@@ -111,7 +111,7 @@ export default function Home() {
     const details = Array.from(document.querySelectorAll('details')) as HTMLDetailsElement[]
 
     // Initialize aria-expanded on summaries and ensure only one open
-    details.forEach((d, i) => {
+    details.forEach((d) => {
       const summary = d.querySelector('summary') as HTMLElement | null
       if (summary) summary.setAttribute('aria-expanded', d.open ? 'true' : 'false')
     })
@@ -201,7 +201,7 @@ export default function Home() {
       {/* === How To Use Steps === */}
       <section className="section">
         <div className="container">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-8! text-center">How to Use Cralite Free Tools</h2>
+          <h2 className="md:text-4xl font-extrabold mb-8! text-center">How to Use Cralite Free Tools</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <div className="flex items-start gap-6">
