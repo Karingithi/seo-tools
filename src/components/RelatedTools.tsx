@@ -19,8 +19,9 @@ export default function RelatedTools({ exclude, limit = 4 }: Props) {
   }
 
   return (
-    <section className="mt-16">
-      <h2 className="mb-8!">Related Tools</h2>
+    <section>
+      <h2 className="mb-5 text-center">Explore More Tools</h2>
+      <p className="mb-5 text-center">Discover more free tools to help you build, test, and optimize your site.</p>
       <div className="tools-grid-cards related-tools-grid">
         {related.map((tool) => (
           <Link key={tool.name} to={tool.link} className="tool-item shadow-sm" onClick={scrollToTop}>

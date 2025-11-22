@@ -2,7 +2,7 @@ import Header from "../components/Header"
 import Footer from "../components/Footer"
 import Hero from "../components/Hero"
 import Seo from "../components/Seo"
-import { ReactNode } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 
 interface LayoutProps {
@@ -21,6 +21,21 @@ export default function Layout({
   const location = useLocation()
   const isHome = location.pathname === "/"
 
+  // If any element with the `edge-to-edge` class exists in the rendered
+  // document, skip wrapping children with the central container so pages
+  // can opt into full-bleed bands (like the homepage).
+  const [domHasEdge, setDomHasEdge] = useState(false)
+  useEffect(() => {
+    if (isHome) {
+      setDomHasEdge(false)
+      return
+    }
+    const found = !!document.querySelector(".edge-to-edge")
+    setDomHasEdge(found)
+  }, [location.pathname])
+
+  const noContainer = isHome || domHasEdge
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-slate-800">
       <Seo
@@ -28,20 +43,17 @@ export default function Layout({
         description={subtitle}
         keywords="seo tools, free seo tools, meta tag generator, sitemap checker"
       />
-      {/* === HEADER === */}
+
+      {/* HEADER */}
       <Header />
 
-      {/* === HERO === */}
+      {/* HERO */}
       <Hero title={title} subtitle={subtitle} showBackLink={showBackLink} />
 
       {/* === MAIN CONTENT === */}
-      <main className="grow bg-[#f8fafc] text-gray-800">
-        <div className={`container ${isHome ? "" : "py-12"}`}>
-          {children}
-        </div>
-      </main>
+      {noContainer ? <>{children}</> : <div className="container py-12">{children}</div>}
 
-      {/* === FOOTER === */}
+      {/* FOOTER */}
       <Footer />
     </div>
   )

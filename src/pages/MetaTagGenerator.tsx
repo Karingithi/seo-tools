@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react"
 import Seo from "../components/Seo"
+import { Plus, Minus } from "lucide-react"
+import { Helmet } from "react-helmet-async"
 import { buildMetaTags } from "../utils/metaUtils"
 import RelatedTools from "../components/RelatedTools"
 
@@ -9,6 +11,63 @@ import DownloadIcon from "../assets/icons/download.svg?react"
 import ResetIcon from "../assets/icons/reset.svg?react"
 // default placeholder favicon for preview
 import DefaultFavicon from "../assets/icons/favicon.svg?url"
+
+// Structured data (FAQ JSON-LD)
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Cralite Digital",
+    url: "https://cralite.com",
+    logo: "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
+    sameAs: ["https://twitter.com/cralitedigital"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    url: "https://cralite.com",
+    name: "Cralite Free Tools",
+    publisher: { "@type": "Organization", name: "Cralite Digital" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What should I put in the page title?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Write a concise, descriptive title that reflects the page content and includes important keywords near the front.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How long should the meta description be?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Aim for under ~160 characters and keep an eye on pixel width — the preview helps you keep it focused.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "When should I set a canonical URL?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Add a canonical URL when the same content is reachable via multiple URLs to indicate the preferred version.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do Open Graph and Twitter tags need different content?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "You can reuse titles and descriptions, but tailor Open Graph images and twitter:card types for better social previews.",
+        },
+      },
+    ],
+  },
+]
 
 type DropdownKey =
   | "language"
@@ -50,6 +109,7 @@ export default function MetaTagGenerator(): JSX.Element {
 
   // === Dropdown Management ===
   const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   // === Canvas for accurate pixel measurements ===
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -461,8 +521,26 @@ export default function MetaTagGenerator(): JSX.Element {
         url="https://cralite.com/tools/meta-tag-generator"
       />
 
-      <section className="tool-section">
-        <div className="tool-grid">
+      {/* Inject structured data JSON-LD for SEO */}
+      <Helmet>
+        {structuredData.map((obj, i) => (
+          <script key={i} type="application/ld+json">
+            {JSON.stringify(obj)}
+          </script>
+        ))}
+      </Helmet>
+
+      {/* FAQ Icon Rotation (only rotate the plus icon) */}
+      <style>{`
+        details[open] summary .faq-plus {
+          transform: rotate(45deg);
+        }
+      `}</style>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <section className="tool-section">
+          <div className="tool-grid">
           {/* === LEFT FORM === */}
           <div className="tool-form" style={{ minWidth: 0 }}>
             <h2 className="tool-h2">Meta Information</h2>
@@ -807,10 +885,95 @@ export default function MetaTagGenerator(): JSX.Element {
               <code>{metaPreview}</code>
             </pre>
           </div>
+          </div>
+        </section>
         </div>
       </section>
 
-      <RelatedTools exclude="/meta-tag-generator" />
+      {/* =============================== */}
+      {/* HOW TO USE / STEPS SECTION (full-bleed) */}
+      {/* =============================== */}
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">
+            How to Use the Meta Tag Generator
+          </h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">
+            Follow these simple steps to craft and preview SEO-friendly meta tags for your pages.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                title: "1. Fill Meta Fields",
+                desc: "Enter a descriptive title and concise description — keep length and pixels in mind.",
+              },
+              {
+                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                title: "2. Validate URLs",
+                desc: "Add canonical and Open Graph URLs and correct any validation warnings.",
+              },
+              {
+                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                title: "3. Copy or Download",
+                desc: "Copy the generated meta tags or download them as a text file for your CMS.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <div className="step-icon-outer">
+                  <div className="step-icon-circle">
+                    <img src={icon} alt={title} className="step-icon-img" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =============================== */}
+      {/* FAQ SECTION */}
+      {/* =============================== */}
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+
+          {structuredData[2]?.mainEntity?.map((faq, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={openFaq === idx}>
+              <summary
+                className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setOpenFaq(openFaq === idx ? null : idx)
+                }}
+                aria-expanded={openFaq === idx}
+              >
+                <span>{faq.name}</span>
+                {openFaq === idx ? (
+                  <Minus className="w-6 h-6 text-secondary transition-transform duration-200" />
+                ) : (
+                  <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
+                )}
+              </summary>
+              <div className="pb-6 text-lg text-secondary">{faq.acceptedAnswer.text}</div>
+            </details>
+          ))}
+
+          <div className="max-w-5xl mx-auto text-center mt-6">
+            <p className="text-lg text-secondary">
+              Still stuck? <a href="https://cralite.com/contact/" className="text-primary font-normal">Contact us</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section className="section">
+        <div className="section-inner">
+          <RelatedTools exclude="/meta-tag-generator" />
+        </div>
+      </section>
     </>
   )
 }

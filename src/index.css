@@ -2,7 +2,8 @@
 @import url("./assets/fonts/fonts.css");
 
 /* ============================================
-   Base Typography, Colors & Global Styles
+   Design Tokens: Colors, Spacing, Animation
+   (Safe to keep outside layers – just variables)
    ============================================ */
 :root {
   /* Colors */
@@ -10,795 +11,845 @@
   --primary-dark: #e6b10b;
   --secondary: #070026;
   --secondary-rgb: 7, 0, 38;
-  /* Headings use UI Core typography variables so sizes and weights are centralized */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--uicore-primary-font-family, "Sofia Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-    margin: 0;
+  --secondary-rgba: rgba(7, 0, 38, 0.18);
+  --primary-rgb: 255, 197, 12;
+  --primary-rgba: rgba(255, 197, 12, 0.18);
+  --body: #0c0c0c;
+  --headline: #070026;
+  --neutral-light: #f7f7f7;
+  --green-accent: #4ade80;
+  --google-yellow: #f3b605;
+
+  /* Spacing */
+  --menu-padding: 25px;
+  --site-gutter: 1.5rem;
+
+  /* Animations */
+  --timing-fast: 0.2s;
+  --timing-medium: 0.3s;
+  --timing-chevron: 300ms;
+  --easing-smooth: cubic-bezier(0.25, 1, 0.25, 1);
+  --easing-bounce: cubic-bezier(0.68, 0.01, 0.58, 0.75);
+  --easing-ease-out: ease-out;
+
+  /* Typography tokens */
+  --crl-primary-font-family: "Sofia Pro", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --crl-text-font-family: "Sofia Pro", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --crl-headline-color: var(--headline);
+  --crl-body-color: var(--body);
+
+  --crl-typography--h1-w: 700;
+  --crl-typography--h1-h: 1.2;
+  --crl-typography--h1-t: none;
+  --crl-typography--h1-st: normal;
+  --crl-typography--h1-c: var(--crl-headline-color);
+  --crl-typography--h1-s: 48px;
+
+  --crl-typography--h2-f: var(--crl-primary-font-family);
+  --crl-typography--h2-w: 700;
+  --crl-typography--h2-h: 1.3;
+  --crl-typography--h2-t: none;
+  --crl-typography--h2-st: normal;
+  --crl-typography--h2-c: var(--crl-headline-color);
+  --crl-typography--h2-s: 36px;
+
+  --crl-typography--h3-f: var(--crl-primary-font-family);
+  --crl-typography--h3-w: 700;
+  --crl-typography--h3-h: 1.4;
+  --crl-typography--h3-t: none;
+  --crl-typography--h3-st: normal;
+  --crl-typography--h3-c: var(--crl-headline-color);
+  --crl-typography--h3-s: 32px;
+
+  --crl-typography--h4-f: var(--crl-primary-font-family);
+  --crl-typography--h4-w: 700;
+  --crl-typography--h4-h: 1.4;
+  --crl-typography--h4-t: none;
+  --crl-typography--h4-st: normal;
+  --crl-typography--h4-c: var(--crl-headline-color);
+  --crl-typography--h4-s: 24px;
+
+  --crl-typography--h5-f: var(--crl-primary-font-family);
+  --crl-typography--h5-w: 700;
+  --crl-typography--h5-h: 1.5;
+  --crl-typography--h5-t: none;
+  --crl-typography--h5-st: normal;
+  --crl-typography--h5-c: var(--crl-headline-color);
+  --crl-typography--h5-s: 20px;
+
+  --crl-typography--h6-f: var(--crl-primary-font-family);
+  --crl-typography--h6-w: 700;
+  --crl-typography--h6-h: 1.5;
+  --crl-typography--h6-t: none;
+  --crl-typography--h6-st: normal;
+  --crl-typography--h6-c: var(--crl-headline-color);
+  --crl-typography--h6-s: 18px;
+
+  --crl-typography--p-f: var(--crl-text-font-family);
+  --crl-typography--p-w: normal;
+  --crl-typography--p-h: 1.6;
+  --crl-typography--p-t: none;
+  --crl-typography--p-st: normal;
+  --crl-typography--p-c: var(--crl-body-color);
+  --crl-typography--p-s: 18px;
+}
+
+/* Responsive typography token adjustments */
+@media (max-width: 1024px) {
+  :root {
+    --crl-typography--h1-s: 40px;
+    --crl-typography--h2-s: 30px;
+    --crl-typography--h3-s: 28px;
+    --crl-typography--h4-s: 22px;
+    --crl-typography--h5-s: 18px;
+    --crl-typography--h6-s: 16px;
+    --crl-typography--p-s: 17px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --crl-typography--h1-s: 32px;
+    --crl-typography--h2-s: 26px;
+    --crl-typography--h3-s: 24px;
+    --crl-typography--h4-s: 20px;
+    --crl-typography--h5-s: 16px;
+    --crl-typography--h6-s: 16px;
+    --crl-typography--p-s: 17px;
+  }
+}
+
+/* ============================================
+   BASE LAYER
+   Global element defaults, typography, links,
+   focus rings (Tailwind utilities override these)
+   ============================================ */
+@layer base {
+  body {
+    background-color: var(--neutral-light);
+    color: var(--body);
+    font-family: "Sofia Pro", system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
   }
 
+  /* Headings – keep sensible defaults, but let Tailwind control sizes if used */
   h1 {
-    font-weight: var(--uicore-typography--h1-w, 700);
-    line-height: var(--uicore-typography--h1-h, 1.2);
-    color: var(--uicore-typography--h1-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h1-s, 48px);
+    font-family: var(--crl-primary-font-family);
+    font-weight: var(--crl-typography--h1-w);
+    line-height: var(--crl-typography--h1-h);
+    font-style: var(--crl-typography--h1-st);
+    color: var(--crl-typography--h1-c);
+    font-size: var(--crl-typography--h1-s);
   }
 
   h2 {
-    font-family: var(--uicore-typography--h2-f, var(--uicore-primary-font-family));
-    font-weight: var(--uicore-typography--h2-w, 700);
-    line-height: var(--uicore-typography--h2-h, 1.3);
-    color: var(--uicore-typography--h2-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h2-s, 36px);
+    font-family: var(--crl-typography--h2-f);
+    font-weight: var(--crl-typography--h2-w);
+    line-height: var(--crl-typography--h2-h);
+    font-style: var(--crl-typography--h2-st);
+    color: var(--crl-typography--h2-c);
+    font-size: var(--crl-typography--h2-s);
   }
 
   h3 {
-    font-family: var(--uicore-typography--h3-f, var(--uicore-primary-font-family));
-    font-weight: var(--uicore-typography--h3-w, 700);
-    line-height: var(--uicore-typography--h3-h, 1.4);
-    color: var(--uicore-typography--h3-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h3-s, 32px);
+    font-family: var(--crl-typography--h3-f);
+    font-weight: var(--crl-typography--h3-w);
+    line-height: var(--crl-typography--h3-h);
+    font-style: var(--crl-typography--h3-st);
+    color: var(--crl-typography--h3-c);
+    font-size: var(--crl-typography--h3-s);
   }
 
   h4 {
-    font-family: var(--uicore-typography--h4-f, var(--uicore-primary-font-family));
-    font-weight: var(--uicore-typography--h4-w, 700);
-    line-height: var(--uicore-typography--h4-h, 1.4);
-    color: var(--uicore-typography--h4-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h4-s, 24px);
+    font-family: var(--crl-typography--h4-f);
+    font-weight: var(--crl-typography--h4-w);
+    line-height: var(--crl-typography--h4-h);
+    font-style: var(--crl-typography--h4-st);
+    color: var(--crl-typography--h4-c);
+    font-size: var(--crl-typography--h4-s);
   }
 
   h5 {
-    font-family: var(--uicore-typography--h5-f, var(--uicore-primary-font-family));
-    font-weight: var(--uicore-typography--h5-w, 700);
-    line-height: var(--uicore-typography--h5-h, 1.5);
-    color: var(--uicore-typography--h5-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h5-s, 20px);
+    font-family: var(--crl-typography--h5-f);
+    font-weight: var(--crl-typography--h5-w);
+    line-height: var(--crl-typography--h5-h);
+    font-style: var(--crl-typography--h5-st);
+    color: var(--crl-typography--h5-c);
+    font-size: var(--crl-typography--h5-s);
   }
 
   h6 {
-    font-family: var(--uicore-typography--h6-f, var(--uicore-primary-font-family));
-    font-weight: var(--uicore-typography--h6-w, 700);
-    line-height: var(--uicore-typography--h6-h, 1.5);
-    color: var(--uicore-typography--h6-c, var(--uicore-headline-color));
-    font-size: var(--uicore-typography--h6-s, 18px);
+    font-family: var(--crl-typography--h6-f);
+    font-weight: var(--crl-typography--h6-w);
+    line-height: var(--crl-typography--h6-h);
+    font-style: var(--crl-typography--h6-st);
+    color: var(--crl-typography--h6-c);
+    font-size: var(--crl-typography--h6-s);
     text-transform: none;
-    letter-spacing: normal;
+    letter-spacing: 0.02em;
   }
-      --uicore-typography--p-s: 17px;
+
+  /* Paragraphs & links */
+  p {
+    color: var(--crl-typography--p-c);
+    font-size: var(--crl-typography--p-s);
+    line-height: var(--crl-typography--p-h);
+    margin: 0 0 1rem;
+  }
+
+  footer p {
+    color: #ffffff;
+  }
+
+  footer h3 {
+    color: #ffffff;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    footer h3 {
+      margin-bottom: 10px;
     }
   }
 
-/* --- Global Body --- */
-body {
-  background-color: var(--neutral-light);
-  color: var(--body);
-  font-family: "Sofia Pro", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* Global smooth scrolling for internal anchors and programmatic scrolls */
-html {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Respect users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
-/* --- Headings --- */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Sofia Pro", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  font-weight: 700;
-  color: var(--headline);
-  margin: 0;
-}
-
-/* H1: 32 / 40 / 48 */
-h1 {
-  line-height: 1.2;
-  font-size: 32px;
-}
-
-@media (min-width: 640px) {
-  h1 {
-    font-size: 40px;
-  }
-}
-
-@media (min-width: 1024px) {
-  h1 {
-    font-size: 48px;
-  }
-}
-
-/* H2: 24 / 26 / 28 */
-h2 {
-  line-height: 1.3;
-  font-size: 24px;
-}
-
-@media (min-width: 640px) {
-  h2 {
-    font-size: 26px;
-  }
-}
-
-@media (min-width: 1024px) {
-  h2 {
-    font-size: 36px;
-  }
-}
-
-/* H3: 20 / 22 / 24 */
-h3 {
-  line-height: 1.3;
-  font-size: 20px;
-}
-
-@media (min-width: 640px) {
-  h3 {
-    font-size: 22px;
-  }
-}
-
-@media (min-width: 1024px) {
-  h3 {
-    font-size: 24px;
-  }
-}
-
-/* H4: 18 / 20 / 22 */
-h4 {
-  line-height: 1.4;
-  font-size: 18px;
-}
-
-@media (min-width: 640px) {
-  h4 {
-    font-size: 20px;
-  }
-}
-
-@media (min-width: 1024px) {
-  h4 {
-    font-size: 22px;
-  }
-}
-
-/* H5: 16 / 18 */
-h5 {
-  line-height: 1.5;
-  font-size: 16px;
-}
-
-@media (min-width: 640px) {
-  h5 {
-    font-size: 18px;
-  }
-}
-
-/* H6: 14, uppercase, wide tracking */
-h6 {
-  line-height: 1.5;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-/* --- Paragraphs & Links --- */
-p {
-  color: var(--body);
-  font-size: 18px;
-  line-height: 1.6;
-  margin: 0 0 1rem;
-}
-footer p {
-  color: #ffffff;
-}
-footer h3 {
-  color: #ffffff;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 1024px) {
-  footer h3 {
-    margin-bottom: 10px;
-  }
-}
-
-footer a {
+  footer a {
     color: #ffffff;
+  }
 
-}
-
-footer a:hover {
+  footer a:hover {
     color: var(--primary);
+  }
 
-}
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 150ms;
+  }
 
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: color 150ms;
-}
+  a:hover {
+    color: var(--primary-dark);
+  }
 
-a:hover {
-  color: var(--primary-dark);
-}
+  strong {
+    font-weight: 600;
+    color: var(--headline);
+  }
 
-strong {
-  font-weight: 600;
-  color: var(--headline);
+  /* Global focus ring for form controls
+     (Tailwind ring utilities will override this if used) */
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select,
+  [contenteditable="true"],
+  .tool-input,
+  .tool-textarea,
+  .tool-select,
+  .search-input,
+  .custom-select-trigger {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  input[type="text"]:focus,
+  input[type="search"]:focus,
+  input[type="email"]:focus,
+  input[type="url"]:focus,
+  input[type="tel"]:focus,
+  input[type="number"]:focus,
+  textarea:focus,
+  select:focus,
+  [contenteditable="true"]:focus,
+  .tool-input:focus,
+  .tool-textarea:focus,
+  .tool-select:focus,
+  .search-input:focus,
+  .custom-select-trigger:focus {
+    outline: none;
+    border-color: var(--primary, #ffc50c);
+    box-shadow: 0 0 0 3px var(--primary-rgba);
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [contenteditable="true"]:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-rgba);
+  }
 }
 
 /* ============================================
-   Layout & Generic Components
+   COMPONENTS LAYER
+   Reusable chunks, structural classes,
+   3rd-party overrides, nav, buttons, etc.
    ============================================ */
-
-/* Container */
-.container {
-  max-width: 1240px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+@layer components {
+  /* Social icon utilities */
+ .social-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    color: #ffffff;
   }
 
-@media (max-width: 1024px) {
-  .container {
-  padding-left: 1rem;
-  padding-right: 1rem;
+  .social-link {
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 150ms ease;
   }
-}
-  
-.container.section {
-  padding-left: 0;
-  padding-right: 0;
-}
 
-@media (min-width: 640px) {
-  .container.section {
-    padding-left: 0;
-    padding-right: 0;
+  .social-link:hover {
+    color: var(--primary);
   }
-}
 
-/* Section Spacing */
-.section {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
-}
+  .social-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
 
-@media (min-width: 768px) {
-  .section {
+  .social-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .social-icon path,
+  .social-icon circle,
+  .social-icon rect {
+    fill: currentColor;
+    stroke: currentColor;
+  }
+
+  /* Layout helpers */
+    .section {
+    width: 100%;
     padding-top: 5rem;
     padding-bottom: 5rem;
   }
-}
 
-/* Buttons */
-.btn {
-  font-size: 16px;
-  font-weight: 400;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14.4px 26px;
-  transition: all var(--timing-fast) var(--easing-bounce);
-  transform: translateY(0);
-  border: none;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.btn:hover {
-  transform: translateY(-6px);
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: var(--secondary);
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-dark);
-}
-
-.btn-outline {
-  background-color: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
-}
-
-.btn-outline:hover {
-  background-color: var(--primary);
-  color: var(--secondary);
-}
-
-/* Tooltips */
-.tooltip {
-  position: absolute;
-  font-size: 12px;
-  background-color: #374151;
-  color: #ffffff;
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-4px);
-  transition: opacity var(--timing-fast) ease,
-    transform var(--timing-fast) ease;
-}
-
-.tooltip.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Toolbar Buttons */
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.toolbar-btn:hover {
-  transform: scale(1.05);
-}
-
-.toolbar-btn--blue {
-  background-color: #3b82f6;
-  color: #ffffff;
-}
-
-.toolbar-btn--blue:hover {
-  background-color: #2563eb;
-}
-
-.toolbar-btn--green {
-  background-color: #22c55e;
-  color: #ffffff;
-}
-
-.toolbar-btn--green:hover {
-  background-color: #16a34a;
-}
-
-.toolbar-btn--red {
-  background-color: #ef4444;
-  color: #ffffff;
-}
-
-.toolbar-btn--red:hover {
-  background-color: #dc2626;
-}
-
-/* ============================================
-   Header Navigation & Dropdown
-   ============================================ */
-
-@media (min-width: 1025px) {
-  header button[aria-label="Toggle menu"] {
-    display: none !important;
+  /* Background variants */
+  .section--white {
+    background-color: #ffffff;
   }
 
-  header nav[aria-label="Main"] {
-    display: flex !important;
+  .section--gray {
+    background-color: #f8f9fa;
+  }
+
+  .section--neutral {
+    background-color: var(--neutral-light, #f7f7f7);
+  }
+
+  /* Centered inner max-width container */
+  .section-inner {
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--site-gutter);
+    padding-right: var(--site-gutter);
+  }
+  @media (max-width: 1024px) {
+    .section-inner {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    }
+}
+
+  /* How-it-works step icon styles (layered circles) */
+  .step-icon-outer {
+    width: 72px;
+    height: 72px;
+    border-radius: 9999px;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    background-color: #ffeeb6; /* outer ring */
+    margin: 0 auto 1rem;
+  }
+
+  .step-icon-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffc50c; /* icon background */
+    border: 10px solid #FFEEB6; /* inner border (creates ring look) */
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .step-icon-img {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  /* Optional: full-bleed breakout utility */
+  .edge-to-edge {
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    /* Use a scroll-safe width calculation to avoid horizontal scroll when a
+       vertical scrollbar is present (100vw includes the scrollbar width). */
+    width: calc(100vw - (100vw - 100%));
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .section {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+    }
+  }
+  /* Buttons – you can slowly migrate to pure Tailwind,
+     but these keep legacy .btn markup working */
+  .btn {
+    font-size: 16px;
+    font-weight: 400;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14.4px 26px;
+    transition: all var(--timing-fast) var(--easing-bounce);
+    transform: translateY(0);
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .btn:hover {
+    transform: translateY(-6px);
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--secondary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+  }
+
+  .btn-outline:hover {
+    background-color: var(--primary);
+    color: var(--secondary);
+  }
+
+  /* Tooltips */
+  .tooltip {
+    position: absolute;
+    font-size: 12px;
+    background-color: #374151;
+    color: #ffffff;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity var(--timing-fast) ease,
+      transform var(--timing-fast) ease;
+  }
+
+  .tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Toolbar Buttons */
+  .toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .toolbar-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .toolbar-btn--blue {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
+
+  .toolbar-btn--blue:hover {
+    background-color: #2563eb;
+  }
+
+  .toolbar-btn--green {
+    background-color: #22c55e;
+    color: #ffffff;
+  }
+
+  .toolbar-btn--green:hover {
+    background-color: #16a34a;
+  }
+
+  .toolbar-btn--red {
+    background-color: #ef4444;
+    color: #ffffff;
+  }
+
+  .toolbar-btn--red:hover {
+    background-color: #dc2626;
+  }
+
+  /* Header Navigation & Dropdown (desktop helpers) */
+  @media (min-width: 1025px) {
+    header button[aria-label="Toggle menu"] {
+      display: none !important;
+    }
+
+    header nav[aria-label="Main"] {
+      display: flex !important;
+      align-items: center;
+    }
+
+    .mobile-menu-overlay {
+      display: none !important;
+    }
+
+    header a[href*="cralite.com/contact"].btn {
+      display: inline-block !important;
+    }
   }
 
   .mobile-menu-overlay {
-    display: none !important;
+    animation: fade-in var(--timing-medium) var(--easing-ease-out);
   }
 
-  header a[href*="cralite.com/contact"].btn {
-    display: inline-block !important;
+  .mobile-menu-item {
+    cursor: pointer;
+    padding: 15px 10px;
+    transition: opacity var(--timing-fast) ease;
   }
-}
 
-.mobile-menu-overlay {
-  animation: fade-in var(--timing-medium) var(--easing-ease-out);
-}
-
-.mobile-menu-item {
-  cursor: pointer;
-  padding: 15px 10px;
-  transition: opacity var(--timing-fast) ease;
-}
-
-.mobile-menu-item:active {
-  opacity: 0.7;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
+  .mobile-menu-item:active {
+    opacity: 0.7;
   }
-  to {
-    opacity: 1;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-}
 
-.nav-dropdown-wrapper {
-  position: relative;
-}
+  .nav-dropdown-wrapper {
+    position: relative;
+  }
 
-.nav-dropdown-wrapper::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  height: 8px;
-  pointer-events: auto;
-}
+  .nav-dropdown-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    pointer-events: auto;
+  }
 
-.nav-dropdown-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #ffffff;
-  padding: 6px calc(var(--menu-padding) * 0.6);
-  font-size: 17px;
-  font-weight: 400;
-}
-
-@media (min-width: 1200px) {
   .nav-dropdown-button {
-    padding-left: var(--menu-padding);
-    padding-right: var(--menu-padding);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ffffff;
+    padding: 6px calc(var(--menu-padding) * 0.6);
+    font-size: 17px;
+    font-weight: 400;
   }
-}
 
-.nav-dropdown-button:focus {
-  outline: none;
-}
+  @media (min-width: 1200px) {
+    .nav-dropdown-button {
+      padding-left: var(--menu-padding);
+      padding-right: var(--menu-padding);
+    }
+  }
 
-.nav-dropdown-chevron {
-  width: 17px;
-  height: 17px;
-  transform: translateY(1px);
-  transition: transform var(--timing-chevron) var(--easing-smooth);
-}
+  .nav-dropdown-button:focus {
+    outline: none;
+  }
 
-.nav-dropdown-wrapper:hover .nav-dropdown-chevron,
-.nav-dropdown-wrapper:focus-within .nav-dropdown-chevron {
-  transform: translateY(1px) rotate(180deg);
-}
-
-@media (min-width: 1025px) {
   .nav-dropdown-chevron {
-    transform: translateY(-1px);
+    width: 17px;
+    height: 17px;
+    transform: translateY(1px);
+    transition: transform var(--timing-chevron) var(--easing-smooth);
   }
 
   .nav-dropdown-wrapper:hover .nav-dropdown-chevron,
   .nav-dropdown-wrapper:focus-within .nav-dropdown-chevron {
-    transform: translateY(-1px) rotate(180deg);
+    transform: translateY(1px) rotate(180deg);
   }
-}
 
-.nav-dropdown-panel {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
-  min-width: 210px;
-  border-radius: 0.5rem;
-  background-color: #ffffff;
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-  padding: 8px 0;
-  z-index: 9999999;
-  transform-origin: top;
-  opacity: 0;
-  transform: translateY(8px);
-  animation: dropdown-fade-in 200ms ease-out forwards;
-}
+  @media (min-width: 1025px) {
+    .nav-dropdown-chevron {
+      transform: translateY(-1px);
+    }
 
-@keyframes dropdown-fade-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    .nav-dropdown-wrapper:hover .nav-dropdown-chevron,
+    .nav-dropdown-wrapper:focus-within .nav-dropdown-chevron {
+      transform: translateY(-1px) rotate(180deg);
+    }
   }
-}
 
-.nav-dropdown-item {
-  display: block;
-  padding: 8px 15px;
-  border-radius: 0.25rem;
-  color: var(--secondary);
-  font-size: 17px;
-  font-weight: 400;
-  line-height: 1;
-  transition: transform var(--timing-fast) ease,
-    color var(--timing-fast) ease;
-}
+  .nav-dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    min-width: 210px;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    padding: 8px 0;
+    z-index: 9999999;
+    transform-origin: top;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: dropdown-fade-in 200ms ease-out forwards;
+  }
 
-@media (min-width: 1200px) {
+  @keyframes dropdown-fade-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .nav-dropdown-item {
-    padding-left: calc(var(--menu-padding) * 0.75);
-    padding-right: calc(var(--menu-padding) * 0.75);
+    display: block;
+    padding: 8px 15px;
+    border-radius: 0.25rem;
+    color: var(--secondary);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1;
+    transition: transform var(--timing-fast) ease,
+      color var(--timing-fast) ease;
   }
-}
 
-@media (min-width: 1300px) {
-  .nav-dropdown-item {
-    padding-left: var(--menu-padding);
-    padding-right: var(--menu-padding);
+  @media (min-width: 1200px) {
+    .nav-dropdown-item {
+      padding-left: calc(var(--menu-padding) * 0.75);
+      padding-right: calc(var(--menu-padding) * 0.75);
+    }
   }
-}
 
-.nav-dropdown-item:hover {
-  color: var(--primary);
-}
+  @media (min-width: 1300px) {
+    .nav-dropdown-item {
+      padding-left: var(--menu-padding);
+      padding-right: var(--menu-padding);
+    }
+  }
 
-.nav-dropdown-item:focus {
-  outline: none;
-}
+  .nav-dropdown-item:hover {
+    color: var(--primary);
+  }
 
-.nav-dropdown-panel.animate .nav-dropdown-item {
-  opacity: 0;
-  transform: translateY(8px);
-  animation: item-fade-up var(--timing-fast) var(--easing-ease-out) forwards;
-}
+  .nav-dropdown-item:focus {
+    outline: none;
+  }
 
-.nav-dropdown-panel.animate .nav-dropdown-item:nth-child(1) {
-  animation-delay: 40ms;
-}
+  .nav-dropdown-panel.animate .nav-dropdown-item {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: item-fade-up var(--timing-fast) var(--easing-ease-out) forwards;
+  }
 
-.nav-dropdown-panel.animate .nav-dropdown-item:nth-child(2) {
-  animation-delay: 80ms;
-}
+  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(1) {
+    animation-delay: 40ms;
+  }
 
-.nav-dropdown-panel.animate .nav-dropdown-item:nth-child(3) {
-  animation-delay: 120ms;
-}
+  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(2) {
+    animation-delay: 80ms;
+  }
 
-@keyframes item-fade-up {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  @keyframes item-fade-up {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* DayPicker overrides */
+  .rdp {
+    font-size: 13px;
+    min-width: 340px;
+  }
+
+  .rdp-caption {
+    font-size: 13px;
+  }
+
+  .rdp-caption_label {
+    font-size: 16px;
+  }
+
+  .rdp-weekday {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .rdp-nav button {
+    color: var(--primary);
+    padding: 4px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .rdp-nav button svg {
+    width: 14px;
+    height: 14px;
+    fill: var(--primary);
+  }
+
+  .rdp-chevron {
+    fill: var(--primary);
+  }
+
+  .rdp-day {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .rdp-day_button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .rdp-today:not(.rdp-outside) {
+    background-color: var(--primary);
+    color: var(--secondary);
+    border-color: transparent;
+    font-weight: 600;
+  }
+
+  .rdp-day_selected {
+    background-color: var(--primary);
+    color: var(--secondary);
+  }
+
+  .rdp-wrapper {
+    box-shadow: 0 8px 24px rgba(12, 12, 12, 0.08);
+    border-radius: 8px;
+  }
+
+  /* Code preview font override */
+  .tool-code,
+  .tool-code pre,
+  .tool-code code {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
+      "Segoe UI Mono", monospace !important;
+  }
+
+  /* FAQ & about meta titles */
+  .faq-title,
+  .about-meta-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--headline);
+    margin-bottom: 1.5rem;
+  }
+
+  .faq-section p {
+    line-height: 1.625;
+    color: var(--body);
   }
 }
 
 /* ============================================
-   DayPicker Overrides
+   UTILITIES LAYER
+   Small one-off helpers that behave like
+   Tailwind utilities.
    ============================================ */
+@layer utilities {
+    .container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1240px;
+      padding-left: var(--site-gutter);
+      padding-right: var(--site-gutter);
+  }
 
-.rdp {
-  font-size: 13px;
-  min-width: 340px;
-}
+  @media (max-width: 1024px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+  }
 
-.rdp-caption {
-  font-size: 13px;
-}
+  .text-balance {
+    text-wrap: balance;
+  }
 
-.rdp-caption_label {
-  font-size: 16px;
-}
+  .shadow-soft {
+    box-shadow: 0 4px 10px rgba(12, 12, 12, 0.04);
+  }
 
-.rdp-weekday {
-  font-size: 0.875rem;
-  font-weight: 600;
-}
+  .shadow-medium {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 
-.rdp-nav button {
-  color: var(--primary);
-  padding: 4px;
-  width: 28px;
-  height: 28px;
-}
+  /* Override/define shadow-sm to the requested appearance */
+  .shadow-sm {
+    --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)),
+      0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+      var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
 
-.rdp-nav button svg {
-  width: 14px;
-  height: 14px;
-  fill: var(--primary);
-}
+  .text-primary {
+    color: var(--primary);
+  }
 
-.rdp-chevron {
-  fill: var(--primary);
-}
+  .bg-secondary {
+    background-color: var(--secondary) !important;
+  }
 
-.rdp-day {
-  font-size: 12px;
-  padding: 6px;
-}
+  .text-secondary {
+    color: var(--secondary) !important;
+  }
 
-.rdp-day_button {
-  width: 30px;
-  height: 30px;
-}
-
-.rdp-today:not(.rdp-outside) {
-  background-color: var(--primary);
-  color: var(--secondary);
-  border-color: transparent;
-  font-weight: 600;
-}
-
-.rdp-day_selected {
-  background-color: var(--primary);
-  color: var(--secondary);
-}
-
-.rdp-wrapper {
-  box-shadow: 0 8px 24px rgba(12, 12, 12, 0.08);
-  border-radius: 8px;
-}
-
-/* Text helper */
-.text-primary {
-  color: var(--primary);
-}
-
-/* Secondary color utilities (convenience helpers) */
-.bg-secondary {
-  background-color: var(--secondary) !important;
-}
-
-.text-secondary {
-  color: var(--secondary) !important;
-}
-
-.border-secondary {
-  border-color: var(--secondary) !important;
-}
-
-/* Code preview font override */
-.tool-code,
-.tool-code pre,
-.tool-code code {
-  font-size: 13px !important;
-  line-height: 1.4 !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
-    "Segoe UI Mono", monospace !important;
-}
-
-/* FAQ & about meta titles */
-.faq-title,
-.about-meta-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--headline);
-  margin-bottom: 1.5rem;
-}
-
-.faq-section p {
-  line-height: 1.625;
-  color: var(--body);
-}
-
-/* ============================================
-   Custom Utilities
-   ============================================ */
-
-.text-balance {
-  text-wrap: balance;
-}
-
-.shadow-soft {
-  box-shadow: 0 4px 10px rgba(12, 12, 12, 0.04);
-}
-
-.shadow-medium {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* Override/define shadow-sm to the requested appearance so components
-   using `shadow-sm` will get a slightly stronger soft shadow. */
-.shadow-sm {
-  --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
-  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-/* ============================================
-   Global focus ring for form controls
-   Uses the same yellow primary ring as the homepage search input
-   Applies to common text-like controls and custom tool controls
-   ============================================ */
-input[type="text"],
-input[type="search"],
-input[type="email"],
-input[type="url"],
-input[type="tel"],
-input[type="number"],
-textarea,
-select,
-[contenteditable="true"],
-.tool-input,
-.tool-textarea,
-.tool-select,
-.search-input,
-.custom-select-trigger {
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-input[type="text"]:focus,
-input[type="search"]:focus,
-input[type="email"]:focus,
-input[type="url"]:focus,
-input[type="tel"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus,
-[contenteditable="true"]:focus,
-.tool-input:focus,
-.tool-textarea:focus,
-.tool-select:focus,
-.search-input:focus,
-.custom-select-trigger:focus {
-  outline: none;
-  border-color: var(--primary, #ffc50c);
-  box-shadow: 0 0 0 3px var(--primary-rgba);
-}
-
-/* Prefer keyboard focus-visible when available */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
-[contenteditable="true"]:focus-visible {
-  box-shadow: 0 0 0 3px var(--primary-rgba);
-}
-
-/* Social icon utilities - centralize styling for footer/social icons */
-.social-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
-  align-items: center;
-  color: #ffffff;
-}
-
-.social-link {
-  color: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 150ms ease;
-}
-
-.social-link:hover {
-  color: var(--primary);
-}
-
-.social-icon {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-
-.social-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.social-icon path,
-.social-icon circle,
-.social-icon rect {
-  fill: currentColor;
-  stroke: currentColor;
+  .border-secondary {
+    border-color: var(--secondary) !important;
+  }
 }
