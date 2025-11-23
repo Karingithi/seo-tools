@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { Plus, Minus } from "lucide-react"
 import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
+import { Helmet } from "react-helmet-async"
 import RelatedTools from "../components/RelatedTools"
 
 // SVGs imported correctly (SVGR)
@@ -21,6 +23,7 @@ export default function KeywordGenerator() {
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [aiMode, setAiMode] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
 
 
@@ -256,6 +259,37 @@ export default function KeywordGenerator() {
     setTimeout(() => setDownloaded(false), 1500)
   }
 
+  // Shared FAQ items for this page
+  const FAQ_ITEMS = [
+    {
+      q: "How do I choose a good seed keyword?",
+      a: "Start with a concise topic or product name (1-3 words). Prefer terms that reflect user intent and relevancy to your content.",
+    },
+    {
+      q: "What does AI mode do?",
+      a: "AI mode expands your seed term into semantically-related phrases, local variants, and contextual modifiers to surface long-tail opportunities.",
+    },
+    {
+      q: "How should I use the exported CSV?",
+      a: "Import the CSV into your spreadsheet or keyword tool to prioritize by intent, search volume, or to plan content clusters.",
+    },
+    {
+      q: "Can I use this for local SEO?",
+      a: "Yes — intent detection highlights local queries and AI expansion includes 'near me' and city-specific variants when relevant.",
+    },
+  ]
+
+  // Build JSON-LD for FAQ using the same source of truth
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map((it) => ({
+      "@type": "Question",
+      name: it.q,
+      acceptedAnswer: { "@type": "Answer", text: it.a },
+    })),
+  }
+
   return (
     <>
       <Seo
@@ -264,7 +298,31 @@ export default function KeywordGenerator() {
         keywords="keyword generator, AI keyword tool, seo tools"
         url="https://cralite.com/tools/keyword-generator"
       />
-
+      {/* Inject structured data JSON-LD for SEO (Organization, WebSite, FAQ) */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Cralite Digital",
+            url: "https://cralite.com",
+            logo: "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
+            sameAs: ["https://twitter.com/cralitedigital"],
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            url: "https://cralite.com",
+            name: "Cralite Free Tools",
+            publisher: { "@type": "Organization", name: "Cralite Digital" },
+          })}
+        </script>
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Helmet>
+      <section className="section section--neutral">
+      <div className="section-inner">
       <section className="tool-section keyword-generator">
         <div className="tool-grid">
 
@@ -457,8 +515,90 @@ export default function KeywordGenerator() {
           </div>
         </div>
       </section>
+      </div>
+  </section>
 
-      <RelatedTools exclude="/keyword-generator" />
+      {/* =============================== */}
+      {/* HOW TO USE / STEPS SECTION */}
+      {/* =============================== */}
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Keyword Generator</h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Enter a seed keyword, optionally enable AI expansion, then generate and export keyword lists for planning content and SEO campaigns.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                title: "1. Enter Seed",
+                desc: "Type a concise topic or keyword to start — keep it short and specific.",
+              },
+              {
+                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                title: "2. Toggle AI Mode",
+                desc: "Enable AI expansion to surface semantic variations and long-tail ideas.",
+              },
+              {
+                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                title: "3. Generate & Export",
+                desc: "Generate suggestions, then copy or export CSV to use in your workflow.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <div className="step-icon-outer">
+                  <div className="step-icon-circle">
+                    <img src={icon} alt={title} className="step-icon-img" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =============================== */}
+      {/* FAQ SECTION */}
+      {/* =============================== */}
+      <style>{`details[open] summary .faq-plus { transform: rotate(45deg); }`}</style>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+
+          {FAQ_ITEMS.map((item, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={openFaq === idx}>
+              <summary
+                className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setOpenFaq(openFaq === idx ? null : idx)
+                }}
+                aria-expanded={openFaq === idx}
+              >
+                <span>{item.q}</span>
+                {openFaq === idx ? (
+                  <Minus className="w-6 h-6 text-secondary transition-transform duration-200" />
+                ) : (
+                  <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
+                )}
+              </summary>
+              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+            </details>
+          ))}
+
+          <div className="max-w-5xl mx-auto text-center mt-6">
+            <p className="text-lg text-secondary">Still stuck? <a href="https://cralite.com/contact/" className="text-primary font-normal">Contact us</a>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-inner">
+          <RelatedTools exclude="/keyword-generator" />
+        </div>
+      </section>
     </>
   )
 }

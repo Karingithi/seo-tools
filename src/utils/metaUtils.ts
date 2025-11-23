@@ -52,7 +52,12 @@ export function buildMetaTags({
 }: MetaOptions): string {
   const lines: string[] = []
   lines.push("<!-- === Generated Meta Tags === -->")
-  lines.push(`<html lang="${escapeHtml(language)}">`)
+  // Only include the lang attribute when a non-empty language is provided.
+  if (language && language.trim()) {
+    lines.push(`<html lang="${escapeHtml(language.trim())}">`)
+  } else {
+    lines.push(`<html>`) // no lang attribute
+  }
   lines.push("<head>")
 
   if (title?.trim()) {

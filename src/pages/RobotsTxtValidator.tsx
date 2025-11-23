@@ -1,5 +1,7 @@
 import { useCallback, useState, useRef, useEffect } from "react"
+import { Plus, Minus } from "lucide-react"
 import Seo from "../components/Seo"
+import { Helmet } from "react-helmet-async"
 import RelatedTools from "../components/RelatedTools"
 
 // --- FULL USER-AGENT DATABASE (cleaned) ---
@@ -75,6 +77,26 @@ const USER_AGENTS: Record<string, { display: string; value: string }[]> = {
   ],
 }
 
+// Shared FAQ items used for UI and JSON-LD
+const FAQ_ITEMS = [
+  {
+    q: "How do I fetch robots.txt for a domain?",
+    a: "Enter the domain or full robots.txt URL in the Fetch field, then blur the field to auto-fetch. The tool will try server-side, HTTPS/HTTP fallbacks, and a public proxy.",
+  },
+  {
+    q: "What if my site blocks public proxies?",
+    a: "Use a server-side fetch endpoint (see the commented snippet in the tool) to avoid CORS and proxy restrictions.",
+  },
+  {
+    q: "Does this check indexing or crawling?",
+    a: "This validator checks crawling rules from robots.txt (Allow/Disallow). To control indexing, use meta robots tags or x-robots-tag headers.",
+  },
+  {
+    q: "Can I test custom bots?",
+    a: "Yes — choose from many common User-Agents or paste a custom one in the field to simulate different crawlers.",
+  },
+]
+
 export default function RobotsTxtValidator(): JSX.Element {
     // Simple inline spinner component (small and dependency-free)
     const Spinner = ({ size = 16 }: { size?: number }) => (
@@ -100,6 +122,7 @@ export default function RobotsTxtValidator(): JSX.Element {
   const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [resultBg, setResultBg] = useState<string>("") // background color
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   // Exclude this page from its own related list. Use the tool `link` to avoid
   // mismatches if the display `name` differs (e.g. "Robots.txt Tester and Validator").
@@ -363,6 +386,39 @@ export default function RobotsTxtValidator(): JSX.Element {
         url="https://cralite.com/tools/robots-txt-validator"
       />
 
+      {/* Inject structured data JSON-LD for FAQ (single source) */}
+      <Helmet>
+        {[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Cralite Digital",
+            url: "https://cralite.com",
+            logo: "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
+            sameAs: ["https://twitter.com/cralitedigital"],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            url: "https://cralite.com",
+            name: "Cralite Free Tools",
+            publisher: { "@type": "Organization", name: "Cralite Digital" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          },
+        ].map((obj, i) => (
+          <script key={i} type="application/ld+json">{JSON.stringify(obj)}</script>
+        ))}
+      </Helmet>
+ <section className="section section--neutral">
+    <div className="section-inner">
       <section className="tool-section robots-txt-validator">
         <div className="tool-grid">
           {/* LEFT FORM */}
@@ -489,8 +545,92 @@ export default function RobotsTxtValidator(): JSX.Element {
           </div>
         </div>
       </section>
+      </div>
+  </section>
 
-      <RelatedTools exclude="/robots-txt-validator" />
+      {/* =============================== */}
+      {/* HOW TO USE / STEPS SECTION */}
+      {/* =============================== */}
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Robots.txt Validator</h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Fetch or paste a robots.txt, select a User-Agent, and test a URL path to check access rules.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                title: "1. Provide Source",
+                desc: "Enter a robots.txt URL or paste the file contents into the textarea.",
+              },
+              {
+                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                title: "2. Choose User-Agent",
+                desc: "Select the crawler you want to simulate (Googlebot, Bingbot, GPTBot, etc.).",
+              },
+              {
+                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                title: "3. Run Validation",
+                desc: "Click 'Run Validation' to see whether the chosen User-Agent can access the URL path.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <div className="step-icon-outer">
+                  <div className="step-icon-circle">
+                    <img src={icon} alt={title} className="step-icon-img" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =============================== */}
+      {/* FAQ SECTION */}
+      {/* =============================== */}
+      <style>{`
+        details[open] summary .faq-plus { transform: rotate(45deg); }
+      `}</style>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+
+          {FAQ_ITEMS.map((item, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={openFaq === idx}>
+              <summary
+                className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setOpenFaq(openFaq === idx ? null : idx)
+                }}
+                aria-expanded={openFaq === idx}
+              >
+                <span>{item.q}</span>
+                {openFaq === idx ? (
+                  <Minus className="w-6 h-6 text-secondary transition-transform duration-200" />
+                ) : (
+                  <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
+                )}
+              </summary>
+              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+            </details>
+          ))}
+
+          <div className="max-w-5xl mx-auto text-center mt-6">
+            <p className="text-lg text-secondary">Still have questions? <a href="https://cralite.com/contact/" className="text-primary font-normal">Contact us</a>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-inner">
+          <RelatedTools exclude="/robots-txt-validator" />
+        </div>
+      </section>
     </>
   )
 }

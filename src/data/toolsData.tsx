@@ -37,7 +37,7 @@ export const toolsData: Tool[] = [
     description: "Validate robots.txt files and detect syntax or access issues.",
   },
   {
-    name: "Keyword Generator",
+    name: "Free Keyword Generator",
     icon: KeywordIconUrl,
     link: "/keyword-generator",
     description: "Generate keyword ideas and variations for content planning.",

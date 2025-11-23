@@ -59,7 +59,7 @@ export default function App() {
         <Route
           path="/keyword-generator"
           element={
-            <Layout title="Keyword Generator" subtitle="Generate keyword suggestions and variations." showBackLink={true}>
+            <Layout title="Free Keyword Generator" subtitle="Generate keyword suggestions and variations." showBackLink={true}>
               <KeywordGenerator />
             </Layout>
           }

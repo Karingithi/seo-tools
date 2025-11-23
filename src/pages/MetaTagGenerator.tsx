@@ -484,15 +484,26 @@ export default function MetaTagGenerator(): JSX.Element {
 
   // === Dropdown Options ===
   const languageOptions = [
-    { value: "en-US", label: "🇺🇸 English (en-US)" },
-    { value: "en-GB", label: "🇬🇧 English (en-GB)" },
-    { value: "fr-FR", label: "🇫🇷 French (fr-FR)" },
-    { value: "es-ES", label: "🇪🇸 Spanish (es-ES)" },
-    { value: "de-DE", label: "🇩🇪 German (de-DE)" },
-    { value: "zh-CN", label: "🇨🇳 Chinese Simplified (zh-CN)" },
-    { value: "ja-JP", label: "🇯🇵 Japanese (ja-JP)" },
-    { value: "ko-KR", label: "🇰🇷 Korean (ko-KR)" },
-    // ...add more as needed
+  { value: "en", label: "English" },
+  { value: "en-GB", label: "English - UK" },
+  { value: "en-US", label: "English - US" },
+  { value: "zh", label: "Chinese" },
+  { value: "nl", label: "Dutch" },
+  { value: "fi", label: "Finnish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "he", label: "Hebrew" },
+  { value: "hi", label: "Hindi" },
+  { value: "it", label: "Italian" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "no", label: "Norwegian" },
+  { value: "pl", label: "Polish" },
+  { value: "pt", label: "Portuguese" },
+  { value: "ro", label: "Romanian" },
+  { value: "ru", label: "Russian" },
+  { value: "es", label: "Spanish" },
+  { value: "", label: "No language tag" },
   ]
 
   const robotsIndexOptions = [
@@ -589,39 +600,40 @@ export default function MetaTagGenerator(): JSX.Element {
               />
             </div>
 
-            {/* Canonical URL */}
-            <div className="tool-field" style={{ minWidth: 0 }}>
-              <label className="tool-label">Canonical URL</label>
-              <input
-                type="url"
-                value={canonical}
-                onChange={(e) => {
-                  setCanonical(e.target.value)
-                  validateUrl(e.target.value, setCanonicalError)
-                }}
-                className={`tool-input ${canonicalError ? "border-red-400" : ""}`}
-                placeholder="https://example.com/path"
-                style={inputStyle}
-              />
-              {canonicalError && (
-                <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">
-                  {canonicalError}
-                </div>
-              )}
-            </div>
+            {/* Canonical URL + Language on same row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="tool-field" style={{ minWidth: 0 }}>
+                <label className="tool-label">Canonical URL</label>
+                <input
+                  type="url"
+                  value={canonical}
+                  onChange={(e) => {
+                    setCanonical(e.target.value)
+                    validateUrl(e.target.value, setCanonicalError)
+                  }}
+                  className={`tool-input ${canonicalError ? "border-red-400" : ""}`}
+                  placeholder="https://example.com/path"
+                  style={inputStyle}
+                />
+                {canonicalError && (
+                  <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">
+                    {canonicalError}
+                  </div>
+                )}
+              </div>
 
-            {/* Language */}
-            <div className="tool-field" style={{ minWidth: 0 }}>
-              <label className="tool-label">Language</label>
-              <CustomDropdown
-                id="language"
-                options={languageOptions}
-                value={language}
-                onChange={setLanguage}
-                openDropdown={openDropdown}
-                setOpenDropdown={setOpenDropdown}
-                enableSearch={true}
-              />
+              <div className="tool-field" style={{ minWidth: 0 }}>
+                <label className="tool-label">Language</label>
+                <CustomDropdown
+                  id="language"
+                  options={languageOptions}
+                  value={language}
+                  onChange={setLanguage}
+                  openDropdown={openDropdown}
+                  setOpenDropdown={setOpenDropdown}
+                  enableSearch={true}
+                  />
+              </div>
             </div>
 
             {/* Robots */}
@@ -884,6 +896,7 @@ export default function MetaTagGenerator(): JSX.Element {
             >
               <code>{metaPreview}</code>
             </pre>
+             <p className="font-normal text-sm mb-1">Copy the generated meta tags and paste them inside the <code>&lt;head&gt;</code> section of your HTML page.</p>
           </div>
           </div>
         </section>

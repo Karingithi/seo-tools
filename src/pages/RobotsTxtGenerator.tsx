@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { Plus, Minus } from "lucide-react"
 import Seo from "../components/Seo"
+import { Helmet } from "react-helmet-async"
 import copyIconUrl from "../assets/icons/copy.svg?url"
 import downloadIconUrl from "../assets/icons/download.svg?url"
 import resetIconUrl from "../assets/icons/reset.svg?url"
@@ -26,6 +28,26 @@ const SEARCH_ROBOTS = [
   "MSN PicSearch",
 ]
 
+// Single source of truth for FAQs — used for both UI and JSON-LD
+const FAQ_ITEMS = [
+  {
+    q: "Where do I upload my robots.txt file?",
+    a: "Place the robots.txt file at the root of your domain, e.g., https://example.com/robots.txt so crawlers can find it.",
+  },
+  {
+    q: "Will robots.txt prevent a page from being indexed?",
+    a: "No — robots.txt prevents crawling but does not guarantee non-indexing. To prevent indexing, use a noindex meta tag or x-robots-tag header.",
+  },
+  {
+    q: "How do I allow some bots but block others?",
+    a: "Use per-user-agent groups: add a User-agent line and specific Allow/Disallow directives for that crawler.",
+  },
+  {
+    q: "Can I include multiple sitemap URLs?",
+    a: "Yes — separate multiple Sitemap lines with one URL per line. This tool accepts comma-separated sitemaps and will output multiple Sitemap entries.",
+  },
+]
+
 export default function RobotsTxtGenerator(): JSX.Element {
   // Default / global settings
   const [globalAllow, setGlobalAllow] = useState<"Allow" | "Disallow">("Allow")
@@ -50,6 +72,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
   const [downloadMsgVisible, setDownloadMsgVisible] = useState(false)
   const [resetMsgVisible, setResetMsgVisible] = useState(false)
   const [sitemapsError, setSitemapsError] = useState("")
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   const handleSetOverride = (robot: string, value: RobotSetting) => {
     setRobotOverrides((prev) => ({ ...prev, [robot]: value }))
@@ -265,7 +288,41 @@ export default function RobotsTxtGenerator(): JSX.Element {
         url="https://cralite.com/tools/robots-txt-generator"
       />
 
+      {/* Inject structured data JSON-LD for FAQ */}
+      <Helmet>
+        {[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Cralite Digital",
+            url: "https://cralite.com",
+            logo: "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
+            sameAs: ["https://twitter.com/cralitedigital"],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            url: "https://cralite.com",
+            name: "Cralite Free Tools",
+            publisher: { "@type": "Organization", name: "Cralite Digital" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          },
+        ].map((obj, i) => (
+          <script key={i} type="application/ld+json">{JSON.stringify(obj)}</script>
+        ))}
+      </Helmet>
+
       {/* MAIN TOOL SECTION */}
+      <section className="section section--neutral">
+      <div className="section-inner">
       <section className="tool-section">
         <div className="tool-grid">
           {/* LEFT FORM */}
@@ -454,10 +511,94 @@ export default function RobotsTxtGenerator(): JSX.Element {
               </div>
             </div>
           </div>
+          </div>
+        </section>
         </div>
       </section>
 
-      <RelatedTools exclude="/robots-txt-generator" />
+      {/* =============================== */}
+      {/* HOW TO USE / STEPS SECTION */}
+      {/* =============================== */}
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Robots.txt Generator</h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Create a robots.txt to control crawling and indexing for your site — follow these basic steps.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                title: "1. Choose Defaults",
+                desc: "Set the global Allow/Disallow and optional crawl-delay that applies to most user-agents.",
+              },
+              {
+                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                title: "2. Add Overrides",
+                desc: "Add per-robot overrides if you need different rules for specific crawlers.",
+              },
+              {
+                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                title: "3. Copy or Download",
+                desc: "Copy the generated robots.txt or download it and upload to your site root (/robots.txt).",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <div className="step-icon-outer">
+                  <div className="step-icon-circle">
+                    <img src={icon} alt={title} className="step-icon-img" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =============================== */}
+      {/* FAQ SECTION */}
+      {/* =============================== */}
+      <style>{`
+        details[open] summary .faq-plus { transform: rotate(45deg); }
+      `}</style>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+
+          {FAQ_ITEMS.map((item, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={openFaq === idx}>
+              <summary
+                className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setOpenFaq(openFaq === idx ? null : idx)
+                }}
+                aria-expanded={openFaq === idx}
+              >
+                <span>{item.q}</span>
+                {openFaq === idx ? (
+                  <Minus className="w-6 h-6 text-secondary transition-transform duration-200" />
+                ) : (
+                  <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
+                )}
+              </summary>
+              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+            </details>
+          ))}
+
+          <div className="max-w-5xl mx-auto text-center mt-6">
+            <p className="text-lg text-secondary">Still stuck? <a href="https://cralite.com/contact/" className="text-primary font-normal">Contact us</a>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-inner">
+          <RelatedTools exclude="/robots-txt-generator" />
+        </div>
+      </section>
     </>
   )
 }

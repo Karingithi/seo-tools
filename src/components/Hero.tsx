@@ -69,7 +69,7 @@ export default function Hero({
             const highlightPhrases = [
               "Boost Visibility, Rankings, and Business Growth",
               "Business Growth and Visibility",
-              "Robots.txt File in Seconds",
+              "Keyword Generator",
               "Robots.txt Validator",
               "Meta Tag Generator",
               "Robots.txt Generator",
