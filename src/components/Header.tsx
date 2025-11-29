@@ -263,7 +263,7 @@ export default function Header() {
     <header
       ref={headerRef as any}
       className={`site-header fixed top-0 left-0 w-full transition-all duration-300 
-      ${isScrolled ? "scrolled bg-secondary shadow-md z-999999" : "bg-transparent z-50"}
+      ${isScrolled ? "scrolled bg-secondary shadow-md z-60" : "bg-transparent z-50"}
       ${menuOpen ? "menu-open" : ""} text-white`}
     >
       <div className="container flex items-center justify-between py-3.5 lg:py-[25px]">

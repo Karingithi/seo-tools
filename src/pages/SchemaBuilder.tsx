@@ -62,6 +62,9 @@ export default function SchemaBuilder(): JSX.Element {
   const [regionSearch, setRegionSearch] = useState<string>("")
   // Employment type dropdown state for Job Posting
   const [employmentTypeOpen, setEmploymentTypeOpen] = useState<boolean>(false)
+  // Organization @type dropdown state
+  const [orgTypeOpen, setOrgTypeOpen] = useState<boolean>(false)
+  const [orgMoreSpecificOpen, setOrgMoreSpecificOpen] = useState<boolean>(false)
   // Ticket currency open index for repeater (- null when closed)
   // Default ticket currency dropdown (searchable)
   const [ticketDefaultCurrencyOpen, setTicketDefaultCurrencyOpen] = useState<boolean>(false)
@@ -250,6 +253,13 @@ export default function SchemaBuilder(): JSX.Element {
       if (!(e.target as HTMLElement).closest(".localbusiness-subtype-wrapper")) {
         setMoreSpecificOpen(false)
       }
+      // Organization selects
+      if (!(e.target as HTMLElement).closest(".organization-select-wrapper")) {
+        setOrgTypeOpen(false)
+      }
+      if (!(e.target as HTMLElement).closest(".organization-subtype-wrapper")) {
+        setOrgMoreSpecificOpen(false)
+      }
       if (!(e.target as HTMLElement).closest(".opening-days-wrapper")) {
         setOpeningDaysOpenIndex(null)
       }
@@ -304,7 +314,7 @@ export default function SchemaBuilder(): JSX.Element {
     Recipe: "Recipe — ingredients, cookTime, recipeInstructions",
     Video: "VideoObject",
     "Website Sitelinks Searchbox": "WebSite + SearchAction",
-    Organization: "Organization, LocalBusiness, Corporation",
+    Organization: "Generate Accurate Schema Markup for Organizations, Local Businesses, and Corporations",
     Person: "Person, Author, Speaker",
     "Job Posting": "Schema Builder for Job Listings, Hiring Info, and Requirements",
     Event: "Generate Structured Data for Events, Business Events, and Festivals",
@@ -714,6 +724,45 @@ export default function SchemaBuilder(): JSX.Element {
       { value: "FurnitureStore", desc: "Furniture & décor" },
       { value: "PetStore", desc: "Pet supplies" },
       { value: "JewelryStore", desc: "Jewelry & watches" },
+    ],
+  }
+
+  // Organization types and subtypes (used in Organization form)
+  const ORG_TYPES: { value: string; desc: string }[] = [
+    { value: "Organization", desc: "A general organization like a business, NGO, or club." },
+    { value: "Corporation", desc: "A registered business company." },
+    { value: "EducationalOrganization", desc: "A school, college, or learning institution." },
+    { value: "MedicalOrganization", desc: "Healthcare provider." },
+    { value: "GovernmentOrganization", desc: "Public or state-run institution." },
+    { value: "NewsMediaOrganization", desc: "Publishes or broadcasts news." },
+    { value: "OnlineBusiness", desc: "Internet-based business." },
+    { value: "PerformingGroup", desc: "Music, dance, or theater group." },
+    { value: "SportsOrganization", desc: "Sports organizing body." },
+    { value: "NGO", desc: "Non-profit organization." },
+  ]
+
+  const ORG_SUBTYPE_MAP: Record<string, { value: string; desc: string }[]> = {
+    EducationalOrganization: [
+      { value: "CollegeOrUniversity", desc: "Higher education institution." },
+      { value: "ElementarySchool", desc: "Primary education." },
+      { value: "HighSchool", desc: "Secondary education." },
+      { value: "Preschool", desc: "Early childhood education." },
+      { value: "School", desc: "General education facility." },
+    ],
+    MedicalOrganization: [
+      { value: "Hospital", desc: "Large healthcare facility." },
+      { value: "MedicalClinic", desc: "Outpatient healthcare." },
+      { value: "Pharmacy", desc: "Dispenses medicines." },
+      { value: "Dentist", desc: "Dental healthcare." },
+    ],
+    PerformingGroup: [
+      { value: "MusicGroup", desc: "Musical group." },
+      { value: "DanceGroup", desc: "Dance performers." },
+      { value: "TheaterGroup", desc: "Stage performers." },
+    ],
+    SportsOrganization: [
+      { value: "SportsClub", desc: "Organized sports club." },
+      { value: "SportsTeam", desc: "Team in competitions." },
     ],
   }
 
@@ -1288,6 +1337,26 @@ export default function SchemaBuilder(): JSX.Element {
       if (key === "localBusinessType") {
         const parent = val || ""
         const opts = parent && SUBTYPE_MAP[parent] ? SUBTYPE_MAP[parent] : []
+        let nextMore = prev.moreSpecificType || ""
+        if (opts && opts.length) {
+          const ok = nextMore && opts.some((o) => o.value === nextMore)
+          if (!ok) nextMore = opts[0].value
+        } else {
+          nextMore = ""
+        }
+
+        const next = { ...prev, [key]: val, moreSpecificType: nextMore }
+        validateField(key, val, next)
+        validateField("moreSpecificType", nextMore, next)
+        return next
+      }
+
+      // If user changes the top-level Organization @type, mirror Organization behavior:
+      // - if there are subtypes in ORG_SUBTYPE_MAP for the selected parent, set `moreSpecificType` to the first available option when the current value isn't valid
+      // - otherwise clear `moreSpecificType`
+      if (key === "organizationType") {
+        const parent = val || ""
+        const opts = parent && ORG_SUBTYPE_MAP[parent] ? ORG_SUBTYPE_MAP[parent] : []
         let nextMore = prev.moreSpecificType || ""
         if (opts && opts.length) {
           const ok = nextMore && opts.some((o) => o.value === nextMore)
@@ -4526,8 +4595,17 @@ export default function SchemaBuilder(): JSX.Element {
                                                   const next = cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]
                                                   updateOpeningHour(idx, "days", next.join(","))
                                                 }}>
-                                                  <label className="flex items-center gap-2 p-2">
-                                                    <input type="checkbox" checked={selected} readOnly />
+                                                  <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={selected}
+                                                      onChange={(e) => {
+                                                        e.stopPropagation()
+                                                        const cur = (oh.days || "").split(",").map(s => s.trim()).filter(Boolean)
+                                                        const next = cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]
+                                                        updateOpeningHour(idx, "days", next.join(","))
+                                                      }}
+                                                    />
                                                     <span>{d}</span>
                                                   </label>
                                                 </li>
@@ -4652,7 +4730,7 @@ export default function SchemaBuilder(): JSX.Element {
                                     )}
                                   </div>
                                 ) : (
-                                  <input type="text" className="tool-input opacity-50" disabled value={d.moreSpecificType} onChange={(e) => updateDepartment(idx, "moreSpecificType", e.target.value)} />
+                                  <input type="text" className="tool-input opacity-50" disabled value={d.moreSpecificType || ""} placeholder="Select Option" onChange={(e) => updateDepartment(idx, "moreSpecificType", e.target.value)} />
                                 )}
                               </div>
                             </div>
@@ -4693,7 +4771,7 @@ export default function SchemaBuilder(): JSX.Element {
                                   {deptOpeningDaysOpenIndex === idx && (
                                     <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 220, overflow: "auto" }}>
                                       <ul>
-                                        {DAYS_OF_WEEK.map((day) => {
+                                            {DAYS_OF_WEEK.map((day) => {
                                           const selected = (d.days || "").split(",").map(s => s.trim()).filter(Boolean).includes(day)
                                           return (
                                             <li key={day} className={selected ? "selected" : ""} onClick={(e) => {
@@ -4702,8 +4780,17 @@ export default function SchemaBuilder(): JSX.Element {
                                               const next = cur.includes(day) ? cur.filter(x => x !== day) : [...cur, day]
                                               updateDepartment(idx, "days", next.join(","))
                                             }}>
-                                              <label className="flex items-center gap-2 p-2">
-                                                <input type="checkbox" checked={selected} readOnly />
+                                              <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={selected}
+                                                  onChange={(e) => {
+                                                    e.stopPropagation()
+                                                    const cur = (d.days || "").split(",").map(s => s.trim()).filter(Boolean)
+                                                    const next = cur.includes(day) ? cur.filter(x => x !== day) : [...cur, day]
+                                                    updateDepartment(idx, "days", next.join(","))
+                                                  }}
+                                                />
                                                 <span>{day}</span>
                                               </label>
                                             </li>
@@ -4766,6 +4853,84 @@ export default function SchemaBuilder(): JSX.Element {
                   </>
                 ) : type === "Organization" ? (
                   <>
+                    {/* Organization @type + More specific @type selectors */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Organization @type</label>
+                        <div className="custom-select-wrapper compact-select organization-select-wrapper relative" style={{ width: "100%" }}>
+                          <button
+                            type="button"
+                            className="custom-select-trigger tool-select"
+                            onClick={() => setOrgTypeOpen((o) => !o)}
+                            style={{ width: "100%", justifyContent: "space-between" }}
+                            aria-expanded={orgTypeOpen}
+                          >
+                            <span className="truncate block">{(fields.organizationType && fields.organizationType.trim()) ? fields.organizationType : "Organization"}</span>
+                            <span className="text-xs">⏷</span>
+                          </button>
+
+                          {orgTypeOpen && (
+                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 320, overflow: "auto" }}>
+                              <ul>
+                                {ORG_TYPES.map((opt) => (
+                                  <li key={opt.value} className={(fields.organizationType || "") === opt.value ? "selected" : ""} onClick={() => { handleChange("organizationType", opt.value); setOrgTypeOpen(false) }}>
+                                    <div className="font-semibold text-[15px]">{opt.value}</div>
+                                    <div className="text-[13px] text-gray-500">{opt.desc}</div>
+                                  </li>
+                                ))}
+                                <li key="none-organization" className={(fields.organizationType || "") === "" ? "selected" : ""} onClick={() => { handleChange("organizationType", ""); setOrgTypeOpen(false) }}>
+                                  Not specified
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        {renderError("organizationType")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">More specific @type</label>
+                        {(() => {
+                          const parent = fields.organizationType || ""
+                          const subtypeOpts = parent && ORG_SUBTYPE_MAP[parent] ? ORG_SUBTYPE_MAP[parent] : []
+                          if (subtypeOpts && subtypeOpts.length) {
+                            return (
+                              <div className="custom-select-wrapper compact-select organization-subtype-wrapper relative" style={{ width: "100%" }}>
+                                <button
+                                  type="button"
+                                  className="custom-select-trigger tool-select"
+                                  onClick={() => setOrgMoreSpecificOpen((o) => !o)}
+                                  style={{ width: "100%", justifyContent: "space-between" }}
+                                  aria-expanded={orgMoreSpecificOpen}
+                                >
+                                  <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select subtype"}</span>
+                                  <span className="text-xs">⏷</span>
+                                </button>
+
+                                {orgMoreSpecificOpen && (
+                                  <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                    <ul>
+                                      {subtypeOpts.map((o) => (
+                                        <li key={o.value} className={(fields.moreSpecificType || "") === o.value ? "selected" : ""} onClick={() => { handleChange("moreSpecificType", o.value); setOrgMoreSpecificOpen(false) }}>
+                                          <div className="font-semibold text-[15px]">{o.value}</div>
+                                          <div className="text-[13px] text-gray-500">{o.desc}</div>
+                                        </li>
+                                      ))}
+                                      <li key="none-org-subtype" className={(fields.moreSpecificType || "") === "" ? "selected" : ""} onClick={() => { handleChange("moreSpecificType", ""); setOrgMoreSpecificOpen(false) }}>
+                                        Not specified
+                                      </li>
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          }
+                          return <input type="text" className="tool-input opacity-50" disabled value={fields.moreSpecificType || ""} placeholder="No subtypes available" />
+                        })()}
+                        {renderError("moreSpecificType")}
+                      </div>
+                    </div>
+
                     {/* Contacts repeater for Organization */}
                     <div className="mt-0">
                       <div className="flex items-center justify-between mb-2">
@@ -4844,8 +5009,8 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Render remaining simple fields for Organization */}
-                    {schemaFields[type].map((field) => (
+                    {/* Render remaining simple fields for Organization (skip organizationType/moreSpecificType) */}
+                    {schemaFields[type].filter((f) => f.key !== "organizationType" && f.key !== "moreSpecificType").map((field) => (
                       <div key={field.key} className="tool-field">
                         <label className="tool-label">{field.label}</label>
                         <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />

@@ -51,7 +51,7 @@ export default function MobileMenu({
   if (!isOpen) return null
 
   return (
-    <div className="mobile-menu-overlay fixed inset-0 bg-secondary z-999998">
+    <div className="mobile-menu-overlay fixed inset-0 bg-secondary z-50">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="container flex items-center justify-between py-3.5 md:py-[25px]">
