@@ -197,12 +197,12 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
             {[
               {
-                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/pick.svg", import.meta.url).href,
                 title: "1. Pick Your Tool",
                 desc: "Choose the free tool you need to achieve your task or goal",
               },
               {
-                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/info.svg", import.meta.url).href,
                 title: "2. Enter Your Info",
                 desc: "Enter the required info and run the tool for instant results",
               },

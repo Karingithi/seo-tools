@@ -1,4 +1,4 @@
-function HoverLabel({
+export default function HoverLabel({
   label,
   color = "text-white",
   hoverColor = color,

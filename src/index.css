@@ -202,6 +202,13 @@
     margin: 0 0 1rem;
   }
 
+  hr {
+    border: none;
+    border-top: 1px solid var(--muted-border, #d1d5db);
+    height: 0;
+    margin: 1.5rem 0;
+  }
+
   footer p {
     color: #ffffff;
   }
@@ -794,6 +801,44 @@
     line-height: 1.625;
     color: var(--body);
   }
+
+  /* Validation message used for inline form errors */
+  .validation-message {
+    background-color: #fff6f4; /* pale peach */
+    border: 1px solid #f5c1b0; /* soft orange border */
+    color: #b91c1c; /* red-700 */
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.92rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Country select styles */
+.country-select-wrapper { position: relative; }
+.country-select-wrapper img.flag-preview {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.country-select {
+  padding-left: 44px; /* flag width (24) + left offset (10) + gap (10) */
+  height: 46px;       /* match .tool-input height to align vertically */
+  line-height: 46px;  /* helps vertical alignment across browsers */
+  -webkit-appearance: none; /* keeps arrow consistent */
+  appearance: none; /* standard property for compatibility */
+}
+@media (max-width: 768px) {
+  .country-select {
+    height: 42px;
+    line-height: 42px;
+  }
+}
 }
 
 /* ============================================

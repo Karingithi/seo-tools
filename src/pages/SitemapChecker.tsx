@@ -1,11 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
-import { Link } from "react-router-dom"
-import { useNavigate } from "react-router-dom"
 import Seo from "../components/Seo"
-import { toolsData } from "../data/toolsData"
 import RelatedTools from "../components/RelatedTools"
-import type { Tool } from "../data/toolsData"
-import { copyToClipboard, downloadText } from "../utils"
 
 export default function SitemapChecker(): JSX.Element {
   const [sitemapUrl, setSitemapUrl] = useState("")
@@ -16,10 +11,7 @@ export default function SitemapChecker(): JSX.Element {
   const [parsedUrls, setParsedUrls] = useState<{ loc: string; valid: boolean; status?: "unknown" | "valid" | "broken" | "skipped"; statusCode?: number | null }[]>([])
   const [checking, setChecking] = useState(false)
   const [stats, setStats] = useState({ total: 0, valid: 0, broken: 0, skipped: 0 })
-  const [serverEndpoint, setServerEndpoint] = useState<string>("http://localhost:3001/check-urls")
-
-  const related: Tool[] = toolsData.filter((t) => t.name !== "XML Sitemap Checker")
-  const navigate = useNavigate()
+  const [serverEndpoint] = useState<string>("http://localhost:3001/check-urls")
 
   const validateUrl = (value: string, setError: (v: string) => void) => {
     if (!value || !value.trim()) {
@@ -180,15 +172,7 @@ export default function SitemapChecker(): JSX.Element {
     parseXml(xmlText)
   }
 
-  const handleCopyList = async () => {
-    const text = parsedUrls.map((u) => u.loc).join("\n")
-    await copyToClipboard(text)
-  }
-
-  const handleDownloadList = () => {
-    const text = parsedUrls.map((u) => u.loc).join("\n")
-    downloadText("sitemap-urls.txt", text)
-  }
+  // copy/download handlers removed (not used in UI)
 
   useEffect(() => {
     // Only update total when parsedUrls changes to avoid clobbering

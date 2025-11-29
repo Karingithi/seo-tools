@@ -1,4 +1,3 @@
-import React from "react"
 import { Link } from "react-router-dom"
 import { toolsData, type Tool } from "../data/toolsData"
 import ToolTitle from "./ToolTitle"
@@ -11,7 +10,7 @@ type Props = {
 
 export default function RelatedTools({ exclude, limit = 4 }: Props) {
   const related: Tool[] = toolsData.filter((t) => t.link !== exclude).slice(0, limit)
-  const scrollToTop = (e: React.MouseEvent) => {
+  const scrollToTop = () => {
     // allow navigation to proceed, but ensure viewport jumps to top
     try {
       window.scrollTo(0, 0)

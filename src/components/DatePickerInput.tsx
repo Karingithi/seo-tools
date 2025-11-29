@@ -76,7 +76,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-2 bg-white p-2 rounded shadow-lg">
+        <div className="absolute z-50 mt-2 bg-white p-2 shadow-lg date-picker-popup">
           <DayPicker
             mode="single"
             selected={selected}

@@ -46,7 +46,7 @@ export default function App() {
           path="/schema-builder"
           element={
             <Layout
-              title="Schema Markup Generator"
+              title="Free Schema Markup Generator"
               subtitle="Generate structured data (JSON-LD) to boost your search visibility and click-through rates."
               showBackLink={true}
             >

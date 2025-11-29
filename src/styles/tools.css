@@ -26,7 +26,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .tool-section {
     padding: 1rem;
   }
@@ -40,7 +40,7 @@
   align-items: flex-start;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .tool-grid {
     grid-template-columns: 3fr 2fr;
     gap: 2rem; /* 32px */
@@ -203,7 +203,7 @@
   margin-bottom: 0;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .tool-h2 {
     font-size: 1.25rem; /* 20px */
   }
@@ -231,7 +231,7 @@
   height: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.5rem;
 }
 
 @media (min-width: 768px) {
@@ -268,6 +268,7 @@
   max-height: 60vh;
   width: 100%;
   box-sizing: border-box;
+  margin-top: 0;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -293,7 +294,7 @@
 /* ==============================
    Responsive tweaks
    ============================== */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .tool-input,
   .tool-select,
   .tool-textarea {
@@ -328,6 +329,40 @@
     word-break: break-word;
     overflow-wrap: anywhere;
   }
+}
+
+/* Small neutral gap between stacked sections to visually separate content
+   Matches the neutral panel background used elsewhere */
+.section-gap {
+  height: 20px;
+  width: 100%;
+  /* Exact page gap background requested by user */
+  background: #f7f7f7;
+}
+
+/* CSS-only grouping: give neutral sections the neutral background so
+   multiple adjacent neutral sections (with .section-gap between them)
+   visually appear as one stacked container. This avoids JSX changes. */
+.section.section--neutral {
+  background-color: var(--neutral-light, #f7f7f7);
+}
+
+/* Make inner `.section-inner` behave like a stacked flex container
+   so inner `.tool-section` cards have consistent gap and alignment. */
+.section.section--neutral > .section-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section.section--neutral .tool-section {
+  margin: 0; /* ensure inner cards don't add extra outer gaps */
+}
+
+/* Ensure neutral page sections use the neutral-light background so
+   inner `.tool-section` cards cast visible shadows against it. */
+.section.section--neutral {
+  background-color: var(--neutral-light, #f7f7f7);
 }
 
 /* Ensure tool layout never overflows horizontally */
@@ -486,7 +521,8 @@ code {
 }
 
 .toolbar-spacing {
-  margin-top: 14px;
+  margin-top: 10px;
+  margin-bottom: 6px;
 }
 
 /* ==============================
@@ -495,6 +531,32 @@ code {
 .custom-select-wrapper {
   position: relative;
   width: 100%;
+}
+
+/* Compact variant for closely spaced selects */
+.compact-select {
+  margin-bottom: 6px; /* smaller gap under each select */
+}
+
+.compact-select + .compact-select {
+  margin-top: 6px; /* small gap when stacked */
+}
+
+/* Compact header grouping for `tool-h2` and its intro paragraph */
+.tool-header-compact {
+  display: block;
+}
+
+.tool-header-compact .tool-h2 {
+  margin-bottom: 0.25rem; /* reduce gap below the H2 */
+}
+
+.tool-header-compact .tool-sub{
+  margin-top: 0;
+  margin-bottom: 0.5rem; /* slightly smaller than mb-2 */
+  font-size: 1rem; /* matches `text-base` */
+  color: #4B5563; /* text-gray-600 */
+  line-height: 1.35;
 }
 
 .custom-select-trigger {
@@ -541,11 +603,10 @@ code {
   line-height: 1.5;
 }
 
-@media (max-width: 768px) {
-  .custom-select-trigger,
-  .tool-input,
-  .tool-select {
-    height: 42px;
+@media (min-width: 1024px) {
+  .tool-preview {
+    position: sticky;
+    top: 100px;
   }
 }
 
@@ -625,7 +686,7 @@ code {
   font-style: italic;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .custom-select-trigger {
     font-size: 14px;
     padding: 0.45rem 0.65rem;
@@ -641,9 +702,85 @@ code {
   }
 }
 
-/* ==============================
-   Robots.txt Generator Specific
-   ============================== */
+/* Compact DayPicker popup styling */
+.date-picker-popup {
+  /* Let the popup size itself while keeping sensible bounds:
+     - `width: auto` allows the content to decide width
+     - `min-width` gives a reasonable minimum on narrow screens
+     - `max-width: 90vw` prevents overflow on small viewports
+     - `inline-block` lets the popup shrink to fit content when necessary */
+  width: auto;
+  min-width: 240px;
+  max-width: 90vw;
+  padding: 4px;
+  border-radius: 8px;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.date-picker-popup .rdp {
+  font-size: 13px;
+}
+
+.date-picker-popup .rdp-month {
+  width: 100%;
+  padding: 4px 4px;
+}
+
+.date-picker-popup .rdp-nav button {
+  padding: 2px;
+}
+
+.date-picker-popup .rdp-day {
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+}
+
+.date-picker-popup .rdp-weekdays,
+.date-picker-popup .rdp-day {
+  line-height: 1;
+}
+
+.date-picker-popup .rdp-caption {
+  padding: 4px 6px;
+}
+
+/* Let the DayPicker months container size itself based on its content
+   so the popup height adjusts to the number of weeks/months shown. */
+.date-picker-popup .rdp-months {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Reduce the size of the DayPicker day buttons for a denser calendar */
+.date-picker-popup .rdp-day_button {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 2px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  border-radius: 9999px !important;
+}
+
+.date-picker-popup .rdp-day_selected .rdp-day_button,
+.date-picker-popup .rdp-day_today .rdp-day_button {
+  width: 36px !important;
+  height: 36px !important;
+}
+.date-picker-popup .rdp-today:not(.rdp-outside) {
+  color: var(--secondary, #070026) !important;
+}
+
+/* Selected day border should be primary yellow */
+.date-picker-popup .rdp-selected .rdp-day_button,
+.date-picker-popup .rdp-day_selected .rdp-day_button {
+  border: 2px solid var(--primary, #ffc50c) !important;
+}
+.date-picker-popup .rdp-chevron {
+  display: inline-block;
+  fill: var(--primary, #ffc50c);
+}
 .search-robot-row {
   display: flex;
   align-items: center;
@@ -662,7 +799,7 @@ code {
   max-width: 320px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .search-robot-row {
     flex-direction: column;
     align-items: stretch;
@@ -887,7 +1024,7 @@ code {
   margin-top: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .button-group {
     flex-direction: column;
     align-items: stretch;

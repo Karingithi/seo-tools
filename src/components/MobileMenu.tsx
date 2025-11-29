@@ -77,7 +77,7 @@ export default function MobileMenu({
         {/* Main Menu */}
         {!mobileSubmenu ? (
           <div className="flex-1 flex flex-col container pt-6">
-            {Object.entries(MOBILE_MENU_DATA).map(([key, items]) => (
+            {Object.entries(MOBILE_MENU_DATA).map(([key, _items]) => (
               <div
                 key={key}
                 className="mobile-menu-item flex justify-between items-center text-white text-[17px] cursor-pointer"
