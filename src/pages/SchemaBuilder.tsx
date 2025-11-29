@@ -119,11 +119,24 @@ export default function SchemaBuilder(): JSX.Element {
   // Contacts repeater for Organization schema
   const [contacts, setContacts] = useState<Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>>([])
 
+  // Product identification dropdown state (sku, gtin8, gtin13, gtin14, mpn)
+  const [productIdOpen, setProductIdOpen] = useState<boolean>(false)
+  const [productIdSelected, setProductIdSelected] = useState<string[]>([])
+
+  // Product availability dropdown state
+  const [productAvailabilityOpen, setProductAvailabilityOpen] = useState<boolean>(false)
+  const [productItemConditionOpen, setProductItemConditionOpen] = useState<boolean>(false)
+
   // Publish / Modified date pickers (fields.datePublished and fields.dateModified are stored in `fields`)
 
   // Video duration inputs (minutes & seconds)
   const [videoMinutes, setVideoMinutes] = useState<string>("")
   const [videoSeconds, setVideoSeconds] = useState<string>("")
+  // Product offer type dropdown state
+  const [productOfferOpen, setProductOfferOpen] = useState<boolean>(false)
+  // Product currency dropdown state
+  const [productCurrencyOpen, setProductCurrencyOpen] = useState<boolean>(false)
+  const [productCurrencySearch, setProductCurrencySearch] = useState<string>("")
 
   // Event specific: ticket types repeater and performer info
   const [ticketTypes, setTicketTypes] = useState<Array<{ name: string; price: string; currency?: string; availableFrom?: string; url?: string; availability?: string }>>([])
@@ -187,6 +200,90 @@ export default function SchemaBuilder(): JSX.Element {
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
+
+  // Close product identification dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".product-id-select-wrapper")) {
+        setProductIdOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Close Offer type dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".offer-type-select-wrapper")) {
+        setProductOfferOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Close Product currency dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".product-currency-select-wrapper")) {
+        setProductCurrencyOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Close Product availability dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".product-availability-select-wrapper")) {
+        setProductAvailabilityOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Close Product item condition dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".product-itemcondition-select-wrapper")) {
+        setProductItemConditionOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Sync selected identification properties into fields.identificationProperties (comma-separated)
+  useEffect(() => {
+    handleChange("identificationProperties", productIdSelected.join(","))
+  }, [productIdSelected])
+
+  // Initialize productIdSelected from existing fields.identificationProperties when switching to Product
+  useEffect(() => {
+    if (type === "Product") {
+      if ((!productIdSelected || productIdSelected.length === 0) && fields.identificationProperties) {
+        const arr = (fields.identificationProperties || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+        if (arr.length) setProductIdSelected(arr)
+      }
+    }
+  }, [type, fields.identificationProperties])
+
+  // Disable offer-related inputs when Offer Type is 'None' (empty)
+  const offerDisabled = !((fields.offerType || "").trim())
+
+  // If offer is disabled, ensure product currency dropdown is closed and search cleared
+  useEffect(() => {
+    if (offerDisabled) {
+      setProductCurrencyOpen(false)
+      setProductCurrencySearch("")
+    }
+  }, [offerDisabled])
 
   // Close article type dropdown when clicking outside its wrapper
   useEffect(() => {
@@ -511,18 +608,20 @@ export default function SchemaBuilder(): JSX.Element {
     "FAQ Page": [],
     // FAQ Page handled by dynamic editor (faqItemsState)
     Product: [
-      { label: "Product Name", key: "name", placeholder: "Organic Herbal Tea" },
+      { label: "Product Name", key: "name", placeholder: "e.g. Ergonomic Office Chair" },
       { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
       { label: "SKU", key: "sku", placeholder: "SKU12345" },
       { label: "MPN", key: "mpn", placeholder: "MPN-0001" },
-      { label: "GTIN (e.g., GTIN-13)", key: "gtin13", placeholder: "0123456789012" },
+      { label: "GTIN-8", key: "gtin8", placeholder: "01234567" },
+      { label: "GTIN-13", key: "gtin13", placeholder: "0123456789012" },
+      { label: "GTIN-14", key: "gtin14", placeholder: "01234567890123" },
       { label: "Brand", key: "brand", placeholder: "Tembeya Wellness" },
-      { label: "Category", key: "category", placeholder: "Beverages" },
+      
       { label: "Price", key: "price", placeholder: "25.99" },
       { label: "Currency", key: "currency", placeholder: "USD" },
-      { label: "Price Valid Until", key: "priceValidUntil", placeholder: "2026-12-31" },
+      { label: "Offer Valid Until", key: "priceValidUntil", placeholder: "2026-12-31" },
       { label: "Availability", key: "availability", placeholder: "InStock" },
-      { label: "Condition", key: "itemCondition", placeholder: "NewCondition" },
+      { label: "Item Condition", key: "itemCondition", placeholder: "NewCondition" },
       { label: "URL", key: "url", placeholder: "https://example.com/product" },
       { label: "Image(s)", key: "images", placeholder: "https://example.com/image.jpg, https://example.com/image2.jpg" },
       { label: "Description", key: "description", placeholder: "Natural detox blend" },
@@ -875,8 +974,22 @@ export default function SchemaBuilder(): JSX.Element {
   const TICKET_AVAILABILITY_OPTIONS = [
     { value: "", label: "Not specified" },
     { value: "InStock", label: "In stock" },
-    { value: "OutOfStock", label: "Sold out" },
+    { value: "OutOfStock", label: "Out of stock" },
+    { value: "OnlineOnly", label: "Online only" },
+    { value: "InStoreOnly", label: "In store only" },
     { value: "PreOrder", label: "Pre-order" },
+    { value: "PreSale", label: "Pre-sale" },
+    { value: "LimitedAvailability", label: "Limited availability" },
+    { value: "SoldOut", label: "Sold out" },
+    { value: "Discontinued", label: "Discontinued" },
+  ]
+
+  const ITEM_CONDITION_OPTIONS = [
+    { value: "", label: "Not specified" },
+    { value: "NewCondition", label: "New" },
+    { value: "UsedCondition", label: "Used" },
+    { value: "RefurbishedCondition", label: "Refurbished" },
+    { value: "DamagedCondition", label: "Damaged" },
   ]
 
   // Common currencies (small static list). Replace or extend if you installed a package.
@@ -1701,7 +1814,7 @@ export default function SchemaBuilder(): JSX.Element {
     }
 
     if (type === "Product") {
-      // Offers (required for Product)
+      // Offers (optional for Product) — respect selected offerType
       if (fields.price && fields.price.trim()) {
         const offer: any = {
           "@type": "Offer",
@@ -1722,7 +1835,14 @@ export default function SchemaBuilder(): JSX.Element {
           const cond = fields.itemCondition.trim()
           offer.itemCondition = cond.startsWith("http") ? cond : `https://schema.org/${cond}`
         }
-        base.offers = offer
+
+        const offerType = (fields.offerType || "Offer").trim()
+        if (offerType === "AggregateOffer") {
+          base.offers = { "@type": "AggregateOffer", offers: offer }
+        } else if (offerType === "Offer" || offerType === "") {
+          // If explicitly set to empty string, treat as None (do not emit offers)
+          if (offerType === "Offer") base.offers = offer
+        }
       }
 
       // AggregateRating (if rating provided)
@@ -5457,14 +5577,383 @@ export default function SchemaBuilder(): JSX.Element {
                       ))}
                   </>
                 ) : (
-                  schemaFields[type].map((field) => (
-                    <div key={field.key} className="tool-field">
-                      <label className="tool-label">{field.label}</label>
-                      <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
-                      {renderError(field.key)}
-                    </div>
-                  ))
-                )
+                              type === "Product" ? (
+                                <>
+                                  <div className="tool-field">
+                                    <label className="tool-label">Product Name</label>
+                                    <input
+                                      type="text"
+                                      className="tool-input"
+                                      value={fields.name || ""}
+                                      placeholder={schemaFields.Product.find(f => f.key === 'name')?.placeholder || ""}
+                                      onChange={(e) => handleChange("name", e.target.value)}
+                                    />
+                                    {renderError("name")}
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                    <div className="tool-field">
+                                      <label className="tool-label">Image URL</label>
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={fields.imageUrl || ""}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'imageUrl')?.placeholder || ""}
+                                        onChange={(e) => handleChange("imageUrl", e.target.value)}
+                                      />
+                                      {renderError("imageUrl")}
+                                    </div>
+
+                                    <div className="tool-field">
+                                      <label className="tool-label">Brand</label>
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={fields.brand || ""}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'brand')?.placeholder || ""}
+                                        onChange={(e) => handleChange("brand", e.target.value)}
+                                      />
+                                      {renderError("brand")}
+                                    </div>
+                                  </div>
+
+                                  <div className="tool-field">
+                                    <label className="tool-label">Description</label>
+                                    <textarea
+                                      className="tool-textarea"
+                                      value={fields.description || ""}
+                                      placeholder={schemaFields.Product.find(f => f.key === 'description')?.placeholder || ""}
+                                      onChange={(e) => handleChange("description", e.target.value)}
+                                    />
+                                    {renderError("description")}
+                                  </div>
+
+                                  <div className="tool-field">
+                                    <label className="tool-label">Identification properties</label>
+                                    <div className="custom-select-wrapper product-id-select-wrapper relative" style={{ width: "100%" }}>
+                                      <button
+                                        type="button"
+                                        className="custom-select-trigger tool-select"
+                                        aria-expanded={productIdOpen}
+                                        onClick={() => setProductIdOpen((o) => !o)}
+                                        style={{ width: "100%", justifyContent: "space-between" }}
+                                      >
+                                        <span className="truncate block">
+                                          {productIdSelected && productIdSelected.length ? productIdSelected.join(", ") : "Select identification types"}
+                                        </span>
+                                        <span className="text-xs">⏷</span>
+                                      </button>
+
+                                      {productIdOpen && (
+                                        <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                          <ul>
+                                            {["sku", "gtin8", "gtin13", "gtin14", "mpn"].map((opt) => {
+                                              const selected = productIdSelected.includes(opt)
+                                              return (
+                                                <li
+                                                  key={opt}
+                                                  className={selected ? "selected" : ""}
+                                                  onClick={() => {
+                                                    const prev = productIdSelected.slice()
+                                                    const isSelected = prev.includes(opt)
+                                                    const nextSel = isSelected ? prev.filter((p) => p !== opt) : [...prev, opt]
+                                                    setProductIdSelected(nextSel)
+                                                    // If deselecting, clear the corresponding field value
+                                                    if (isSelected) handleChange(opt, "")
+                                                  }}
+                                                >
+                                                  {selected ? "✓ " : ""}{opt}
+                                                </li>
+                                              )
+                                            })}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                    {renderError("identificationProperties")}
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="tool-field">
+                                      <label className="tool-label">Offer Type</label>
+                                      <div className="custom-select-wrapper offer-type-select-wrapper relative" style={{ width: "100%" }}>
+                                        <button
+                                          type="button"
+                                          className="custom-select-trigger tool-select"
+                                          aria-expanded={productOfferOpen}
+                                          onClick={() => setProductOfferOpen((o) => !o)}
+                                          style={{ width: "100%", justifyContent: "space-between" }}
+                                        >
+                                          <span className="truncate block">{(fields.offerType && fields.offerType.trim()) || "None"}</span>
+                                          <span className="text-xs">⏷</span>
+                                        </button>
+
+                                        {productOfferOpen && (
+                                          <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                            <ul>
+                                              {[
+                                                { value: "Offer", label: "Offer" },
+                                                { value: "AggregateOffer", label: "Aggregate Offer" },
+                                                { value: "", label: "None" },
+                                              ].map((opt) => (
+                                                <li
+                                                  key={opt.label}
+                                                  className={(fields.offerType || "") === (opt.value || "") ? "selected" : ""}
+                                                  onClick={() => {
+                                                    handleChange("offerType", opt.value)
+                                                    setProductOfferOpen(false)
+                                                  }}
+                                                >
+                                                  {opt.label}
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {renderError("offerType")}
+                                    </div>
+
+                                    <div className="tool-field">
+                                      <label className="tool-label">Offer URL</label>
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={fields.url || ""}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'url')?.placeholder || "https://example.com/product"}
+                                        onChange={(e) => handleChange("url", e.target.value)}
+                                        disabled={offerDisabled}
+                                        title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
+                                      />
+                                      {renderError("url")}
+                                    </div>
+                                  </div>
+
+                                  {/* Currency + Price row (currency before price) */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
+                                    <div className="tool-field">
+                                      <label className="tool-label">Currency</label>
+                                      <div className={"custom-select-wrapper product-currency-select-wrapper relative" + (offerDisabled ? " opacity-50" : "")} style={{ width: "100%" }}>
+                                        <button
+                                          type="button"
+                                          className={"custom-select-trigger tool-select" + (offerDisabled ? " opacity-50" : "")}
+                                          aria-expanded={productCurrencyOpen}
+                                          onClick={() => { if (!offerDisabled) setProductCurrencyOpen((o) => !o) }}
+                                          disabled={offerDisabled}
+                                          aria-disabled={offerDisabled}
+                                          title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
+                                          style={{ width: "100%", justifyContent: "space-between" }}
+                                        >
+                                          <span className="truncate block">{(fields.currency && fields.currency.trim()) || "Select currency"}</span>
+                                          <span className="text-xs">⏷</span>
+                                        </button>
+
+                                        {productCurrencyOpen && (
+                                          <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 320, overflow: 'auto' }}>
+                                            <div className="p-2">
+                                              <input
+                                                type="text"
+                                                className="tool-input"
+                                                placeholder="Search currency..."
+                                                value={productCurrencySearch}
+                                                onChange={(e) => setProductCurrencySearch(e.target.value)}
+                                              />
+                                            </div>
+                                            <ul>
+                                              {ALL_CURRENCIES.filter((c) => (`${c.code} ${c.name}`).toLowerCase().includes((productCurrencySearch || "").toLowerCase())).map((c) => (
+                                                <li
+                                                  key={c.code}
+                                                  className={(fields.currency || "") === c.code ? "selected" : ""}
+                                                  onClick={() => {
+                                                    handleChange("currency", c.code)
+                                                    setProductCurrencyOpen(false)
+                                                    setProductCurrencySearch("")
+                                                  }}
+                                                >
+                                                  {c.code} — {c.name}
+                                                </li>
+                                              ))}
+                                              <li key="none-product-currency" className={(fields.currency || "") === "" ? "selected" : ""} onClick={() => { handleChange("currency", ""); setProductCurrencyOpen(false); setProductCurrencySearch("") }}>
+                                                Not specified
+                                              </li>
+                                            </ul>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {renderError("currency")}
+                                    </div>
+
+                                    <div className="tool-field">
+                                      <label className="tool-label">Price</label>
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={fields.price || ""}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'price')?.placeholder || "0.00"}
+                                        onChange={(e) => handleChange("price", e.target.value)}
+                                        disabled={offerDisabled}
+                                        title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
+                                      />
+                                      {renderError("price")}
+                                    </div>
+                                  </div>
+
+                                  {/* Identification inputs: grouped rows per request */}
+                                  {(() => {
+                                    const firstRow = ["sku", "gtin8", "gtin13"]
+                                    const secondRow = ["gtin14", "mpn"]
+
+                                    const selectedFirst = firstRow.filter((k) => productIdSelected.includes(k))
+                                    const selectedSecond = secondRow.filter((k) => productIdSelected.includes(k))
+
+                                    return (
+                                      <>
+                                        {selectedFirst.length > 0 && (
+                                          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                                            {selectedFirst.map((idKey) => {
+                                              const field = schemaFields[type].find((f) => f.key === idKey)
+                                              if (!field) return null
+                                              return (
+                                                <div key={field.key} className="tool-field">
+                                                  <label className="tool-label">{field.label}</label>
+                                                  <input
+                                                    type="text"
+                                                    className="tool-input"
+                                                    value={fields[field.key] || ""}
+                                                    placeholder={field.placeholder}
+                                                    onChange={(e) => handleChange(field.key, e.target.value)}
+                                                  />
+                                                  {renderError(field.key)}
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        )}
+
+                                        {selectedSecond.length > 0 && (
+                                          <div className="grid gap-4 mt-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                                            {selectedSecond.map((idKey) => {
+                                              const field = schemaFields[type].find((f) => f.key === idKey)
+                                              if (!field) return null
+                                              return (
+                                                <div key={field.key} className="tool-field">
+                                                  <label className="tool-label">{field.label}</label>
+                                                  <input
+                                                    type="text"
+                                                    className="tool-input"
+                                                    value={fields[field.key] || ""}
+                                                    placeholder={field.placeholder}
+                                                    onChange={(e) => handleChange(field.key, e.target.value)}
+                                                  />
+                                                  {renderError(field.key)}
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        )}
+                                      </>
+                                    )
+                                  })()}
+
+                                  {/* Render remaining non-identification fields */}
+                                  {type === "Product" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'priceValidUntil') || { label: 'Offer Valid Until' }).label}</label>
+                                        <DatePickerInput
+                                          value={fields.priceValidUntil}
+                                          onChange={(iso) => handleChange("priceValidUntil", iso)}
+                                          placeholder={(schemaFields.Product.find(f => f.key === 'priceValidUntil') || { placeholder: 'yyyy-mm-dd' }).placeholder}
+                                          disabled={offerDisabled}
+                                        />
+                                        {renderError("priceValidUntil")}
+                                      </div>
+
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'availability') || { label: 'Availability' }).label}</label>
+                                        <div className={"custom-select-wrapper product-availability-select-wrapper relative" + (offerDisabled ? " opacity-50" : "")} style={{ width: "100%" }}>
+                                          <button
+                                            type="button"
+                                            className={"custom-select-trigger tool-select" + (offerDisabled ? " opacity-50" : "")}
+                                            onClick={() => { if (!offerDisabled) setProductAvailabilityOpen((o) => !o) }}
+                                            aria-expanded={productAvailabilityOpen}
+                                            disabled={offerDisabled}
+                                            aria-disabled={offerDisabled}
+                                            title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
+                                            style={{ width: "100%", justifyContent: "space-between" }}
+                                          >
+                                            <span className="truncate block">{(TICKET_AVAILABILITY_OPTIONS.find(a => a.value === (fields.availability || "")) || { label: "Not specified" }).label}</span>
+                                            <span className="text-xs">⏷</span>
+                                          </button>
+
+                                          {productAvailabilityOpen && (
+                                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                              <ul>
+                                                {TICKET_AVAILABILITY_OPTIONS.map((opt) => (
+                                                  <li key={opt.value} className={(fields.availability || "") === opt.value ? "selected" : ""} onClick={() => { handleChange("availability", opt.value); setProductAvailabilityOpen(false) }}>
+                                                    {opt.label}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {renderError('availability')}
+                                      </div>
+
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'itemCondition') || { label: 'Item Condition' }).label}</label>
+                                        <div className={"custom-select-wrapper product-itemcondition-select-wrapper relative" + (offerDisabled ? " opacity-50" : "")} style={{ width: "100%" }}>
+                                          <button
+                                            type="button"
+                                            className={"custom-select-trigger tool-select" + (offerDisabled ? " opacity-50" : "")}
+                                            onClick={() => { if (!offerDisabled) setProductItemConditionOpen((o) => !o) }}
+                                            aria-expanded={productItemConditionOpen}
+                                            disabled={offerDisabled}
+                                            aria-disabled={offerDisabled}
+                                            title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
+                                            style={{ width: "100%", justifyContent: "space-between" }}
+                                          >
+                                            <span className="truncate block">{(ITEM_CONDITION_OPTIONS.find(a => a.value === (fields.itemCondition || "")) || { label: "Not specified" }).label}</span>
+                                            <span className="text-xs">⏷</span>
+                                          </button>
+
+                                          {productItemConditionOpen && (
+                                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                              <ul>
+                                                {ITEM_CONDITION_OPTIONS.map((opt) => (
+                                                  <li key={opt.value} className={(fields.itemCondition || "") === opt.value ? "selected" : ""} onClick={() => { handleChange("itemCondition", opt.value); setProductItemConditionOpen(false) }}>
+                                                    {opt.label}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {renderError('itemCondition')}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {schemaFields[type]
+                                    .filter((f) => !["name", "imageUrl", "brand", "description", "sku", "gtin8", "gtin13", "gtin14", "mpn", "url", "currency", "price", "priceValidUntil", "availability", "itemCondition"].includes(f.key))
+                                    .map((field) => (
+                                      <div key={field.key} className="tool-field">
+                                        <label className="tool-label">{field.label}</label>
+                                        <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
+                                        {renderError(field.key)}
+                                      </div>
+                                    ))}
+                                </>
+                              ) : (
+                                schemaFields[type].map((field) => (
+                                  <div key={field.key} className="tool-field">
+                                    <label className="tool-label">{field.label}</label>
+                                    <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
+                                    {renderError(field.key)}
+                                  </div>
+                                ))
+                              )
+                            )
               )
             )}
             {renderHelpLinks(type)}

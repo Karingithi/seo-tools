@@ -8,9 +8,10 @@ type Props = {
   onChange: (iso: string) => void
   placeholder?: string
   className?: string
+  disabled?: boolean
 }
 
-export default function DatePickerInput({ value, onChange, placeholder, className }: Props) {
+export default function DatePickerInput({ value, onChange, placeholder, className, disabled }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<Date | undefined>(() => {
@@ -49,6 +50,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
   }, [])
 
   const handleOpen = () => {
+    if (disabled) return
     // announce to others so they close
     window.dispatchEvent(new CustomEvent("datepicker-open", { detail: idRef.current }))
     setOpen((v) => !v)
@@ -63,12 +65,14 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
           onClick={handleOpen}
           value={value || ""}
           placeholder={placeholder}
-          className="tool-input cursor-pointer pr-10"
+          className={`tool-input ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} pr-10`}
         />
         <button
           type="button"
           aria-label="Toggle date picker"
           onClick={handleOpen}
+          disabled={disabled}
+          aria-disabled={disabled}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
         >
           <CalendarDays size={18} />
