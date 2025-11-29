@@ -9,6 +9,7 @@ import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from 'react-country-state-fields'
 // Prefer `currency-codes` (installed). Avoid importing `currency-list` to prevent module-not-found.
 import currencyCodes from "currency-codes"
+import ISO6391 from "iso-639-1"
 
 import Seo from "../components/Seo"
 
@@ -73,9 +74,13 @@ export default function SchemaBuilder(): JSX.Element {
   const [areaCountrySearch, setAreaCountrySearch] = useState<string>("")
   // Contact Options dropdown (per-contact index)
   const [optionsOpenIndex, setOptionsOpenIndex] = useState<number | null>(null)
+  // Contact Language(s) dropdown (per-contact index) and search
+  const [languageOpenIndex, setLanguageOpenIndex] = useState<number | null>(null)
+  const [languageSearch, setLanguageSearch] = useState<string>("")
+  // Top-level Organization Language(s) dropdown state
+  // (Removed Organization-level languages dropdown per request)
   // Memoized country list for Area(s) Served dropdown (English)
   countries.registerLocale(enLocale)
-  const countryList = useMemo(() => Object.values(countries.getNames('en', { select: 'official' }) || {}).sort((a, b) => a.localeCompare(b)), [])
   // Ticket currency open index for repeater (- null when closed)
   // Default ticket currency dropdown (searchable)
   const [ticketDefaultCurrencyOpen, setTicketDefaultCurrencyOpen] = useState<boolean>(false)
@@ -289,6 +294,11 @@ export default function SchemaBuilder(): JSX.Element {
       if (!(e.target as HTMLElement).closest(".area-country-select")) {
         setAreaCountryOpenIndex(null)
       }
+      // Close contact languages dropdown
+      if (!(e.target as HTMLElement).closest(".contact-language-select")) {
+        setLanguageOpenIndex(null)
+      }
+      // Close top-level organization languages dropdown
       // Close contact options dropdown
       if (!(e.target as HTMLElement).closest(".contact-options-select")) {
         setOptionsOpenIndex(null)
@@ -308,6 +318,34 @@ export default function SchemaBuilder(): JSX.Element {
       if (arr.length) setSocialProfiles(arr)
     }
   }, [type, fields.sameAs])
+
+  // Migration: convert existing contacts[].availableLanguage values (names) to ISO 639-1 codes when possible
+  useEffect(() => {
+    if (!contacts || !contacts.length) return
+    let changed = false
+    const next = contacts.map((c) => {
+      if (!c.availableLanguage || !c.availableLanguage.trim()) return c
+      const parts = c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean)
+      const mapped = parts.map((p) => {
+        // if already 2-letter code, normalize to lower-case
+        if (/^[A-Za-z]{2}$/.test(p)) return p.toLowerCase()
+        // try ISO6391 lookup by name
+        const code = ISO6391.getCode(p)
+        if (code) return code.toLowerCase()
+        // try matching LANG_LIST by name
+        const found = LANG_LIST.find((l) => l.name.toLowerCase() === p.toLowerCase())
+        if (found) return found.code
+        return p
+      })
+      const joined = mapped.join(",")
+      if (joined !== c.availableLanguage) {
+        changed = true
+        return { ...c, availableLanguage: joined }
+      }
+      return c
+    })
+    if (changed) setContacts(next)
+  }, [])
 
   // --- Short descriptions under each schema type in the main dropdown ---
   const schemaDescriptions: Record<string, string> = {
@@ -474,6 +512,7 @@ export default function SchemaBuilder(): JSX.Element {
     // FAQ Page handled by dynamic editor (faqItemsState)
     Product: [
       { label: "Product Name", key: "name", placeholder: "Organic Herbal Tea" },
+      { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
       { label: "SKU", key: "sku", placeholder: "SKU12345" },
       { label: "MPN", key: "mpn", placeholder: "MPN-0001" },
       { label: "GTIN (e.g., GTIN-13)", key: "gtin13", placeholder: "0123456789012" },
@@ -891,12 +930,34 @@ export default function SchemaBuilder(): JSX.Element {
   // Countries list using `i18n-iso-countries` (English locale)
   // Build list of { name, code } and prefer storing ISO codes as the field value.
   countries.registerLocale(enLocale)
-  const COUNTRY_LIST: { name: string; code?: string }[] = Object.entries(countries.getNames('en', { select: 'official' }) || {})
-    .map(([code, name]) => ({ name, code }))
+  const COUNTRY_LIST: { name: string; code?: string }[] = Object.entries((countries.getNames('en', { select: 'official' }) || {}) as Record<string, string>)
+    .map(([code, name]) => ({ name: String(name), code }))
     .filter((c) => c && c.name)
     .sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-  // Small states/provinces map for common countries (used when `react-country-state-fields` not available)
+  // Contact options (use schema.org enumeration values as `value`, labels for UI)
+  const CONTACT_OPTIONS: { value: string; label: string }[] = [
+    { value: "TollFree", label: "Toll-free" },
+    { value: "HearingImpairedSupported", label: "Hearing impaired" },
+  ]
+
+  // Full language list (ISO 639-1) generated from `iso-639-1` package
+  const LANG_LIST: { code: string; name: string }[] = useMemo(() =>
+    ISO6391.getAllCodes()
+      .map((code) => ({ code, name: ISO6391.getName(code) || code }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [])
+
+  // (Intl.DisplayNames handled via `displayNames` below)
+
+  // Localized display names helper for languages
+  const displayNames = useMemo(() => {
+    try {
+      return new Intl.DisplayNames(["en"], { type: "language" })
+    } catch {
+      return null
+    }
+  }, [])
   const STATES_BY_COUNTRY: Record<string, string[]> = {
     US: [
       'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'
@@ -1188,6 +1249,40 @@ export default function SchemaBuilder(): JSX.Element {
       return next
     })
   }
+
+  // Migrate existing contacts[].availableLanguage values from names -> ISO 639-1 codes when possible
+  useEffect(() => {
+    setContacts((prev) => {
+      let changed = false
+      const next = prev.map((c) => {
+        if (!c.availableLanguage || !c.availableLanguage.trim()) return c
+        const parts = c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean)
+        const mapped = parts.map((p) => {
+          // already a 2-letter code
+          if (/^[A-Za-z]{2}$/.test(p)) return p.toLowerCase()
+          // try iso-639-1 mapping by name
+          try {
+            const code = ISO6391.getCode(p)
+            if (code) return code
+          } catch {
+            // ignore
+          }
+          // case-insensitive exact match to display name
+          const found = ISO6391.getAllCodes().find((code) => (ISO6391.getName(code) || "").toLowerCase() === p.toLowerCase())
+          if (found) return found
+          // leave as-is (fallback)
+          return p
+        })
+        const nextVal = mapped.join(",")
+        if (nextVal !== c.availableLanguage) {
+          changed = true
+          return { ...c, availableLanguage: nextVal }
+        }
+        return c
+      })
+      return changed ? next : prev
+    })
+  }, [])
 
   const validateField = (key: string, value: string, allFields: Record<string, string>) => {
     const nextErrors = { ...errors }
@@ -2109,6 +2204,7 @@ export default function SchemaBuilder(): JSX.Element {
         : (fields.sameAs && fields.sameAs.trim() ? fields.sameAs.split(",").map((s) => s.trim()).filter(Boolean) : [])
       if (sa.length) org.sameAs = sa
 
+
       // Map contacts repeater to ContactPoint objects
       if (contacts && contacts.length) {
         const cps = contacts
@@ -2117,12 +2213,34 @@ export default function SchemaBuilder(): JSX.Element {
             if (c.contactType && c.contactType.trim()) cp.contactType = c.contactType.trim()
             if (c.phone && c.phone.trim()) cp.telephone = c.phone.trim()
             if (c.areaServed && c.areaServed.trim()) {
-              const areas = c.areaServed.includes(",") ? c.areaServed.split(",").map((s) => s.trim()).filter(Boolean) : [c.areaServed.trim()]
-              cp.areaServed = areas.length === 1 ? areas[0] : areas
+              // areaServed is stored as comma-separated ISO alpha-2 codes (preferred).
+              // Build JSON-LD using the ISO codes (per Schema.org recommendation).
+              // If an existing value is a full country name, attempt to map it to an ISO code;
+              // if mapping fails, fall back to the raw value.
+              const raw = c.areaServed.includes(",") ? c.areaServed.split(",").map((s) => s.trim()).filter(Boolean) : [c.areaServed.trim()]
+              const codes = raw.map((v) => {
+                // already a 2-letter code?
+                if (/^[A-Za-z]{2}$/.test(v)) return v.toUpperCase()
+                // try i18n-iso-countries mapping (English)
+                try {
+                  const mapped = countries.getAlpha2Code(v, 'en')
+                  if (mapped) return mapped
+                } catch {
+                  // ignore
+                }
+                // try lookup in COUNTRY_LIST by name (case-insensitive)
+                const found = COUNTRY_LIST.find((it) => it.name.toLowerCase() === String(v).toLowerCase())
+                if (found && found.code) return found.code
+                // fallback to raw value
+                return v
+              })
+              cp.areaServed = codes.length === 1 ? codes[0] : codes
             }
             if (c.availableLanguage && c.availableLanguage.trim()) {
-              const langs = c.availableLanguage.includes(",") ? c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean) : [c.availableLanguage.trim()]
-              cp.availableLanguage = langs.length === 1 ? langs[0] : langs
+              // availableLanguage stored as comma-separated ISO 639-1 codes (e.g. 'en', 'fr')
+              const rawLangs = c.availableLanguage.includes(",") ? c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean) : [c.availableLanguage.trim()]
+              const codes = rawLangs.map((v) => v.toLowerCase())
+              cp.availableLanguage = codes.length === 1 ? codes[0] : codes
             }
             if (c.options && c.options.trim()) {
               const opts = c.options.includes(",") ? c.options.split(",").map((s) => s.trim()).filter(Boolean) : [c.options.trim()]
@@ -2245,6 +2363,8 @@ export default function SchemaBuilder(): JSX.Element {
                     <span className="truncate block">{type}</span>
                     <span className="text-xs">⏷</span>
                   </button>
+
+                  {/* Language display locale toggle removed per request */}
 
                   {dropdownOpen && (
                     <div
@@ -5071,6 +5191,8 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
+                    {/* Removed Organization-level Language(s) field per request */}
+
                     {/* Social profiles for Organization */}
                     <div className="mt-0">
                       <label className="tool-label block mb-2">Social profiles</label>
@@ -5153,9 +5275,13 @@ export default function SchemaBuilder(): JSX.Element {
                                       aria-expanded={areaCountryOpenIndex === idx}
                                     >
                                       <span className="truncate block">
-                                        {c.areaServed && c.areaServed.trim()
-                                          ? c.areaServed.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3).join(", ") + (c.areaServed.split(",").filter(Boolean).length > 3 ? "…" : "")
-                                          : "Select country(s)"}
+                                        {c.areaServed && c.areaServed.trim() ? (
+                                          (() => {
+                                            const codes = c.areaServed.split(",").map((s) => s.trim()).filter(Boolean)
+                                            const names = codes.map((cd) => COUNTRY_LIST.find((it) => it.code === cd)?.name || cd)
+                                            return names.slice(0, 3).join(", ") + (names.length > 3 ? "…" : "")
+                                          })()
+                                        ) : "Select country(s)"}
                                       </span>
                                       <span className="text-xs">⏷</span>
                                     </button>
@@ -5166,19 +5292,23 @@ export default function SchemaBuilder(): JSX.Element {
                                           <input type="text" className="tool-input" placeholder="Search countries" value={areaCountrySearch} onChange={(e) => setAreaCountrySearch(e.target.value)} />
                                         </div>
                                         <ul>
-                                          {countryList
-                                            .filter((name) => name.toLowerCase().includes(areaCountrySearch.trim().toLowerCase()))
-                                            .map((name) => {
-                                              const selected = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean).includes(name)
+                                          {COUNTRY_LIST
+                                            .filter((it) => it.name.toLowerCase().includes(areaCountrySearch.trim().toLowerCase()))
+                                            .map((it) => {
+                                              const code = it.code || it.name
+                                              const selected = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean).includes(code)
                                               return (
-                                                <li key={name} className={selected ? "selected" : ""} onClick={() => {
-                                                  const prev = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean)
-                                                  const nextSel = prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
-                                                  updateContact(idx, "areaServed", nextSel.join(", "))
-                                                }}>
-                                                  {selected ? "✓ " : ""}{name}
-                                                </li>
-                                              )
+                                                    <li key={code} className={selected ? "selected" : ""} onClick={() => {
+                                                      const prev = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean)
+                                                      const nextSel = prev.includes(code) ? prev.filter((p) => p !== code) : [...prev, code]
+                                                      updateContact(idx, "areaServed", nextSel.join(","))
+                                                    }}>
+                                                      <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
+                                                        {selected ? "✓ " : ""}
+                                                        <span>{it.name}</span>
+                                                      </label>
+                                                    </li>
+                                                  )
                                             })}
                                         </ul>
                                       </div>
@@ -5188,7 +5318,60 @@ export default function SchemaBuilder(): JSX.Element {
 
                                 <div className="tool-field md:col-span-4">
                                   <label className="tool-label">Language(s)</label>
-                                  <input type="text" className="tool-input" value={c.availableLanguage} placeholder="Languages" onChange={(e) => updateContact(idx, "availableLanguage", e.target.value)} />
+                                  <div className="custom-select-wrapper compact-select contact-language-select relative" style={{ width: "100%" }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={() => { setLanguageOpenIndex((o) => (o === idx ? null : idx)); setLanguageSearch("") }}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={languageOpenIndex === idx}
+                                    >
+                                      <span className="truncate block">{(() => {
+                                        if (!c.availableLanguage || !c.availableLanguage.trim()) return "Select language(s)"
+                                        const codes = c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean)
+                                        const labels = codes.map((code) => {
+                                          const langObj = LANG_LIST.find((l) => l.code === code)
+                                          let name: string | undefined
+                                          if (displayNames && typeof displayNames.of === "function") {
+                                            const dn = displayNames.of(code)
+                                            if (dn && dn.toLowerCase() !== code.toLowerCase()) name = dn
+                                          }
+                                          name = name || langObj?.name || ISO6391.getName(code) || code
+                                          return `${name} (${code})`
+                                        })
+                                        return labels.slice(0, 3).join(", ") + (labels.length > 3 ? "…" : "")
+                                      })()}</span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {languageOpenIndex === idx && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                        <div className="p-2">
+                                          <input type="text" className="tool-input" placeholder="Search languages" value={languageSearch} onChange={(e) => setLanguageSearch(e.target.value)} />
+                                        </div>
+                                        <ul>
+                                          {LANG_LIST.filter((l) => l.name.toLowerCase().includes(languageSearch.trim().toLowerCase()) || l.code.toLowerCase().includes(languageSearch.trim().toLowerCase())).map((l) => {
+                                            const selected = (c.availableLanguage || "").split(",").map((s) => s.trim()).filter(Boolean).includes(l.code)
+                                            let name: string | undefined
+                                            if (displayNames && typeof displayNames.of === "function") {
+                                              const dn = displayNames.of(l.code)
+                                              if (dn && dn.toLowerCase() !== l.code.toLowerCase()) name = dn
+                                            }
+                                            name = name || l.name || ISO6391.getName(l.code) || l.code
+                                            return (
+                                              <li key={l.code} className={selected ? "selected" : ""} onClick={() => {
+                                                const prev = (c.availableLanguage || "").split(",").map((s) => s.trim()).filter(Boolean)
+                                                const nextSel = prev.includes(l.code) ? prev.filter((p) => p !== l.code) : [...prev, l.code]
+                                                updateContact(idx, "availableLanguage", nextSel.join(","))
+                                              }}>
+                                                {selected ? "✓ " : ""}{name} ({l.code})
+                                              </li>
+                                            )
+                                          })}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
 
                                 <div className="tool-field md:col-span-3">
@@ -5201,22 +5384,27 @@ export default function SchemaBuilder(): JSX.Element {
                                       style={{ width: "100%", justifyContent: "space-between" }}
                                       aria-expanded={optionsOpenIndex === idx}
                                     >
-                                      <span className="truncate block">{c.options && c.options.trim() ? c.options : "Select options"}</span>
+                                      <span className="truncate block">{(() => {
+                                        if (!c.options || !c.options.trim()) return "Select options"
+                                        const codes = c.options.split(",").map((s) => s.trim()).filter(Boolean)
+                                        const labels = codes.map((code) => CONTACT_OPTIONS.find((o) => o.value === code)?.label || code)
+                                        return labels.slice(0, 3).join(", ") + (labels.length > 3 ? "…" : "")
+                                      })()}</span>
                                       <span className="text-xs">⏷</span>
                                     </button>
 
                                     {optionsOpenIndex === idx && (
                                       <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
                                         <ul>
-                                          {(["Toll-free", "Hearing impaired"]).map((opt) => {
-                                            const selected = (c.options || "").split(",").map((s) => s.trim()).filter(Boolean).includes(opt)
+                                          {CONTACT_OPTIONS.map((opt) => {
+                                            const selected = (c.options || "").split(",").map((s) => s.trim()).filter(Boolean).includes(opt.value)
                                             return (
-                                              <li key={opt} className={selected ? "selected" : ""} onClick={() => {
+                                              <li key={opt.value} className={selected ? "selected" : ""} onClick={() => {
                                                 const prev = (c.options || "").split(",").map((s) => s.trim()).filter(Boolean)
-                                                const nextSel = prev.includes(opt) ? prev.filter((p) => p !== opt) : [...prev, opt]
-                                                updateContact(idx, "options", nextSel.join(", "))
+                                                const nextSel = prev.includes(opt.value) ? prev.filter((p) => p !== opt.value) : [...prev, opt.value]
+                                                updateContact(idx, "options", nextSel.join(","))
                                               }}>
-                                                {selected ? "✓ " : ""}{opt}
+                                                {selected ? "✓ " : ""}{opt.label}
                                               </li>
                                             )
                                           })}

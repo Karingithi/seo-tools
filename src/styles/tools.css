@@ -542,6 +542,13 @@ code {
   margin-top: 6px; /* small gap when stacked */
 }
 
+/* Remove extra bottom gap for area-country, language, and options selects inside Organization contacts */
+.area-country-select.compact-select,
+.contact-language-select.compact-select,
+.contact-options-select.compact-select {
+  margin-bottom: 0;
+}
+
 /* Compact header grouping for `tool-h2` and its intro paragraph */
 .tool-header-compact {
   display: block;
@@ -862,8 +869,8 @@ code {
 }
 
 .square-btn {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -873,6 +880,9 @@ code {
   border: none;
   background-color: var(--neutral-2, #f3f4f6);
   cursor: pointer;
+  align-self: center;
+  vertical-align: middle;
+  margin-top: 1px; /* nudge to visually align with selects */
 }
 
 .square-btn .toolbar-icon,
