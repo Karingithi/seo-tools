@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async"
 import { buildSchemaFromState } from "../utils/schema/builders"
 import { } from "react-router-dom"
 import DatePickerInput from "../components/DatePickerInput"
+import IdentificationInputs from "../components/IdentificationInputs"
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from 'react-country-state-fields'
@@ -4939,50 +4940,17 @@ export default function SchemaBuilder(): JSX.Element {
                                     {renderError("description")}
                                   </div>
 
-                                  <div className="tool-field">
-                                    <label className="tool-label">Identification properties</label>
-                                    <div className="custom-select-wrapper product-id-select-wrapper relative" style={{ width: "100%" }}>
-                                      <button
-                                        type="button"
-                                        className="custom-select-trigger tool-select"
-                                        aria-expanded={productIdOpen}
-                                        onClick={() => setProductIdOpen((o) => !o)}
-                                        style={{ width: "100%", justifyContent: "space-between" }}
-                                      >
-                                        <span className="truncate block">
-                                          {productIdSelected && productIdSelected.length ? productIdSelected.join(", ") : "Select identification types"}
-                                        </span>
-                                        <span className="text-xs">⏷</span>
-                                      </button>
-
-                                      {productIdOpen && (
-                                        <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
-                                          <ul>
-                                            {["sku", "gtin8", "gtin13", "gtin14", "mpn"].map((opt) => {
-                                              const selected = productIdSelected.includes(opt)
-                                              return (
-                                                <li
-                                                  key={opt}
-                                                  className={selected ? "selected" : ""}
-                                                  onClick={() => {
-                                                    const prev = productIdSelected.slice()
-                                                    const isSelected = prev.includes(opt)
-                                                    const nextSel = isSelected ? prev.filter((p) => p !== opt) : [...prev, opt]
-                                                    setProductIdSelected(nextSel)
-                                                    // If deselecting, clear the corresponding field value
-                                                    if (isSelected) handleChange(opt, "")
-                                                  }}
-                                                >
-                                                  {selected ? "✓ " : ""}{opt}
-                                                </li>
-                                              )
-                                            })}
-                                          </ul>
-                                        </div>
-                                      )}
-                                    </div>
-                                    {renderError("identificationProperties")}
-                                  </div>
+                                  <IdentificationInputs
+                                    productIdSelected={productIdSelected}
+                                    setProductIdSelected={setProductIdSelected}
+                                    productIdOpen={productIdOpen}
+                                    setProductIdOpen={setProductIdOpen}
+                                    fields={fields}
+                                    handleChange={handleChange}
+                                    renderError={renderError}
+                                    schemaFields={schemaFields}
+                                    type={type}
+                                  />
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="tool-field">
                                       <label className="tool-label">Offer Type</label>
