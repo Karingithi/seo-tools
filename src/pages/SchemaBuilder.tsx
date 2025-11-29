@@ -101,7 +101,15 @@ export default function SchemaBuilder(): JSX.Element {
 
   // Social profiles repeater for Person schema
   const [socialProfiles, setSocialProfiles] = useState<string[]>([])
-
+  // Reviews repeater for Product schema: array of review objects
+  const [reviews, setReviews] = useState<Array<{
+    name: string
+    body: string
+    rating: string
+    date: string
+    author: string
+    publisher: string
+  }>>([])
   // Opening hours repeater for Local Business
   const [openingHoursState, setOpeningHoursState] = useState<Array<{ days: string; opens: string; closes: string }>>([])
 
@@ -276,6 +284,7 @@ export default function SchemaBuilder(): JSX.Element {
 
   // Disable offer-related inputs when Offer Type is 'None' (empty)
   const offerDisabled = !((fields.offerType || "").trim())
+  const isAggregateOffer = ((fields.offerType || "").trim() === "AggregateOffer")
 
   // If offer is disabled, ensure product currency dropdown is closed and search cleared
   useEffect(() => {
@@ -509,8 +518,14 @@ export default function SchemaBuilder(): JSX.Element {
       google: [{ label: "Organization", url: "https://developers.google.com/search/docs/appearance/structured-data/organization" }],
     },
     Product: {
-      schema: [{ label: "Product", url: "https://schema.org/Product" }],
-      google: [{ label: "Product", url: "https://developers.google.com/search/docs/appearance/structured-data/product" }],
+      schema: [
+        { label: "Product", url: "https://schema.org/Product" },
+        { label: "Review", url: "https://schema.org/Review" },
+      ],
+      google: [
+        { label: "Product", url: "https://developers.google.com/search/docs/appearance/structured-data/product" },
+        { label: "Review snippet", url: "https://developers.google.com/search/docs/appearance/structured-data/review-snippet" },
+      ],
     },
     Recipe: {
       schema: [{ label: "Recipe", url: "https://schema.org/Recipe" }],
@@ -618,14 +633,20 @@ export default function SchemaBuilder(): JSX.Element {
       { label: "Brand", key: "brand", placeholder: "Tembeya Wellness" },
       
       { label: "Price", key: "price", placeholder: "25.99" },
+      { label: "Low price", key: "lowPrice", placeholder: "19.99" },
+      { label: "High price", key: "highPrice", placeholder: "29.99" },
+      { label: "Number of offers", key: "offerCount", placeholder: "3" },
       { label: "Currency", key: "currency", placeholder: "USD" },
       { label: "Offer Valid Until", key: "priceValidUntil", placeholder: "2026-12-31" },
       { label: "Availability", key: "availability", placeholder: "InStock" },
       { label: "Item Condition", key: "itemCondition", placeholder: "NewCondition" },
       { label: "URL", key: "url", placeholder: "https://example.com/product" },
-      { label: "Image(s)", key: "images", placeholder: "https://example.com/image.jpg, https://example.com/image2.jpg" },
+      // Image(s) removed from Product schema per request
       { label: "Description", key: "description", placeholder: "Natural detox blend" },
-      { label: "Rating Value", key: "ratingValue", placeholder: "4.5" },
+      { label: "Aggregate Rating Value", key: "ratingValue", placeholder: "4.5" },
+      { label: "Number of ratings", key: "ratingCount", placeholder: "12" },
+      { label: "Highest rating allowed (bestRating)", key: "bestRating", placeholder: "5" },
+      { label: "Lowest rating allowed (worstRating)", key: "worstRating", placeholder: "1" },
       { label: "Review Count", key: "reviewCount", placeholder: "12" },
     ],
     "Local Business": [
@@ -1363,6 +1384,62 @@ export default function SchemaBuilder(): JSX.Element {
     })
   }
 
+  // Reviews handlers (structured review objects)
+  const addReview = () => setReviews((prev) => [...prev, { name: "", body: "", rating: "", date: "", author: "", publisher: "" }])
+
+  const handleReviewFieldChange = (index: number, key: keyof (typeof reviews)[0], value: string) => {
+    setReviews((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], [key]: value }
+      return next
+    })
+
+    // Inline validation for review fields
+    const trimmed = value ? value.trim() : ""
+    const errKey = `review_${index}_${key}`
+    setErrors((prev) => {
+      const next = { ...prev }
+      if (!trimmed) {
+        delete next[errKey]
+        return next
+      }
+      if (key === 'rating') {
+        if (isNaN(Number(trimmed))) next[errKey] = 'Rating must be a number'
+        else delete next[errKey]
+        return next
+      }
+      if (key === 'date') {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) next[errKey] = 'Date must be yyyy-mm-dd'
+        else delete next[errKey]
+        return next
+      }
+      // For other keys, remove errors (no special validation)
+      delete next[errKey]
+      return next
+    })
+  }
+
+  const handleReviewFieldBlur = (index: number, _key: keyof (typeof reviews)[0]) => {
+    // If last and empty, remove
+    const isLastEmpty = Object.values(reviews[index] || {}).every((v) => !(String(v || "").trim()))
+    if (isLastEmpty && index === reviews.length - 1) {
+      removeReview(index)
+      return
+    }
+    // trigger validation already handled in change
+  }
+
+  const removeReview = (index: number) => {
+    setReviews((prev) => prev.filter((_, i) => i !== index))
+    setErrors((prev) => {
+      const next = { ...prev }
+      Object.keys(next).forEach((k) => {
+        if (k.startsWith("review_")) delete next[k]
+      })
+      return next
+    })
+  }
+
   // Migrate existing contacts[].availableLanguage values from names -> ISO 639-1 codes when possible
   useEffect(() => {
     setContacts((prev) => {
@@ -1524,7 +1601,27 @@ export default function SchemaBuilder(): JSX.Element {
       }
 
       case "price":
-        if (isNaN(Number(trimmed))) setError(key, "Price must be a number")
+      case "lowPrice":
+      case "highPrice":
+        if (trimmed && isNaN(Number(trimmed))) setError(key, "Price must be a number")
+        else setError(key)
+        break
+
+      case "offerCount": {
+        if (trimmed && (!/^[0-9]+$/.test(trimmed) || isNaN(Number(trimmed)))) setError(key, "Number of offers must be a non-negative integer")
+        else setError(key)
+        break
+      }
+
+      case "ratingValue":
+      case "bestRating":
+      case "worstRating":
+        if (trimmed && isNaN(Number(trimmed))) setError(key, "Rating must be a number")
+        else setError(key)
+        break
+
+      case "ratingCount":
+        if (trimmed && (!/^[0-9]+$/.test(trimmed) || isNaN(Number(trimmed)))) setError(key, "Number of ratings must be a non-negative integer")
         else setError(key)
         break
 
@@ -1815,12 +1912,13 @@ export default function SchemaBuilder(): JSX.Element {
 
     if (type === "Product") {
       // Offers (optional for Product) — respect selected offerType
-      if (fields.price && fields.price.trim()) {
+      const hasOfferData = (fields.price && fields.price.trim()) || (fields.lowPrice && fields.lowPrice.trim()) || (fields.highPrice && fields.highPrice.trim()) || (fields.offerCount && fields.offerCount.trim())
+      if (hasOfferData) {
         const offer: any = {
           "@type": "Offer",
-          price: fields.price.trim(),
-          priceCurrency: fields.currency || "USD",
         }
+        if (fields.price && fields.price.trim()) offer.price = fields.price.trim()
+        offer.priceCurrency = fields.currency || "USD"
         if (fields.availability && fields.availability.trim()) {
           const avail = fields.availability.trim()
           offer.availability = avail.startsWith("http") ? avail : `https://schema.org/${avail}`
@@ -1838,7 +1936,17 @@ export default function SchemaBuilder(): JSX.Element {
 
         const offerType = (fields.offerType || "Offer").trim()
         if (offerType === "AggregateOffer") {
-          base.offers = { "@type": "AggregateOffer", offers: offer }
+          const agg: any = { "@type": "AggregateOffer" }
+          if (fields.lowPrice && fields.lowPrice.trim()) agg.lowPrice = fields.lowPrice.trim()
+          if (fields.highPrice && fields.highPrice.trim()) agg.highPrice = fields.highPrice.trim()
+          if (fields.offerCount && fields.offerCount.trim()) {
+            const n = Number(fields.offerCount.trim())
+            if (!isNaN(n)) agg.offerCount = n
+            else agg.offerCount = fields.offerCount.trim()
+          }
+          // include an example Offer entry under 'offers' when available
+          agg.offers = offer
+          base.offers = agg
         } else if (offerType === "Offer" || offerType === "") {
           // If explicitly set to empty string, treat as None (do not emit offers)
           if (offerType === "Offer") base.offers = offer
@@ -1851,8 +1959,23 @@ export default function SchemaBuilder(): JSX.Element {
           "@type": "AggregateRating",
           ratingValue: fields.ratingValue.trim(),
         }
+        // ratingCount is preferred for AggregateRating; fall back to reviewCount if present
+        if (fields.ratingCount && fields.ratingCount.trim()) {
+          const n = Number(fields.ratingCount.trim())
+          rating.ratingCount = !isNaN(n) ? n : fields.ratingCount.trim()
+        } else if (fields.reviewCount && fields.reviewCount.trim()) {
+          const n = Number(fields.reviewCount.trim())
+          rating.ratingCount = !isNaN(n) ? n : fields.reviewCount.trim()
+        }
         if (fields.reviewCount && fields.reviewCount.trim()) {
-          rating.reviewCount = fields.reviewCount.trim()
+          const n = Number(fields.reviewCount.trim())
+          rating.reviewCount = !isNaN(n) ? n : fields.reviewCount.trim()
+        }
+        if (fields.bestRating && fields.bestRating.trim()) {
+          rating.bestRating = fields.bestRating.trim()
+        }
+        if (fields.worstRating && fields.worstRating.trim()) {
+          rating.worstRating = fields.worstRating.trim()
         }
         base.aggregateRating = rating
       }
@@ -1864,6 +1987,9 @@ export default function SchemaBuilder(): JSX.Element {
       delete base.availability
       delete base.itemCondition
       delete base.ratingValue
+      delete base.ratingCount
+      delete base.bestRating
+      delete base.worstRating
       delete base.reviewCount
     }
 
@@ -5783,19 +5909,48 @@ export default function SchemaBuilder(): JSX.Element {
                                     </div>
 
                                     <div className="tool-field">
-                                      <label className="tool-label">Price</label>
+                                      <label className="tool-label">{isAggregateOffer ? "Low price" : "Price"}</label>
                                       <input
                                         type="text"
                                         className="tool-input"
-                                        value={fields.price || ""}
-                                        placeholder={schemaFields.Product.find(f => f.key === 'price')?.placeholder || "0.00"}
-                                        onChange={(e) => handleChange("price", e.target.value)}
+                                        value={isAggregateOffer ? (fields.lowPrice || "") : (fields.price || "")}
+                                        placeholder={isAggregateOffer ? (schemaFields.Product.find(f => f.key === 'lowPrice')?.placeholder || "0.00") : (schemaFields.Product.find(f => f.key === 'price')?.placeholder || "0.00")}
+                                        onChange={(e) => handleChange(isAggregateOffer ? "lowPrice" : "price", e.target.value)}
                                         disabled={offerDisabled}
                                         title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
                                       />
-                                      {renderError("price")}
+                                      {renderError(isAggregateOffer ? "lowPrice" : "price")}
                                     </div>
                                   </div>
+
+                                  {/* AggregateOffer fields: lowPrice / highPrice / offerCount */}
+                                  {type === "Product" && isAggregateOffer && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
+                                      <div className="tool-field">
+                                        <label className="tool-label">High price</label>
+                                        <input
+                                          type="text"
+                                          className="tool-input"
+                                          value={fields.highPrice || ""}
+                                          placeholder={schemaFields.Product.find(f => f.key === 'highPrice')?.placeholder || "0.00"}
+                                          onChange={(e) => handleChange("highPrice", e.target.value)}
+                                        />
+                                        {renderError("highPrice")}
+                                      </div>
+
+                                      <div className="tool-field">
+                                        <label className="tool-label">Number of offers</label>
+                                        <input
+                                          type="text"
+                                          className="tool-input"
+                                          value={fields.offerCount || ""}
+                                          placeholder={schemaFields.Product.find(f => f.key === 'offerCount')?.placeholder || "0"}
+                                          onChange={(e) => handleChange("offerCount", e.target.value)}
+                                        />
+                                        {renderError("offerCount")}
+                                      </div>
+                                    </div>
+                                  )}
 
                                   {/* Identification inputs: grouped rows per request */}
                                   {(() => {
@@ -5855,7 +6010,7 @@ export default function SchemaBuilder(): JSX.Element {
                                   })()}
 
                                   {/* Render remaining non-identification fields */}
-                                  {type === "Product" && (
+                                  {type === "Product" && !offerDisabled && !isAggregateOffer && (
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                       <div className="tool-field">
                                         <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'priceValidUntil') || { label: 'Offer Valid Until' }).label}</label>
@@ -5934,8 +6089,106 @@ export default function SchemaBuilder(): JSX.Element {
                                     </div>
                                   )}
 
+                                  {/* Aggregate rating row: value + count */}
+                                  {type === "Product" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'ratingValue') || { label: 'Aggregate Rating Value' }).label}</label>
+                                        <input type="text" className="tool-input" value={fields.ratingValue || ""} placeholder={schemaFields.Product.find(f => f.key === 'ratingValue')?.placeholder || ""} onChange={(e) => handleChange('ratingValue', e.target.value)} />
+                                        {renderError('ratingValue')}
+                                      </div>
+
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'ratingCount') || { label: 'Number of ratings' }).label}</label>
+                                        <input type="text" className="tool-input" value={fields.ratingCount || ""} placeholder={schemaFields.Product.find(f => f.key === 'ratingCount')?.placeholder || ""} onChange={(e) => handleChange('ratingCount', e.target.value)} />
+                                        {renderError('ratingCount')}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Aggregate rating bounds row: bestRating + worstRating */}
+                                  {type === "Product" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'bestRating') || { label: 'Highest rating' }).label}</label>
+                                        <input type="text" className="tool-input" value={fields.bestRating || ""} placeholder={schemaFields.Product.find(f => f.key === 'bestRating')?.placeholder || ""} onChange={(e) => handleChange('bestRating', e.target.value)} />
+                                        {renderError('bestRating')}
+                                      </div>
+
+                                      <div className="tool-field">
+                                        <label className="tool-label">{(schemaFields.Product.find(f => f.key === 'worstRating') || { label: 'Lowest rating' }).label}</label>
+                                        <input type="text" className="tool-input" value={fields.worstRating || ""} placeholder={schemaFields.Product.find(f => f.key === 'worstRating')?.placeholder || ""} onChange={(e) => handleChange('worstRating', e.target.value)} />
+                                        {renderError('worstRating')}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Reviews repeater (simple review bodies) */}
+                                  {type === "Product" && (
+                                    <div className="mt-2">
+                                      <label className="tool-label block mb-2">Reviews</label>
+                                      <div className="flex flex-col gap-2">
+                                        {reviews && reviews.length > 0 ? (
+                                          reviews.map((r, idx) => (
+                                            <div key={idx}>
+                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                <div className="tool-field">
+                                                  <label className="tool-label">Review name</label>
+                                                  <input type="text" className="tool-input" value={r.name} placeholder={`Title for review #${idx + 1}`} onChange={(e) => handleReviewFieldChange(idx, 'name', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'name')} />
+                                                  {renderError(`review_${idx}_name`)}
+                                                </div>
+
+                                                <div className="tool-field">
+                                                  <label className="tool-label">Rating</label>
+                                                  <input type="text" className="tool-input" value={r.rating} placeholder="4.5" onChange={(e) => handleReviewFieldChange(idx, 'rating', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'rating')} />
+                                                  {renderError(`review_${idx}_rating`)}
+                                                </div>
+
+                                                <div className="tool-field">
+                                                  <label className="tool-label">Date</label>
+                                                  <DatePickerInput value={r.date} onChange={(iso) => handleReviewFieldChange(idx, 'date', iso)} placeholder="yyyy-mm-dd" />
+                                                  {renderError(`review_${idx}_date`)}
+                                                </div>
+                                              </div>
+
+                                              <div className="tool-field mt-3">
+                                                <label className="tool-label">Review body</label>
+                                                <textarea rows={8} className="tool-input" value={r.body} placeholder="Review text" onChange={(e) => handleReviewFieldChange(idx, 'body', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'body')} />
+                                                {renderError(`review_${idx}_body`)}
+                                              </div>
+
+                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-3">
+                                                <div className="tool-field">
+                                                  <label className="tool-label">Author</label>
+                                                  <input type="text" className="tool-input" value={r.author} placeholder="Author name" onChange={(e) => handleReviewFieldChange(idx, 'author', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'author')} />
+                                                  {renderError(`review_${idx}_author`)}
+                                                </div>
+
+                                                <div className="tool-field">
+                                                  <label className="tool-label">Publisher</label>
+                                                  <input type="text" className="tool-input" value={r.publisher} placeholder="Publisher name" onChange={(e) => handleReviewFieldChange(idx, 'publisher', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'publisher')} />
+                                                  {renderError(`review_${idx}_publisher`)}
+                                                </div>
+
+                                                <div className="flex items-center justify-end">
+                                                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeReview(idx)} title="Remove">×</button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <div className="text-sm text-gray-500">No reviews added.</div>
+                                        )}
+
+                                        <div>
+                                          <button type="button" className="action-btn" onClick={addReview}>Add Review</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {schemaFields[type]
-                                    .filter((f) => !["name", "imageUrl", "brand", "description", "sku", "gtin8", "gtin13", "gtin14", "mpn", "url", "currency", "price", "priceValidUntil", "availability", "itemCondition"].includes(f.key))
+                                    .filter((f) => !["name", "imageUrl", "brand", "description", "sku", "gtin8", "gtin13", "gtin14", "mpn", "url", "currency", "price", "lowPrice", "highPrice", "offerCount", "priceValidUntil", "availability", "itemCondition", "ratingValue", "ratingCount", "bestRating", "worstRating", "reviewCount"].includes(f.key))
                                     .map((field) => (
                                       <div key={field.key} className="tool-field">
                                         <label className="tool-label">{field.label}</label>
