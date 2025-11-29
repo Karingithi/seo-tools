@@ -4,7 +4,8 @@ import { Plus, Minus } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 import { } from "react-router-dom"
 import DatePickerInput from "../components/DatePickerInput"
-import { getNames, getCode } from "country-list"
+import countries from 'i18n-iso-countries'
+import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from 'react-country-state-fields'
 // Prefer `currency-codes` (installed). Avoid importing `currency-list` to prevent module-not-found.
 import currencyCodes from "currency-codes"
@@ -65,6 +66,16 @@ export default function SchemaBuilder(): JSX.Element {
   // Organization @type dropdown state
   const [orgTypeOpen, setOrgTypeOpen] = useState<boolean>(false)
   const [orgMoreSpecificOpen, setOrgMoreSpecificOpen] = useState<boolean>(false)
+  // Contact type dropdown state (per-contact index)
+  const [contactTypeOpenIndex, setContactTypeOpenIndex] = useState<number | null>(null)
+  // Area(s) Served country dropdown (per-contact index) and search
+  const [areaCountryOpenIndex, setAreaCountryOpenIndex] = useState<number | null>(null)
+  const [areaCountrySearch, setAreaCountrySearch] = useState<string>("")
+  // Contact Options dropdown (per-contact index)
+  const [optionsOpenIndex, setOptionsOpenIndex] = useState<number | null>(null)
+  // Memoized country list for Area(s) Served dropdown (English)
+  countries.registerLocale(enLocale)
+  const countryList = useMemo(() => Object.values(countries.getNames('en', { select: 'official' }) || {}).sort((a, b) => a.localeCompare(b)), [])
   // Ticket currency open index for repeater (- null when closed)
   // Default ticket currency dropdown (searchable)
   const [ticketDefaultCurrencyOpen, setTicketDefaultCurrencyOpen] = useState<boolean>(false)
@@ -270,6 +281,18 @@ export default function SchemaBuilder(): JSX.Element {
       if (!(e.target as HTMLElement).closest(".department-subtype-select")) {
         setDeptMoreSpecificOpenIndex(null)
       }
+      // Close contact type dropdown when clicking outside
+      if (!(e.target as HTMLElement).closest(".contact-type-select")) {
+        setContactTypeOpenIndex(null)
+      }
+      // Close area(s) served country dropdown
+      if (!(e.target as HTMLElement).closest(".area-country-select")) {
+        setAreaCountryOpenIndex(null)
+      }
+      // Close contact options dropdown
+      if (!(e.target as HTMLElement).closest(".contact-options-select")) {
+        setOptionsOpenIndex(null)
+      }
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
@@ -310,12 +333,12 @@ export default function SchemaBuilder(): JSX.Element {
     "FAQ Page": "Add questions and answers to create a valid FAQ schema",
     "How-to": "Schema Builder for How-To Guides and Step-by-Step Content",
     "Local Business": "LocalBusiness, Store, Restaurant",
-    Product: "Product, Offer, AggregateOffer",
+    Product: "Generate Structured Data Builder for Product, Offer, and AggregateOffer Types",
     Recipe: "Recipe — ingredients, cookTime, recipeInstructions",
     Video: "VideoObject",
     "Website Sitelinks Searchbox": "WebSite + SearchAction",
     Organization: "Generate Accurate Schema Markup for Organizations, Local Businesses, and Corporations",
-    Person: "Person, Author, Speaker",
+    Person: "Generate Structured Data Builder for Person, Author, and Speaker Profiles",
     "Job Posting": "Schema Builder for Job Listings, Hiring Info, and Requirements",
     Event: "Generate Structured Data for Events, Business Events, and Festivals",
   }
@@ -555,6 +578,13 @@ export default function SchemaBuilder(): JSX.Element {
       { label: "URL", key: "url", placeholder: "https://tembeyawellnessretreats.com" },
       { label: "Logo URL", key: "logo", placeholder: "https://example.com/logo.png" },
       { label: "Contact Email", key: "email", placeholder: "info@example.com" },
+      { label: "Founder", key: "founder", placeholder: "Founder's name" },
+      { label: "Founding date", key: "foundingDate", placeholder: "yyyy-mm-dd" },
+      { label: "Street", key: "street", placeholder: "Street address" },
+      { label: "City", key: "city", placeholder: "City" },
+      { label: "State/Region", key: "region", placeholder: "State or region" },
+      { label: "Zip / Postal code", key: "postalCode", placeholder: "Zip code" },
+      { label: "Country", key: "country", placeholder: "Country name or code" },
     ],
     "Website Sitelinks Searchbox": [
       { label: "Site Name", key: "name", placeholder: "Example Site" },
@@ -567,12 +597,12 @@ export default function SchemaBuilder(): JSX.Element {
       { label: "Description", key: "description", placeholder: "Short description of your site" },
     ],
     Person: [
-      { label: "Name", key: "name", placeholder: "Full name" },
-      { label: "URL", key: "url", placeholder: "https://example.com" },
-      { label: "Picture URL", key: "pictureUrl", placeholder: "https://example.com/photo.jpg" },
-      { label: "Social profiles", key: "sameAs", placeholder: "https://twitter.com/..., https://linkedin.com/..." },
-      { label: "Job title", key: "jobTitle", placeholder: "Wellness Coach" },
-      { label: "Company", key: "worksFor", placeholder: "Company or Organization" },
+      { label: "Name", key: "name", placeholder: "e.g. Jane Smith" },
+      { label: "URL", key: "url", placeholder: "https://example.com/about/jane-smith" },
+      { label: "Picture URL", key: "pictureUrl", placeholder: "https://example.com/images/jane-smith.jpg" },
+      { label: "Social profiles", key: "sameAs", placeholder: "https://twitter.com/janesmith, https://linkedin.com/in/janesmith" },
+      { label: "Job title", key: "jobTitle", placeholder: "e.g. Senior Marketing Manager, Author, Data Analyst" },
+      { label: "Company", key: "worksFor", placeholder: "e.g. Acme Corporation, Self-employed" },
     ],
   }
 
@@ -730,15 +760,24 @@ export default function SchemaBuilder(): JSX.Element {
   // Organization types and subtypes (used in Organization form)
   const ORG_TYPES: { value: string; desc: string }[] = [
     { value: "Organization", desc: "A general organization like a business, NGO, or club." },
+    { value: "Airline", desc: "Provides passenger flight services." },
+    { value: "Consortium", desc: "A membership body of organizations." },
     { value: "Corporation", desc: "A registered business company." },
     { value: "EducationalOrganization", desc: "A school, college, or learning institution." },
-    { value: "MedicalOrganization", desc: "Healthcare provider." },
+    { value: "FundingScheme", desc: "Grant funding program." },
     { value: "GovernmentOrganization", desc: "Public or state-run institution." },
+    { value: "LibrarySystem", desc: "Network of cooperating libraries." },
+    { value: "MedicalOrganization", desc: "Healthcare provider." },
+    { value: "NGO", desc: "Non-profit organization." },
     { value: "NewsMediaOrganization", desc: "Publishes or broadcasts news." },
     { value: "OnlineBusiness", desc: "Internet-based business." },
     { value: "PerformingGroup", desc: "Music, dance, or theater group." },
+    { value: "PoliticalParty", desc: "Organized political movement." },
+    { value: "Project", desc: "Organized planned initiative." },
+    { value: "ResearchOrganization", desc: "Academic or scientific research." },
+    { value: "SearchRescueOrganization", desc: "Emergency search & rescue." },
     { value: "SportsOrganization", desc: "Sports organizing body." },
-    { value: "NGO", desc: "Non-profit organization." },
+    { value: "WorkersUnion", desc: "Represents employees’ interests." },
   ]
 
   const ORG_SUBTYPE_MAP: Record<string, { value: string; desc: string }[]> = {
@@ -746,18 +785,21 @@ export default function SchemaBuilder(): JSX.Element {
       { value: "CollegeOrUniversity", desc: "Higher education institution." },
       { value: "ElementarySchool", desc: "Primary education." },
       { value: "HighSchool", desc: "Secondary education." },
+      { value: "MiddleSchool", desc: "Intermediate level school." },
       { value: "Preschool", desc: "Early childhood education." },
       { value: "School", desc: "General education facility." },
     ],
     MedicalOrganization: [
+      { value: "Dentist", desc: "Dental healthcare." },
       { value: "Hospital", desc: "Large healthcare facility." },
       { value: "MedicalClinic", desc: "Outpatient healthcare." },
       { value: "Pharmacy", desc: "Dispenses medicines." },
-      { value: "Dentist", desc: "Dental healthcare." },
+      { value: "Physician", desc: "Licensed medical doctor." },
+      { value: "VeterinaryCare", desc: "Animal healthcare." },
     ],
     PerformingGroup: [
-      { value: "MusicGroup", desc: "Musical group." },
       { value: "DanceGroup", desc: "Dance performers." },
+      { value: "MusicGroup", desc: "Musical group." },
       { value: "TheaterGroup", desc: "Stage performers." },
     ],
     SportsOrganization: [
@@ -846,9 +888,11 @@ export default function SchemaBuilder(): JSX.Element {
   })()
 
   // Countries list (requires `country-list` package)
+  // Countries list using `i18n-iso-countries` (English locale)
   // Build list of { name, code } and prefer storing ISO codes as the field value.
-  const COUNTRY_LIST: { name: string; code?: string }[] = (getNames ? getNames() : [])
-    .map((name: string) => ({ name, code: typeof getCode === "function" ? getCode(name) : undefined }))
+  countries.registerLocale(enLocale)
+  const COUNTRY_LIST: { name: string; code?: string }[] = Object.entries(countries.getNames('en', { select: 'official' }) || {})
+    .map(([code, name]) => ({ name, code }))
     .filter((c) => c && c.name)
     .sort((a: any, b: any) => a.name.localeCompare(b.name))
 
@@ -898,9 +942,13 @@ export default function SchemaBuilder(): JSX.Element {
     if (!countryVal) return undefined
     // If user or selector already provided a 2-letter uppercase code, use it directly
     if (/^[A-Z]{2}$/.test(countryVal)) return countryVal
-    // Otherwise try to map a country name to code using `getCode` from country-list
-    if (typeof getCode === "function") return getCode(countryVal)
-    return undefined
+    // Otherwise try to map a country name to ISO alpha-2 code using i18n-iso-countries
+    try {
+      const code = countries.getAlpha2Code(countryVal, 'en')
+      return code || undefined
+    } catch {
+      return undefined
+    }
   }
 
   const selectedCountryCode = getSelectedCountryCode(fields.country)
@@ -1036,6 +1084,18 @@ export default function SchemaBuilder(): JSX.Element {
     validateField(`sameAs_${index}`, value, fields)
   }
 
+  // When a social profile input is blurred, remove the last empty profile (like images/video thumbs)
+  const handleSocialBlur = (index: number) => {
+    const val = (socialProfiles && socialProfiles[index]) ? socialProfiles[index].trim() : ""
+    // if the blurred field is empty and it's the last item, remove it
+    if (!val && socialProfiles && index === socialProfiles.length - 1) {
+      removeSocialProfile(index)
+      return
+    }
+    // re-run validation on blur
+    validateField(`sameAs_${index}`, val, fields)
+  }
+
   // Opening hours handlers
   const addOpeningHour = () => {
     // Prevent adding opening hours when Open 24/7 is checked
@@ -1105,7 +1165,7 @@ export default function SchemaBuilder(): JSX.Element {
   const removeDepartment = (index: number) => setDepartments((prev) => prev.filter((_, i) => i !== index))
 
   // Contacts handlers (Organization)
-  const addContact = () => setContacts((prev) => [...prev, { contactType: "CustomerService", phone: "", areaServed: "", availableLanguage: "", options: "" }])
+  const addContact = () => setContacts((prev) => [...prev, { contactType: "Customer service", phone: "", areaServed: "", availableLanguage: "", options: "" }])
   const updateContact = (index: number, key: string, value: string) => {
     setContacts((prev) => {
       const next = [...prev]
@@ -1184,6 +1244,14 @@ export default function SchemaBuilder(): JSX.Element {
 
     // Job-related date fields validation
     if (key === "datePosted" || key === "validThrough") {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) nextErrors[key] = "Date must be in yyyy-mm-dd format"
+      else delete nextErrors[key]
+      setErrors(nextErrors)
+      return
+    }
+
+    // Organization founding date
+    if (key === "foundingDate") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) nextErrors[key] = "Date must be in yyyy-mm-dd format"
       else delete nextErrors[key]
       setErrors(nextErrors)
@@ -1304,6 +1372,20 @@ export default function SchemaBuilder(): JSX.Element {
       }
     })
   }, [departments, fields])
+
+  // Validate contacts repeater: require phone and basic checks
+  useEffect(() => {
+    contacts.forEach((c, i) => {
+      setErrors((prev) => {
+        const next = { ...prev }
+        const key = `contact_phone_${i}`
+        if (!c.phone || !c.phone.trim()) next[key] = "Phone is required for each contact"
+        else delete next[key]
+        return next
+      })
+      // validate areaServed/options formatting could be added later
+    })
+  }, [contacts])
 
   // Image handlers
   const handleImageChange = (index: number, value: string) => {
@@ -2034,17 +2116,48 @@ export default function SchemaBuilder(): JSX.Element {
             const cp: any = { "@type": "ContactPoint" }
             if (c.contactType && c.contactType.trim()) cp.contactType = c.contactType.trim()
             if (c.phone && c.phone.trim()) cp.telephone = c.phone.trim()
-            if (c.areaServed && c.areaServed.trim()) cp.areaServed = c.areaServed.trim()
+            if (c.areaServed && c.areaServed.trim()) {
+              const areas = c.areaServed.includes(",") ? c.areaServed.split(",").map((s) => s.trim()).filter(Boolean) : [c.areaServed.trim()]
+              cp.areaServed = areas.length === 1 ? areas[0] : areas
+            }
             if (c.availableLanguage && c.availableLanguage.trim()) {
               const langs = c.availableLanguage.includes(",") ? c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean) : [c.availableLanguage.trim()]
               cp.availableLanguage = langs.length === 1 ? langs[0] : langs
             }
-            if (c.options && c.options.trim()) cp.contactOption = c.options.trim()
+            if (c.options && c.options.trim()) {
+              const opts = c.options.includes(",") ? c.options.split(",").map((s) => s.trim()).filter(Boolean) : [c.options.trim()]
+              cp.contactOption = opts.length === 1 ? opts[0] : opts
+            }
             return Object.keys(cp).length > 1 ? cp : null
           })
           .filter(Boolean)
 
         if (cps.length) org.contactPoint = cps
+      }
+
+      // Logo as ImageObject when provided
+      if (fields.logo && fields.logo.trim()) {
+        org.logo = { "@type": "ImageObject", url: fields.logo.trim() }
+      }
+
+      // Founder and foundingDate (if present)
+      if (fields.founder && fields.founder.trim()) {
+        org.founder = { "@type": "Person", name: fields.founder.trim() }
+      }
+      if (fields.foundingDate && fields.foundingDate.trim()) {
+        org.foundingDate = fields.foundingDate.trim()
+      }
+
+      // Structured postal address when address-related fields provided
+      const hasAddr = fields.street || fields.city || fields.region || fields.postalCode || fields.country
+      if (hasAddr) {
+        const addr: any = { "@type": "PostalAddress" }
+        if (fields.street && fields.street.trim()) addr.streetAddress = fields.street.trim()
+        if (fields.city && fields.city.trim()) addr.addressLocality = fields.city.trim()
+        if (fields.region && fields.region.trim()) addr.addressRegion = fields.region.trim()
+        if (fields.postalCode && fields.postalCode.trim()) addr.postalCode = fields.postalCode.trim()
+        if (fields.country && fields.country.trim()) addr.addressCountry = fields.country.trim()
+        org.address = addr
       }
 
       return org
@@ -2807,6 +2920,7 @@ export default function SchemaBuilder(): JSX.Element {
                                   value={s}
                                   placeholder={`https://social.example/profile-${idx + 1}`}
                                   onChange={(e) => handleSocialChange(idx, e.target.value)}
+                                  onBlur={() => handleSocialBlur(idx)}
                                 />
                                 <button
                                   type="button"
@@ -2852,7 +2966,7 @@ export default function SchemaBuilder(): JSX.Element {
                           type="text"
                           className="tool-input"
                           value={fields.jobTitle || ""}
-                          placeholder="Wellness Coach"
+                          placeholder="Marketing Manager"
                           onChange={(e) => handleChange("jobTitle", e.target.value)}
                         />
                         {renderError("jobTitle")}
@@ -4835,7 +4949,7 @@ export default function SchemaBuilder(): JSX.Element {
                           socialProfiles.map((s, idx) => (
                             <div key={idx}>
                               <div className="flex items-center gap-2">
-                                <input type="text" className="tool-input flex-1" value={s} placeholder={`https://social.example/profile-${idx + 1}`} onChange={(e) => handleSocialChange(idx, e.target.value)} />
+                                <input type="text" className="tool-input flex-1" value={s} placeholder={`https://social.example/profile-${idx + 1}`} onChange={(e) => handleSocialChange(idx, e.target.value)} onBlur={() => handleSocialBlur(idx)} />
                                 <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeSocialProfile(idx)} aria-label="Remove profile" title="Remove">×</button>
                               </div>
                               {renderError(`sameAs_${idx}`)}
@@ -4878,9 +4992,7 @@ export default function SchemaBuilder(): JSX.Element {
                                     <div className="text-[13px] text-gray-500">{opt.desc}</div>
                                   </li>
                                 ))}
-                                <li key="none-organization" className={(fields.organizationType || "") === "" ? "selected" : ""} onClick={() => { handleChange("organizationType", ""); setOrgTypeOpen(false) }}>
-                                  Not specified
-                                </li>
+                                {/* no explicit 'Not specified' option — follow reference */}
                               </ul>
                             </div>
                           )}
@@ -4916,9 +5028,7 @@ export default function SchemaBuilder(): JSX.Element {
                                           <div className="text-[13px] text-gray-500">{o.desc}</div>
                                         </li>
                                       ))}
-                                      <li key="none-org-subtype" className={(fields.moreSpecificType || "") === "" ? "selected" : ""} onClick={() => { handleChange("moreSpecificType", ""); setOrgMoreSpecificOpen(false) }}>
-                                        Not specified
-                                      </li>
+                                      {/* no explicit 'Not specified' option for subtype; use placeholder when none applicable */}
                                     </ul>
                                   </div>
                                 )}
@@ -4931,58 +5041,34 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Contacts repeater for Organization */}
-                    <div className="mt-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold">Contacts</h4>
-                        <button type="button" className="action-btn" onClick={addContact}><Plus className="inline w-4 h-4 mr-2" /> Add Contact</button>
+                    {/* Organization Name + Alternative Name (single row) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Organization Name</label>
+                        <input type="text" className="tool-input" value={fields.name || ""} placeholder="Organization name" onChange={(e) => handleChange("name", e.target.value)} />
+                        {renderError("name")}
                       </div>
 
-                      {contacts && contacts.length > 0 ? (
-                        contacts.map((c, idx) => (
-                          <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end mb-2">
-                            <div className="tool-field md:col-span-1">
-                              <label className="tool-label">Type</label>
-                              <div className="custom-select-wrapper compact-select">
-                              <select className="tool-input tool-select custom-select-trigger" value={c.contactType} onChange={(e) => updateContact(idx, "contactType", e.target.value)}>
-                                <option value="CustomerService">CustomerService</option>
-                                <option value="Sales">Sales</option>
-                                <option value="TechnicalSupport">TechnicalSupport</option>
-                                <option value="Billing">Billing</option>
-                                <option value="Other">Other</option>
-                              </select>
-                              </div>
-                            </div>
+                      <div className="tool-field">
+                        <label className="tool-label">Alternative Name</label>
+                        <input type="text" className="tool-input" value={fields.alternateName || ""} placeholder="Alternative / short name" onChange={(e) => handleChange("alternateName", e.target.value)} />
+                        {renderError("alternateName")}
+                      </div>
+                    </div>
 
-                            <div className="tool-field md:col-span-2">
-                              <label className="tool-label">Phone</label>
-                              <input type="text" className="tool-input" value={c.phone} placeholder="+1-555-555-5555" onChange={(e) => updateContact(idx, "phone", e.target.value)} />
-                            </div>
+                    {/* Website URL + Logo URL (single row) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Website URL</label>
+                        <input type="text" className="tool-input" value={fields.url || ""} placeholder="https://example.com" onChange={(e) => handleChange("url", e.target.value)} />
+                        {renderError("url")}
+                      </div>
 
-                            <div className="tool-field md:col-span-1">
-                              <label className="tool-label">Area(s) served</label>
-                              <input type="text" className="tool-input" value={c.areaServed} placeholder="e.g. US, CA" onChange={(e) => updateContact(idx, "areaServed", e.target.value)} />
-                            </div>
-
-                            <div className="tool-field md:col-span-1">
-                              <label className="tool-label">Language(s)</label>
-                              <input type="text" className="tool-input" value={c.availableLanguage} placeholder="English, Swahili" onChange={(e) => updateContact(idx, "availableLanguage", e.target.value)} />
-                            </div>
-
-                            <div className="flex items-center gap-2 md:col-span-1">
-                              <div className="tool-field flex-1">
-                                <label className="tool-label">Options</label>
-                                <input type="text" className="tool-input" value={c.options} placeholder="e.g. 24/7" onChange={(e) => updateContact(idx, "options", e.target.value)} />
-                              </div>
-                              <div>
-                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeContact(idx)} title="Remove">×</button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-gray-500">No contacts added yet.</div>
-                      )}
+                      <div className="tool-field">
+                        <label className="tool-label">Logo URL</label>
+                        <input type="text" className="tool-input" value={fields.logo || ""} placeholder="https://example.com/logo.png" onChange={(e) => handleChange("logo", e.target.value)} />
+                        {renderError("logo")}
+                      </div>
                     </div>
 
                     {/* Social profiles for Organization */}
@@ -4993,7 +5079,7 @@ export default function SchemaBuilder(): JSX.Element {
                           socialProfiles.map((s, idx) => (
                             <div key={idx}>
                               <div className="flex items-center gap-2">
-                                <input type="text" className="tool-input flex-1" value={s} placeholder={`https://social.example/profile-${idx + 1}`} onChange={(e) => handleSocialChange(idx, e.target.value)} />
+                                <input type="text" className="tool-input flex-1" value={s} placeholder={`https://social.example/profile-${idx + 1}`} onChange={(e) => handleSocialChange(idx, e.target.value)} onBlur={() => handleSocialBlur(idx)} />
                                 <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeSocialProfile(idx)} aria-label="Remove profile" title="Remove">×</button>
                               </div>
                               {renderError(`sameAs_${idx}`)}
@@ -5009,14 +5095,178 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Render remaining simple fields for Organization (skip organizationType/moreSpecificType) */}
-                    {schemaFields[type].filter((f) => f.key !== "organizationType" && f.key !== "moreSpecificType").map((field) => (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
-                        {renderError(field.key)}
+                    {/* Contacts repeater for Organization */}
+                    <div className="mt-0">
+                      <label className="tool-label block mb-2">Contacts</label>
+                      <div className="flex flex-col gap-2">
+                        {contacts && contacts.length > 0 ? (
+                          contacts.map((c, idx) => (
+                            <div key={idx} className="space-y-3 mb-2">
+                              {/* Row 1: Type + Phone */}
+                              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-start">
+                                <div className="tool-field md:col-span-3">
+                                  <label className="tool-label">Type</label>
+                                  <div className="custom-select-wrapper compact-select contact-type-select relative" style={{ width: "100%" }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={() => setContactTypeOpenIndex((o) => (o === idx ? null : idx))}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={contactTypeOpenIndex === idx}
+                                    >
+                                      <span className="truncate block">{c.contactType || "Select type"}</span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {contactTypeOpenIndex === idx && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                        <ul>
+                                          <li className={c.contactType === "Customer service" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Customer service"); setContactTypeOpenIndex(null) }}>Customer service</li>
+                                          <li className={c.contactType === "Technical support" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Technical support"); setContactTypeOpenIndex(null) }}>Technical support</li>
+                                          <li className={c.contactType === "Billing support" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Billing support"); setContactTypeOpenIndex(null) }}>Billing support</li>
+                                          <li className={c.contactType === "Sales" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Sales"); setContactTypeOpenIndex(null) }}>Sales</li>
+                                          <li className={c.contactType === "Reservations" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Reservations"); setContactTypeOpenIndex(null) }}>Reservations</li>
+                                          <li className={c.contactType === "Emergency" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Emergency"); setContactTypeOpenIndex(null) }}>Emergency</li>
+                                          <li className={c.contactType === "Other" ? "selected" : ""} onClick={() => { updateContact(idx, "contactType", "Other"); setContactTypeOpenIndex(null) }}>Other</li>
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="tool-field md:col-span-3">
+                                  <label className="tool-label">Phone Number</label>
+                                  <input type="text" className="tool-input" value={c.phone} placeholder="Format +1-401-555-1212" onChange={(e) => updateContact(idx, "phone", e.target.value)} />
+                                </div>
+                              </div>
+
+                              {/* Row 2: Area(s), Language(s), Options (+ remove) */}
+                              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                <div className="tool-field md:col-span-4">
+                                  <label className="tool-label">Area(s) Served</label>
+                                  <div className="custom-select-wrapper compact-select area-country-select relative" style={{ width: "100%" }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={() => { setAreaCountryOpenIndex((o) => (o === idx ? null : idx)); setAreaCountrySearch("") }}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={areaCountryOpenIndex === idx}
+                                    >
+                                      <span className="truncate block">
+                                        {c.areaServed && c.areaServed.trim()
+                                          ? c.areaServed.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3).join(", ") + (c.areaServed.split(",").filter(Boolean).length > 3 ? "…" : "")
+                                          : "Select country(s)"}
+                                      </span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {areaCountryOpenIndex === idx && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                        <div className="p-2">
+                                          <input type="text" className="tool-input" placeholder="Search countries" value={areaCountrySearch} onChange={(e) => setAreaCountrySearch(e.target.value)} />
+                                        </div>
+                                        <ul>
+                                          {countryList
+                                            .filter((name) => name.toLowerCase().includes(areaCountrySearch.trim().toLowerCase()))
+                                            .map((name) => {
+                                              const selected = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean).includes(name)
+                                              return (
+                                                <li key={name} className={selected ? "selected" : ""} onClick={() => {
+                                                  const prev = (c.areaServed || "").split(",").map((s) => s.trim()).filter(Boolean)
+                                                  const nextSel = prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
+                                                  updateContact(idx, "areaServed", nextSel.join(", "))
+                                                }}>
+                                                  {selected ? "✓ " : ""}{name}
+                                                </li>
+                                              )
+                                            })}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="tool-field md:col-span-4">
+                                  <label className="tool-label">Language(s)</label>
+                                  <input type="text" className="tool-input" value={c.availableLanguage} placeholder="Languages" onChange={(e) => updateContact(idx, "availableLanguage", e.target.value)} />
+                                </div>
+
+                                <div className="tool-field md:col-span-3">
+                                  <label className="tool-label">Options</label>
+                                  <div className="custom-select-wrapper compact-select contact-options-select relative" style={{ width: "100%" }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={() => setOptionsOpenIndex((o) => (o === idx ? null : idx))}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={optionsOpenIndex === idx}
+                                    >
+                                      <span className="truncate block">{c.options && c.options.trim() ? c.options : "Select options"}</span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {optionsOpenIndex === idx && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                        <ul>
+                                          {(["Toll-free", "Hearing impaired"]).map((opt) => {
+                                            const selected = (c.options || "").split(",").map((s) => s.trim()).filter(Boolean).includes(opt)
+                                            return (
+                                              <li key={opt} className={selected ? "selected" : ""} onClick={() => {
+                                                const prev = (c.options || "").split(",").map((s) => s.trim()).filter(Boolean)
+                                                const nextSel = prev.includes(opt) ? prev.filter((p) => p !== opt) : [...prev, opt]
+                                                updateContact(idx, "options", nextSel.join(", "))
+                                              }}>
+                                                {selected ? "✓ " : ""}{opt}
+                                              </li>
+                                            )
+                                          })}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center md:col-span-1 justify-end">
+                                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeContact(idx)} title="Remove">×</button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500">No contacts added.</div>
+                        )}
+
+                        <div>
+                          <button type="button" className="action-btn" onClick={addContact}><Plus className="inline w-4 h-4 mr-2" /> Add Contact</button>
+                        </div>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Render remaining simple fields for Organization (skip keys rendered above) */}
+                    {schemaFields[type]
+                      .filter((f) => ![
+                        "organizationType",
+                        "moreSpecificType",
+                        "name",
+                        "alternateName",
+                        "url",
+                        "logo",
+                        "email",
+                        "founder",
+                        "foundingDate",
+                        "street",
+                        "city",
+                        "region",
+                        "postalCode",
+                        "country",
+                      ].includes(f.key))
+                      .map((field) => (
+                        <div key={field.key} className="tool-field">
+                          <label className="tool-label">{field.label}</label>
+                          <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
+                          {renderError(field.key)}
+                        </div>
+                      ))}
                   </>
                 ) : (
                   schemaFields[type].map((field) => (
