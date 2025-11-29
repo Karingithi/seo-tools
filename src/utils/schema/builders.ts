@@ -1,23 +1,7 @@
 // src/utils/schema/builders.ts
 import { DAY_ORDER } from "./constants"
 import { applyProductOffersAndRatings } from "./product"
-
-export type BuildParams = {
-  type: string
-  fields: Record<string, string>
-  images: string[]
-  breadcrumbs: Array<{ name: string; url: string }>
-  faqItemsState: Array<{ question: string; answer: string }>
-  socialProfiles: string[]
-  videoThumbnails: string[]
-  videoMinutes: string
-  videoSeconds: string
-  openingHoursState: Array<{ days: string; opens: string; closes: string }>
-  departments: Array<{ localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string }>
-  contacts: Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>
-  ticketTypes: Array<{ name: string; price: string; currency?: string; availableFrom?: string; url?: string; availability?: string }>
-  ticketDefaultCurrency: string
-}
+import type { BuildParams } from "./types"
 
 export const normalizeDaysToCodes = (daysRaw: string): string[] => {
   if (!daysRaw) return []
