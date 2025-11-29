@@ -1,49 +1,34 @@
-// src/lib/schema/builders.ts
+// src/utils/schema/builders.ts
 import { DAY_ORDER } from "./constants"
+import { applyProductOffersAndRatings } from "./product"
 
 export type BuildParams = {
   type: string
   fields: Record<string, string>
-  // Article
   images: string[]
-  // Breadcrumb
   breadcrumbs: Array<{ name: string; url: string }>
-  // FAQ
   faqItemsState: Array<{ question: string; answer: string }>
-  // Person / Organization
   socialProfiles: string[]
-  // Video
   videoThumbnails: string[]
   videoMinutes: string
   videoSeconds: string
-  // Local Business
   openingHoursState: Array<{ days: string; opens: string; closes: string }>
   departments: Array<{ localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string }>
-  // Organization
   contacts: Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>
-  // Event
   ticketTypes: Array<{ name: string; price: string; currency?: string; availableFrom?: string; url?: string; availability?: string }>
   ticketDefaultCurrency: string
 }
 
-// These helpers were previously inline in SchemaBuilder
 export const normalizeDaysToCodes = (daysRaw: string): string[] => {
   if (!daysRaw) return []
   const DAY_CODE_MAP: Record<string, string> = {
-    Monday: "Mo",
-    Mon: "Mo",
-    Tuesday: "Tu",
-    Tue: "Tu",
-    Wednesday: "We",
-    Wed: "We",
-    Thursday: "Th",
-    Thu: "Th",
-    Friday: "Fr",
-    Fri: "Fr",
-    Saturday: "Sa",
-    Sat: "Sa",
-    Sunday: "Su",
-    Sun: "Su",
+    Monday: "Mo", Mon: "Mo",
+    Tuesday: "Tu", Tue: "Tu",
+    Wednesday: "We", Wed: "We",
+    Thursday: "Th", Thu: "Th",
+    Friday: "Fr", Fri: "Fr",
+    Saturday: "Sa", Sat: "Sa",
+    Sunday: "Su", Sun: "Su",
   }
   return daysRaw
     .split(",")
@@ -63,9 +48,8 @@ export const collapseDayRanges = (codes: string[]): string[] => {
   let end = idxs[0]
   for (let i = 1; i < idxs.length; i++) {
     const cur = idxs[i]
-    if (cur === end + 1) {
-      end = cur
-    } else {
+    if (cur === end + 1) end = cur
+    else {
       ranges.push(start === end ? DAY_ORDER[start] : `${DAY_ORDER[start]}-${DAY_ORDER[end]}`)
       start = cur
       end = cur
@@ -83,10 +67,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (v && v.trim()) base[k] = v.trim()
   })
 
-  // Inline the same branching as before, but reading from params
-  // For brevity, reuse the original shapes. This mirrors SchemaBuilder logic.
-
-  // Article
   if (type === "Article") {
     base["@type"] = (fields.articleType && fields.articleType.trim()) || "Article"
     const authorName = (fields.authorName || fields.author || "").trim()
@@ -122,7 +102,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return base
   }
 
-  // Breadcrumb
   if (type === "Breadcrumb") {
     const items = p.breadcrumbs && p.breadcrumbs.length
       ? p.breadcrumbs.map((b, i) => ({ "@type": "ListItem", position: i + 1, name: b.name || `Page ${i + 1}`, item: b.url || "" }))
@@ -130,7 +109,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.filter((it: any) => it.item && it.item.length) }
   }
 
-  // FAQ Page
   if (type === "FAQ Page") {
     const mainEntity = (p.faqItemsState || [])
       .map((f) => ({ "@type": "Question", name: (f.question || "").trim(), acceptedAnswer: { "@type": "Answer", text: (f.answer || "").trim() } }))
@@ -138,7 +116,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return { "@context": "https://schema.org", "@type": "FAQPage", mainEntity }
   }
 
-  // Person
   if (type === "Person") {
     const person: any = { "@context": "https://schema.org", "@type": "Person" }
     if (fields.name?.trim()) person.name = fields.name.trim()
@@ -153,37 +130,11 @@ export function buildSchemaFromState(p: BuildParams): any {
     return person
   }
 
-  // Product
   if (type === "Product") {
-    if (fields.price?.trim()) {
-      const offer: any = { "@type": "Offer", price: fields.price.trim(), priceCurrency: fields.currency || "USD" }
-      if (fields.availability?.trim()) {
-        const avail = fields.availability.trim()
-        offer.availability = avail.startsWith("http") ? avail : `https://schema.org/${avail}`
-      }
-      if (fields.priceValidUntil?.trim()) offer.priceValidUntil = fields.priceValidUntil.trim()
-      if (fields.url?.trim()) offer.url = fields.url.trim()
-      if (fields.itemCondition?.trim()) {
-        const cond = fields.itemCondition.trim()
-        offer.itemCondition = cond.startsWith("http") ? cond : `https://schema.org/${cond}`
-      }
-      base.offers = offer
-    }
-    if (fields.ratingValue?.trim()) {
-      const rating: any = { "@type": "AggregateRating", ratingValue: fields.ratingValue.trim() }
-      if (fields.reviewCount?.trim()) rating.reviewCount = fields.reviewCount.trim()
-      base.aggregateRating = rating
-    }
-    delete base.price
-    delete base.currency
-    delete base.priceValidUntil
-    delete base.availability
-    delete base.itemCondition
-    delete base.ratingValue
-    delete base.reviewCount
+    applyProductOffersAndRatings(base, fields)
+    return base
   }
 
-  // Event
   if (type === "Event") {
     if (fields.location) base.location = { "@type": "Place", name: fields.location }
     const combineDateTime = (date?: string, time?: string) => {
@@ -236,7 +187,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return base
   }
 
-  // Website Sitelinks Searchbox
   if (type === "Website Sitelinks Searchbox") {
     const site: any = { "@context": "https://schema.org", "@type": "WebSite" }
     if (fields.name?.trim()) site.name = fields.name.trim()
@@ -248,7 +198,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return site
   }
 
-  // Video
   if (type === "Video") {
     const video: any = { "@context": "https://schema.org", "@type": "VideoObject" }
     if (fields.name?.trim()) video.name = fields.name.trim()
@@ -277,7 +226,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return video
   }
 
-  // Recipe
   if (type === "Recipe") {
     const recipe: any = { "@context": "https://schema.org", "@type": "Recipe" }
     if (fields.name?.trim()) recipe.name = fields.name.trim()
@@ -315,7 +263,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return recipe
   }
 
-  // How-to
   if (type === "How-to") {
     const howto: any = { "@context": "https://schema.org", "@type": "HowTo" }
     if (fields.name?.trim()) howto.name = fields.name.trim()
@@ -326,7 +273,6 @@ export function buildSchemaFromState(p: BuildParams): any {
       const arr = s.includes("\n") ? s.split(/\r?\n/) : s.split(",")
       return arr.map((x) => x.trim()).filter(Boolean)
     }
-    // Prefer repeater state
     const toolsOut = (p as any).howToTools as string[] | undefined
     const suppliesOut = (p as any).howToSupplies as string[] | undefined
     const toolsArr = toolsOut && toolsOut.length ? toolsOut.map((x) => x.trim()).filter(Boolean) : parseList(fields.tools)
@@ -349,7 +295,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return howto
   }
 
-  // Job Posting
   if (type === "Job Posting") {
     const job: any = { "@context": "https://schema.org", "@type": "JobPosting" }
     if (fields.title?.trim()) job.title = fields.title.trim()
@@ -407,7 +352,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return job
   }
 
-  // Local Business
   if (type === "Local Business") {
     const bizType = (fields.moreSpecificType?.trim()) || (fields.localBusinessType?.trim()) || "LocalBusiness"
     const biz: any = { "@context": "https://schema.org", "@type": bizType }
@@ -465,7 +409,7 @@ export function buildSchemaFromState(p: BuildParams): any {
         p.openingHoursState.forEach((oh) => {
           const codes = normalizeDaysToCodes(oh.days || "")
           if (!codes.length) return
-          const daysOrdered = DAY_ORDER.filter((c) => codes.includes(c)).map((c) => CODE_TO_DAY[c])
+          const daysOrdered = DAY_ORDER.filter((c: string) => codes.includes(c)).map((c: string) => CODE_TO_DAY[c])
           const opens = (oh.opens || "").trim()
           const closes = (oh.closes || "").trim()
           if (daysOrdered.length && opens && closes) specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: daysOrdered, opens, closes })
@@ -505,7 +449,6 @@ export function buildSchemaFromState(p: BuildParams): any {
     return biz
   }
 
-  // Organization
   if (type === "Organization") {
     const org: any = { ...base, "@type": "Organization" }
     const sa = (p.socialProfiles && p.socialProfiles.length)
