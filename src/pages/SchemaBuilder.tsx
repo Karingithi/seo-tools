@@ -19,6 +19,7 @@ import copyIconUrl from "../assets/icons/copy.svg?url"
 import downloadIconUrl from "../assets/icons/download.svg?url"
 import resetIconUrl from "../assets/icons/reset.svg?url"
 import googleIconUrl from "../assets/icons/google.svg?url"
+import schemaIconUrl from "../assets/icons/schema-icon.svg?url"
 
 // toolsData not required directly here; related tools component is used below
 import RelatedTools from "../components/RelatedTools"
@@ -33,6 +34,7 @@ export default function SchemaBuilder(): JSX.Element {
   const [downloadMsgVisible, setDownloadMsgVisible] = useState(false)
   const [resetMsgVisible, setResetMsgVisible] = useState(false)
   const [testMsgVisible, setTestMsgVisible] = useState(false)
+  const [validateMsgVisible, setValidateMsgVisible] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   // Dropdown open states
@@ -46,7 +48,6 @@ export default function SchemaBuilder(): JSX.Element {
   // Ticket availability open index (for per-ticket custom dropdown)
   const [ticketAvailabilityOpenIndex, setTicketAvailabilityOpenIndex] = useState<number | null>(null)
   // Ticket currency open index for per-ticket currency dropdown
-  const [ticketCurrencyOpenIndex, setTicketCurrencyOpenIndex] = useState<number | null>(null)
   // HowTo currency dropdown state (searchable list for How-to Estimated cost currency)
   const [howToCurrencyOpen, setHowToCurrencyOpen] = useState<boolean>(false)
   const [howToCurrencySearch, setHowToCurrencySearch] = useState<string>("")
@@ -162,7 +163,7 @@ export default function SchemaBuilder(): JSX.Element {
   const addTicketType = () =>
     setTicketTypes((prev) => [
       ...prev,
-      { name: "", price: "", currency: ticketDefaultCurrency || "", availableFrom: "", url: "", availability: "" },
+      { name: "", price: "", availableFrom: "", url: "", availability: "" },
     ])
 
   // How-to handlers
@@ -1245,6 +1246,17 @@ export default function SchemaBuilder(): JSX.Element {
     }
   }
 
+  const handleValidate = async () => {
+    try {
+      await copyToClipboard(schemaJSON)
+      setValidateMsgVisible(true)
+      window.open("https://validator.schema.org/", "_blank", "noopener,noreferrer")
+      setTimeout(() => setValidateMsgVisible(false), 1400)
+    } catch {
+      window.open("https://validator.schema.org/", "_blank", "noopener,noreferrer")
+    }
+  }
+
   const handleReset = () => {
     setFields(type === "Article" ? { articleType: "Article" } : {})
     setImages(type === "Article" ? [""] : [])
@@ -1821,7 +1833,7 @@ export default function SchemaBuilder(): JSX.Element {
                 
                 <div className="space-y-4">
                   {breadcrumbs.map((b, idx) => (
-                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                       <div className="md:col-span-1">
                         <label className="tool-label">Name</label>
                         <input
@@ -1859,14 +1871,6 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
                   ))}
-
-                  <div>
-                    <button type="button" className="action-btn" onClick={addBreadcrumb}>
-                      Add URL
-                    </button>
-                  </div>
-
-                  
                 </div>
               </div>
             ) : type === "FAQ Page" ? (
@@ -2397,7 +2401,7 @@ export default function SchemaBuilder(): JSX.Element {
                     <div className="flex flex-col gap-3">
                       {ticketTypes.map((t, idx) => (
                         <div key={idx} className="space-y-2">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                             <div className="tool-field">
                               <label className="tool-label">Name</label>
                               <input type="text" className="tool-input" value={t.name} placeholder="General admission" onChange={(e) => updateTicketType(idx, "name", e.target.value)} />
@@ -2406,37 +2410,6 @@ export default function SchemaBuilder(): JSX.Element {
                             <div className="tool-field">
                               <label className="tool-label">Price</label>
                               <input type="text" className="tool-input" value={t.price} placeholder="49.99" onChange={(e) => updateTicketType(idx, "price", e.target.value)} />
-                            </div>
-
-                            <div className="tool-field">
-                              <label className="tool-label">Currency</label>
-                              <div className="custom-select-wrapper compact-select event-select-wrapper relative" style={{ minWidth: 140 }}>
-                                <button
-                                  type="button"
-                                  className="custom-select-trigger tool-select"
-                                  onClick={() => setTicketCurrencyOpenIndex((o) => (o === idx ? null : idx))}
-                                  style={{ width: "100%", justifyContent: "space-between" }}
-                                  aria-expanded={ticketCurrencyOpenIndex === idx}
-                                >
-                                  <span className="truncate block">{t.currency ? `${t.currency} - ${(ALL_CURRENCIES.find(c => c.code === t.currency) || { name: "" }).name}` : "Currency"}</span>
-                                  <span className="text-xs">⏷</span>
-                                </button>
-
-                                {ticketCurrencyOpenIndex === idx && (
-                                  <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
-                                    <ul>
-                                      {ALL_CURRENCIES.map((c) => (
-                                        <li key={`${idx}-${c.code}`} className={(t.currency || "") === c.code ? "selected" : ""} onClick={() => { updateTicketType(idx, "currency", c.code); setTicketCurrencyOpenIndex(null) }}>
-                                          {c.code} - {c.name}
-                                        </li>
-                                      ))}
-                                      <li key={`none-${idx}`} className={(t.currency || "") === "" ? "selected" : ""} onClick={() => { updateTicketType(idx, "currency", ""); setTicketCurrencyOpenIndex(null) }}>
-                                        Not specified
-                                      </li>
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
                             </div>
 
                             <div className="tool-field">
@@ -4888,6 +4861,21 @@ export default function SchemaBuilder(): JSX.Element {
                     aria-label="Test Schema"
                   >
                     <img src={googleIconUrl} alt="test schema" className="toolbar-icon" />
+                  </button>
+                </div>
+
+                {/* Validate (Schema.org Validator) */}
+                <div className="toolbar-wrap">
+                  <div className={`tooltip ${validateMsgVisible ? "visible msg-fade" : ""}`}>
+                    {validateMsgVisible ? "Copied — open validator" : "Validate"}
+                  </div>
+                  <button
+                    onClick={handleValidate}
+                    className="toolbar-btn toolbar-btn--schema"
+                    title="Validate Schema"
+                    aria-label="Validate Schema"
+                  >
+                    <img src={schemaIconUrl} alt="validate schema" className="toolbar-icon" />
                   </button>
                 </div>
 

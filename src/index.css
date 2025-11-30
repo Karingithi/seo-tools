@@ -782,7 +782,7 @@
   .tool-code,
   .tool-code pre,
   .tool-code code {
-    font-size: 13px !important;
+    font-size: 12px !important;
     line-height: 1.4 !important;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
       "Segoe UI Mono", monospace !important;
@@ -808,9 +808,9 @@
     border: 1px solid #f5c1b0; /* soft orange border */
     color: #b91c1c; /* red-700 */
     padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     font-size: 0.92rem;
-    margin-top: 0.25rem;
+    margin-top: 0.125rem;
   }
 
   /* Country select styles */

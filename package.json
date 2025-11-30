@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "print:schema": "npx tsx scripts/print-schema.ts",
+    "test": "npx vitest run"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
