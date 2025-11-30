@@ -2,6 +2,246 @@
 import { DAY_ORDER } from "./constants"
 import { applyProductOffersAndRatings } from "./product"
 import type { BuildParams } from "./types"
+import { compact } from "./utils"
+
+// Exported UI/data constants to be consumed by the SchemaBuilder UI.
+export const schemaDescriptions: Record<string, string> = {
+  Article: "Blog posts or news content.",
+  Breadcrumb: "Website structure: Home → Category → Page.",
+  "FAQ Page": "Questions & answers for rich results.",
+  "How-to": "Step-by-step instructions for tasks.",
+  "Local Business": "Local service, hours, and location.",
+  Organization: "Company brand, socials, and contacts.",
+  Product: "SKU, price, reviews, and offers.",
+  Video: "Video metadata with thumbnail, embed & file URL.",
+  "Website Sitelinks Searchbox": "Enable sitelinks searchbox in Google.",
+  Person: "Information about an individual or author profile.",
+  "Job Posting": "Job details for open positions.",
+  Event: "Events, dates, and locations.",
+}
+
+export const schemaExamples: Record<string, string> = {
+  Article: "Article, BlogPosting, NewsArticle",
+  Breadcrumb: "Help Google understand your page hierarchy",
+  "FAQ Page": "Add questions and answers to create a valid FAQ schema",
+  "How-to": "Schema Builder for How-To Guides and Step-by-Step Content",
+  "Local Business": "LocalBusiness, Store, Restaurant",
+  Product: "Generate Structured Data Builder for Product, Offer, and AggregateOffer Types",
+  Video: "VideoObject",
+  "Website Sitelinks Searchbox": "WebSite + SearchAction",
+  Organization: "Generate Accurate Schema Markup for Organizations, Local Businesses, and Corporations",
+  Person: "Generate Structured Data Builder for Person, Author, and Speaker Profiles",
+  "Job Posting": "Schema Builder for Job Listings, Hiring Info, and Requirements",
+  Event: "Generate Structured Data for Events, Business Events, and Festivals",
+}
+
+export const HELP_LINKS: Record<string, { schema: { label: string; url: string }[]; google?: { label: string; url: string }[] }> = {
+  Article: {
+    schema: [
+      { label: "Article", url: "https://schema.org/Article" },
+      { label: "BlogPosting", url: "https://schema.org/BlogPosting" },
+      { label: "NewsArticle", url: "https://schema.org/NewsArticle" },
+    ],
+    google: [{ label: "Article", url: "https://developers.google.com/search/docs/appearance/structured-data/article" }],
+  },
+  Breadcrumb: {
+    schema: [{ label: "BreadcrumbList", url: "https://schema.org/BreadcrumbList" }],
+    google: [{ label: "Breadcrumb", url: "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb" }],
+  },
+  "FAQ Page": {
+    schema: [{ label: "FAQPage", url: "https://schema.org/FAQPage" }],
+    google: [{ label: "FAQPage", url: "https://developers.google.com/search/docs/appearance/structured-data/faqpage" }],
+  },
+  "How-to": {
+    schema: [{ label: "HowTo", url: "https://schema.org/HowTo" }],
+    google: [{ label: "HowTo", url: "https://developers.google.com/search/docs/appearance/structured-data/how-to" }],
+  },
+  "Local Business": {
+    schema: [{ label: "LocalBusiness", url: "https://schema.org/LocalBusiness" }],
+    google: [{ label: "Local business", url: "https://developers.google.com/search/docs/appearance/structured-data/local-business" }],
+  },
+  Organization: {
+    schema: [{ label: "Organization", url: "https://schema.org/Organization" }],
+    google: [{ label: "Organization", url: "https://developers.google.com/search/docs/appearance/structured-data/organization" }],
+  },
+  Product: {
+    schema: [
+      { label: "Product", url: "https://schema.org/Product" },
+      { label: "Review", url: "https://schema.org/Review" },
+    ],
+    google: [
+      { label: "Product", url: "https://developers.google.com/search/docs/appearance/structured-data/product" },
+      { label: "Review snippet", url: "https://developers.google.com/search/docs/appearance/structured-data/review-snippet" },
+    ],
+  },
+  Video: {
+    schema: [{ label: "VideoObject", url: "https://schema.org/VideoObject" }],
+    google: [{ label: "Video", url: "https://developers.google.com/search/docs/appearance/structured-data/video" }],
+  },
+  Person: {
+    schema: [{ label: "Person", url: "https://schema.org/Person" }],
+    google: [{ label: "Person", url: "https://developers.google.com/search/docs/appearance/structured-data/person" }],
+  },
+  "Job Posting": {
+    schema: [{ label: "JobPosting", url: "https://schema.org/JobPosting" }],
+    google: [{ label: "Job Posting", url: "https://developers.google.com/search/docs/appearance/structured-data/job-posting" }],
+  },
+  Event: {
+    schema: [{ label: "Event", url: "https://schema.org/Event" }],
+    google: [{ label: "Event", url: "https://developers.google.com/search/docs/appearance/structured-data/event" }],
+  },
+  "Website Sitelinks Searchbox": {
+    schema: [{ label: "WebSite + SearchAction", url: "https://schema.org/WebSite" }],
+    google: [{ label: "Sitelinks searchbox", url: "https://developers.google.com/search/docs/appearance/structured-data/sitelinks-searchbox" }],
+  },
+}
+
+export const schemaFields: Record<string, { label: string; key: string; placeholder?: string }[]> = {
+  Article: [
+    { label: "Article @type", key: "articleType", placeholder: "BlogPosting" },
+    { label: "Article URL", key: "url", placeholder: "https://example.com/my-article" },
+    { label: "Headline", key: "headline", placeholder: "e.g. 10 Proven SEO Tips to Boost Traffic" },
+    { label: "Strict 110-character SEO limit", key: "strictHeadlineLimit", placeholder: "false" },
+    { label: "Description", key: "description", placeholder: "Short summary — appears in Google search results" },
+    { label: "Image(s)", key: "images", placeholder: "https://example.com/image.jpg, https://example.com/image2.jpg" },
+    { label: "Author @type", key: "authorType", placeholder: "Person" },
+    { label: "Author Name", key: "authorName", placeholder: "e.g. Jane Doe" },
+    { label: "Author URL", key: "authorUrl", placeholder: "https://example.com/author" },
+    { label: "Publisher Name", key: "publisherName", placeholder: "Publisher or Site Name" },
+    { label: "Publisher Logo URL", key: "publisherLogo", placeholder: "https://example.com/logo.png" },
+    { label: "Date Published", key: "datePublished", placeholder: "yyyy-mm-dd" },
+    { label: "Date Modified", key: "dateModified", placeholder: "yyyy-mm-dd" },
+    { label: "Article Body (Optional)", key: "articleBody", placeholder: "Paste or write the main content here..." },
+  ],
+  Breadcrumb: [
+    { label: "Breadcrumb Trail", key: "itemList", placeholder: "Home > Category > Page" },
+  ],
+  "FAQ Page": [],
+  Product: [
+    { label: "Product Name", key: "name", placeholder: "e.g. Ergonomic Office Chair" },
+    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
+    { label: "SKU", key: "sku", placeholder: "SKU12345" },
+    { label: "MPN", key: "mpn", placeholder: "MPN-0001" },
+    { label: "GTIN-8", key: "gtin8", placeholder: "01234567" },
+    { label: "GTIN-13", key: "gtin13", placeholder: "0123456789012" },
+    { label: "GTIN-14", key: "gtin14", placeholder: "01234567890123" },
+    { label: "Brand", key: "brand", placeholder: "Tembeya Wellness" },
+    { label: "Price", key: "price", placeholder: "25.99" },
+    { label: "Low price", key: "lowPrice", placeholder: "19.99" },
+    { label: "High price", key: "highPrice", placeholder: "29.99" },
+    { label: "Number of offers", key: "offerCount", placeholder: "3" },
+    { label: "Currency", key: "currency", placeholder: "USD" },
+    { label: "Offer Valid Until", key: "priceValidUntil", placeholder: "2026-12-31" },
+    { label: "Availability", key: "availability", placeholder: "InStock" },
+    { label: "Item Condition", key: "itemCondition", placeholder: "NewCondition" },
+    { label: "URL", key: "url", placeholder: "https://example.com/product" },
+    { label: "Description", key: "description", placeholder: "Natural detox blend" },
+    { label: "Aggregate Rating Value", key: "ratingValue", placeholder: "4.5" },
+    { label: "Number of ratings", key: "ratingCount", placeholder: "12" },
+    { label: "Highest rating allowed (bestRating)", key: "bestRating", placeholder: "5" },
+    { label: "Lowest rating allowed (worstRating)", key: "worstRating", placeholder: "1" },
+    { label: "Review Count", key: "reviewCount", placeholder: "12" },
+  ],
+  "Local Business": [
+    { label: "LocalBusiness @type", key: "localBusinessType", placeholder: "LocalBusiness" },
+    { label: "More specific @type", key: "moreSpecificType", placeholder: "Select Option" },
+    { label: "Name", key: "name", placeholder: "Business Name" },
+    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
+    { label: "@id (URL)", key: "@id", placeholder: "https://example.com#id" },
+    { label: "URL", key: "url", placeholder: "https://example.com" },
+    { label: "Phone", key: "telephone", placeholder: "+1-555-123-4567" },
+    { label: "Price range", key: "priceRange", placeholder: "$$" },
+    { label: "Street", key: "street", placeholder: "123 Main St" },
+    { label: "City", key: "city", placeholder: "Nairobi" },
+    { label: "Zip code", key: "postalCode", placeholder: "00100" },
+    { label: "Country", key: "country", placeholder: "Country name or code" },
+    { label: "State/Province/Region", key: "region", placeholder: "State or region" },
+    { label: "Latitude", key: "latitude", placeholder: "e.g. -1.2921" },
+    { label: "Longitude", key: "longitude", placeholder: "e.g. 36.8219" },
+    { label: "Opening Hours", key: "openingHours", placeholder: "Mo-Fr 09:00-17:00" },
+    { label: "Open 24/7", key: "open24_7", placeholder: "false" },
+    { label: "Social profiles", key: "sameAs", placeholder: "https://facebook.com/..." },
+  ],
+  Event: [
+    { label: "Event Name", key: "name", placeholder: "Wellness Retreat 2025" },
+    { label: "Start Date", key: "startDate", placeholder: "2025-06-15" },
+    { label: "End Date", key: "endDate", placeholder: "2025-06-20" },
+    { label: "Location", key: "location", placeholder: "Nairobi, Kenya" },
+    { label: "Description", key: "description", placeholder: "5-day retreat" },
+  ],
+  Video: [
+    { label: "Video Title", key: "name", placeholder: "How to Brew Herbal Tea" },
+    { label: "Description", key: "description", placeholder: "Short video summary" },
+    { label: "Thumbnail URL", key: "thumbnailUrl", placeholder: "https://example.com/thumb.jpg" },
+    { label: "Content URL", key: "contentUrl", placeholder: "https://example.com/video.mp4" },
+    { label: "Embed URL", key: "embedUrl", placeholder: "https://youtube.com/watch?v=..." },
+    { label: "Upload Date", key: "uploadDate", placeholder: "2025-01-01" },
+    { label: "Duration", key: "duration", placeholder: "PT2M30S" },
+  ],
+  "How-to": [
+    { label: "How-to Title", key: "name", placeholder: "How to prune roses" },
+    { label: "Description", key: "description", placeholder: "Short summary" },
+    { label: "Tools (comma or newline)", key: "tools", placeholder: "Pruners, Gloves" },
+    { label: "Supplies (comma or newline)", key: "supply", placeholder: "Mulch, Soil" },
+    { label: "Steps (one per line)", key: "steps", placeholder: "Step 1\\nStep 2\\nStep 3" },
+    { label: "Total Time", key: "totalTime", placeholder: "PT30M" },
+  ],
+  "Job Posting": [
+    { label: "Job title", key: "title", placeholder: "Job's title" },
+    { label: "Identifier", key: "identifier", placeholder: "Job ref / id" },
+    { label: "Job's description (in HTML)", key: "jobDescription", placeholder: "Role responsibilities, HTML allowed" },
+    { label: "Company", key: "hiringOrganization", placeholder: "Company name" },
+    { label: "Company URL", key: "hiringOrganizationUrl", placeholder: "https://example.com" },
+    { label: "Company logo", key: "companyLogo", placeholder: "https://example.com/logo.png" },
+    { label: "Industry", key: "industry", placeholder: "Industry or sector" },
+    { label: "Employment type", key: "employmentType", placeholder: "FULL_TIME, PART_TIME, CONTRACT" },
+    { label: "Work hours (e.g. 8am-5pm)", key: "workHours", placeholder: "e.g. 8am-5pm, shift" },
+    { label: "Date posted", key: "datePosted", placeholder: "yyyy-mm-dd" },
+    { label: "Expire date", key: "validThrough", placeholder: "yyyy-mm-dd" },
+    { label: "Remote job", key: "isRemote", placeholder: "false" },
+    { label: "Country", key: "country", placeholder: "Country name or code" },
+    { label: "State/Province/Region", key: "region", placeholder: "State or region" },
+    { label: "Street", key: "street", placeholder: "Street address" },
+    { label: "City", key: "city", placeholder: "City" },
+    { label: "Zip / Postal code", key: "postalCode", placeholder: "Zip code" },
+    { label: "Salary (min)", key: "minSalary", placeholder: "Minimum salary" },
+    { label: "Max salary", key: "maxSalary", placeholder: "Maximum salary" },
+    { label: "Currency", key: "currency", placeholder: "USD" },
+    { label: "Per", key: "salaryUnit", placeholder: "YEAR, HOUR, MONTH" },
+    { label: "Responsibilities", key: "responsibilities", placeholder: "Key responsibilities (one per line)" },
+    { label: "Skills", key: "skills", placeholder: "Required skills (comma or newline)" },
+    { label: "Qualifications", key: "qualifications", placeholder: "Qualifications required" },
+    { label: "Education requirements", key: "educationRequirements", placeholder: "Education requirements" },
+    { label: "Experience requirements", key: "experienceRequirements", placeholder: "Experience requirements" },
+  ],
+  Organization: [
+    { label: "Organization Name", key: "name", placeholder: "Tembeya Wellness Retreats" },
+    { label: "URL", key: "url", placeholder: "https://tembeyawellnessretreats.com" },
+    { label: "Logo URL", key: "logo", placeholder: "https://example.com/logo.png" },
+    { label: "Contact Email", key: "email", placeholder: "info@example.com" },
+    { label: "Founder", key: "founder", placeholder: "Founder's name" },
+    { label: "Founding date", key: "foundingDate", placeholder: "yyyy-mm-dd" },
+    { label: "Street", key: "street", placeholder: "Street address" },
+    { label: "City", key: "city", placeholder: "City" },
+    { label: "State/Region", key: "region", placeholder: "State or region" },
+    { label: "Zip / Postal code", key: "postalCode", placeholder: "Zip code" },
+    { label: "Country", key: "country", placeholder: "Country name or code" },
+  ],
+  "Website Sitelinks Searchbox": [
+    { label: "Site Name", key: "name", placeholder: "Example Site" },
+    { label: "Site URL", key: "url", placeholder: "https://example.com" },
+    { label: "Search URL Template", key: "urlTemplate", placeholder: "https://example.com/search?q={search_term_string}" },
+    { label: "Description", key: "description", placeholder: "Short description of your site" },
+  ],
+  Person: [
+    { label: "Name", key: "name", placeholder: "e.g. Jane Smith" },
+    { label: "URL", key: "url", placeholder: "https://example.com/about/jane-smith" },
+    { label: "Picture URL", key: "pictureUrl", placeholder: "https://example.com/images/jane-smith.jpg" },
+    { label: "Social profiles", key: "sameAs", placeholder: "https://twitter.com/janesmith, https://linkedin.com/in/janesmith" },
+    { label: "Job title", key: "jobTitle", placeholder: "e.g. Senior Marketing Manager, Author, Data Analyst" },
+    { label: "Company", key: "worksFor", placeholder: "e.g. Acme Corporation, Self-employed" },
+  ],
+}
 
 export const normalizeDaysToCodes = (daysRaw: string): string[] => {
   if (!daysRaw) return []
@@ -51,6 +291,8 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (v && v.trim()) base[k] = v.trim()
   })
 
+  let out: any = null
+
   if (type === "Article") {
     base["@type"] = (fields.articleType && fields.articleType.trim()) || "Article"
     const authorName = (fields.authorName || fields.author || "").trim()
@@ -83,21 +325,21 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete base.publisherLogo
     delete base.strictHeadlineLimit
     delete base.author
-    return base
+    out = base
   }
 
   if (type === "Breadcrumb") {
     const items = p.breadcrumbs && p.breadcrumbs.length
       ? p.breadcrumbs.map((b, i) => ({ "@type": "ListItem", position: i + 1, name: b.name || `Page ${i + 1}`, item: b.url || "" }))
       : (fields.itemList ? fields.itemList.split("\n").map((line: string, i: number) => ({ "@type": "ListItem", position: i + 1, name: line.split("|")[0] || `Page ${i + 1}`, item: (line.split("|")[1] || "").trim() })) : [])
-    return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.filter((it: any) => it.item && it.item.length) }
+    out = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.filter((it: any) => it.item && it.item.length) }
   }
 
   if (type === "FAQ Page") {
     const mainEntity = (p.faqItemsState || [])
       .map((f) => ({ "@type": "Question", name: (f.question || "").trim(), acceptedAnswer: { "@type": "Answer", text: (f.answer || "").trim() } }))
       .filter((q) => q.name && q.acceptedAnswer.text)
-    return { "@context": "https://schema.org", "@type": "FAQPage", mainEntity }
+    out = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity }
   }
 
   if (type === "Person") {
@@ -111,12 +353,12 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (sa.length) person.sameAs = sa
     if (fields.worksFor?.trim()) person.worksFor = { "@type": "Organization", name: fields.worksFor.trim() }
     if (fields.jobTitle?.trim()) person.jobTitle = fields.jobTitle.trim()
-    return person
+    out = person
   }
 
   if (type === "Product") {
     applyProductOffersAndRatings(base, fields)
-    return base
+    out = base
   }
 
   if (type === "Event") {
@@ -168,7 +410,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete base.startTime
     delete base.endTime
     delete base.imageUrl
-    return base
+    out = base
   }
 
   if (type === "Website Sitelinks Searchbox") {
@@ -179,7 +421,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (fields.urlTemplate?.trim()) {
       site.potentialAction = { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: fields.urlTemplate.trim() }, "query-input": "required name=search_term_string" }
     }
-    return site
+    out = site
   }
 
   if (type === "Video") {
@@ -207,7 +449,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete video.thumbnailUrl
     delete video.duration
     delete video.seekToTarget
-    return video
+    out = video
   }
 
   if (type === "Recipe") {
@@ -244,7 +486,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete recipe.authorName
     delete recipe.authorUrl
     delete recipe.authorType
-    return recipe
+    out = recipe
   }
 
   if (type === "How-to") {
@@ -276,7 +518,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete howto.tools
     delete howto.supply
     delete howto.steps
-    return howto
+    out = howto
   }
 
   if (type === "Job Posting") {
@@ -333,7 +575,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete job.maxSalary
     delete job.currency
     delete job.salaryUnit
-    return job
+    out = job
   }
 
   if (type === "Local Business") {
@@ -430,7 +672,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete biz.open24_7
     delete biz.localBusinessType
     delete biz.moreSpecificType
-    return biz
+    out = biz
   }
 
   if (type === "Organization") {
@@ -456,8 +698,8 @@ export function buildSchemaFromState(p: BuildParams): any {
         .filter(Boolean) as any[]
       if (cps.length) org.contactPoint = cps
     }
-    return org
+    out = org
   }
 
-  return base
+  return compact(out || base)
 }

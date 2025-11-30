@@ -11,8 +11,7 @@ export function applyProductOffersAndRatings(base: any, fields: Record<string, s
       const avail = (fields.availability || "").trim()
       offer.availability = avail.startsWith("http") ? avail : `https://schema.org/${avail}`
     }
-    const validUntil = normalizeUrl((fields.priceValidUntil || "").trim())
-    // priceValidUntil expects a date (yyyy-mm-dd) but users sometimes paste urls — keep original trimmed value if valid date
+    // priceValidUntil expects a date (yyyy-mm-dd). Keep trimmed value if present.
     if ((fields.priceValidUntil || "").trim()) offer.priceValidUntil = (fields.priceValidUntil || "").trim()
     if ((fields.url || "").trim()) {
       const u = normalizeUrl(fields.url.trim())
