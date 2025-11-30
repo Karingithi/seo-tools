@@ -313,8 +313,18 @@ export function buildSchemaFromState(p: BuildParams): any {
       if (fields.publisherName?.trim()) base.publisher.name = fields.publisherName.trim()
       if (fields.publisherLogo?.trim()) base.publisher.logo = { "@type": "ImageObject", url: fields.publisherLogo.trim() }
     }
-    if (fields.datePublished?.trim()) base.datePublished = fields.datePublished.trim()
-    if (fields.dateModified?.trim()) base.dateModified = fields.dateModified.trim()
+    const toIsoDatetime = (d?: string) => {
+      if (!d) return undefined
+      const t = d.trim()
+      // If date-only (yyyy-mm-dd), convert to full datetime at midnight UTC to satisfy validators.
+      if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return `${t}T00:00:00Z`
+      return t
+    }
+
+    const dp = toIsoDatetime(fields.datePublished)
+    const dm = toIsoDatetime(fields.dateModified)
+    if (dp) base.datePublished = dp
+    if (dm) base.dateModified = dm
     if (fields.articleBody?.trim()) base.articleBody = fields.articleBody.trim()
     delete base.articleType
     delete base.authorName
@@ -324,7 +334,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete base.publisherName
     delete base.publisherLogo
     delete base.strictHeadlineLimit
-    delete base.author
+    // Keep `base.author` — it contains the author object when provided.
     out = base
   }
 
