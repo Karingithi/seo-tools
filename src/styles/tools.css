@@ -572,7 +572,7 @@ code {
 
 /* Compact variant for closely spaced selects */
 .compact-select {
-  margin-bottom: 6px; /* smaller gap under each select */
+  margin-bottom: 0; /* reduced gap under compact selects */
 }
 
 .compact-select + .compact-select {

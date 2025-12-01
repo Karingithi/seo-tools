@@ -65,6 +65,9 @@ export default function SchemaBuilder(): JSX.Element {
   const [countrySearch, setCountrySearch] = useState<string>("")
   const [regionOpen, setRegionOpen] = useState<boolean>(false)
   const [regionSearch, setRegionSearch] = useState<string>("")
+  // Venue-specific country dropdown state
+  const [venueCountryOpen, setVenueCountryOpen] = useState<boolean>(false)
+  const [venueCountrySearch, setVenueCountrySearch] = useState<string>("")
   // Employment type dropdown state for Job Posting
   const [employmentTypeOpen, setEmploymentTypeOpen] = useState<boolean>(false)
   // Organization @type dropdown state
@@ -129,6 +132,9 @@ export default function SchemaBuilder(): JSX.Element {
 
   // Contacts repeater for Organization schema
   const [contacts, setContacts] = useState<Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>>([])
+  // Organization Additional Info repeater
+  const [orgExtras, setOrgExtras] = useState<Array<{ key: string; value: string }>>([])
+  const [orgExtraKeyOpenIndex, setOrgExtraKeyOpenIndex] = useState<number | null>(null)
 
   // Product identification dropdown state (sku, gtin8, gtin13, gtin14, mpn)
   const [productIdOpen, setProductIdOpen] = useState<boolean>(false)
@@ -205,7 +211,56 @@ export default function SchemaBuilder(): JSX.Element {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!(e.target as HTMLElement).closest(".custom-select-wrapper")) {
-        setDropdownOpen(false)
+        // Close any open custom dropdowns across the page
+        const closeAllDropdowns = () => {
+          try {
+            setDropdownOpen(false)
+            setArticleTypeOpen(false)
+            setAuthorTypeOpen(false)
+            setEventStatusOpen(false)
+            setAttendanceModeOpen(false)
+            setPerformerTypeOpen(false)
+            setTicketAvailabilityOpenIndex(null)
+            setHowToCurrencyOpen(false)
+            setHowToCurrencySearch("")
+            setSalaryCurrencyOpen(false)
+            setSalaryCurrencySearch("")
+            setSalaryUnitOpen(false)
+            setLocalBusinessTypeOpen(false)
+            setMoreSpecificOpen(false)
+            setCountryOpen(false)
+            setCountrySearch("")
+            setRegionOpen(false)
+            setRegionSearch("")
+            setEmploymentTypeOpen(false)
+            setOrgTypeOpen(false)
+            setOrgMoreSpecificOpen(false)
+            setContactTypeOpenIndex(null)
+            setAreaCountryOpenIndex(null)
+            setAreaCountrySearch("")
+            setOptionsOpenIndex(null)
+            setLanguageOpenIndex(null)
+            setLanguageSearch("")
+            setTicketDefaultCurrencyOpen(false)
+            setTicketCurrencySearch("")
+            setTimezoneOpen(false)
+            setTimezoneSearch("")
+            setVenueCountryOpen(false)
+            setVenueCountrySearch("")
+            setDeptLocalBusinessOpenIndex(null)
+            setDeptMoreSpecificOpenIndex(null)
+            setOpeningDaysOpenIndex(null)
+            setDeptOpeningDaysOpenIndex(null)
+            setProductIdOpen(false)
+            setProductAvailabilityOpen(false)
+            setProductItemConditionOpen(false)
+            setProductCurrencyOpen(false)
+          } catch {
+            // ignore errors in teardown
+          }
+        }
+
+        closeAllDropdowns()
       }
     }
     document.addEventListener("mousedown", handleClick)
@@ -217,31 +272,29 @@ export default function SchemaBuilder(): JSX.Element {
   const renderHelpLinks = (schemaType: string) => {
     const entry = HELP_LINKS[schemaType]
     if (!entry) return null
-    return (
-      <>
-        <hr className="mt-4 mb-0 border-gray-300" />
-        <div className="mt-4 text-sm text-gray-700">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="font-semibold mb-2">Schema.org reference:</div>
-              <ul className="list-disc pl-5 text-sm space-y-1 text-primary">
-                {entry.schema.map((s) => (
-                  <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
-                ))}
-              </ul>
-            </div>
 
-            <div>
-              <div className="font-semibold mb-2">Google docs:</div>
-              <ul className="list-disc pl-5 text-sm space-y-1 text-primary">
-                {entry.google?.map((g) => (
-                  <li key={g.url}><a href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a></li>
-                ))}
-              </ul>
-            </div>
+    const schemaLinks = (entry.schema || []).map((s) => (
+      <a key={s.url} className="block mt-1 text-primary" href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+    ))
+
+    const googleLinks = (entry.google || []).map((g) => (
+      <a key={g.url} className="block mt-1 text-primary" href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a>
+    ))
+
+    return (
+      <div className="mt-2 text-sm text-gray-600">
+        <hr className="my-4 border-gray-200" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <strong className="text-base">Schema.org:</strong>
+            <div className="mt-1">{schemaLinks.length ? schemaLinks : null}</div>
+          </div>
+          <div>
+            <strong className="text-base">Google docs:</strong>
+            <div className="mt-1">{googleLinks.length ? googleLinks : null}</div>
           </div>
         </div>
-      </>
+      </div>
     )
   }
 
@@ -285,6 +338,63 @@ export default function SchemaBuilder(): JSX.Element {
     "Sunday",
   ]
 
+  // Timezones list (try Intl.supportedValuesOf if available, fallback to common ones)
+  const TIMEZONES: string[] = (() => {
+    try {
+      // @ts-ignore: supportedValuesOf may not be typed in this environment
+      const vals = (Intl as any).supportedValuesOf?.('timeZone')
+      if (Array.isArray(vals) && vals.length) return vals
+    } catch {
+      // ignore
+    }
+    return ["UTC", "Africa/Nairobi", "Europe/London", "America/New_York", "Asia/Kolkata", "Asia/Tokyo"]
+  })()
+
+  // Helpers to compute current GMT offset for a given IANA timezone
+  const getTimezoneOffsetMinutes = (timeZone: string) => {
+    try {
+      const now = new Date()
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+      const parts = fmt.formatToParts(now).reduce((acc: any, p: any) => {
+        acc[p.type] = p.value
+        return acc
+      }, {})
+
+      const year = Number(parts.year)
+      const month = Number(parts.month) - 1
+      const day = Number(parts.day)
+      const hour = Number(parts.hour)
+      const minute = Number(parts.minute)
+      const second = Number(parts.second)
+
+      // The UTC timestamp that corresponds to the wall-clock time in the target timezone
+      const utcForTz = Date.UTC(year, month, day, hour, minute, second)
+      const nowMs = now.getTime()
+      // Positive minutes means the timezone is ahead of UTC (e.g. +180 for GMT+3)
+      const offsetMinutes = Math.round((utcForTz - nowMs) / 60000)
+      return offsetMinutes
+    } catch {
+      return 0
+    }
+  }
+
+  const formatGmtOffset = (mins: number) => {
+    const sign = mins >= 0 ? '+' : '-'
+    const m = Math.abs(mins)
+    const hh = String(Math.floor(m / 60)).padStart(2, '0')
+    const mm = String(m % 60).padStart(2, '0')
+    return `GMT${sign}${hh}:${mm}`
+  }
+
   // Map full day names (or short codes) to schema.org day codes
   
 
@@ -327,6 +437,12 @@ export default function SchemaBuilder(): JSX.Element {
       { value: "IceCreamShop", desc: "Ice cream & frozen treats" },
       { value: "Winery", desc: "Wine production or tasting" },
       { value: "Brewery", desc: "Beer production" },
+    ],
+    FinancialService: [
+      { value: "AccountingService", desc: "Accounting services" },
+      { value: "AutomatedTeller", desc: "ATM" },
+      { value: "BankOrCreditUnion", desc: "Bank or credit union" },
+      { value: "InsuranceAgency", desc: "Insurance agency" },
     ],
     HealthAndBeautyBusiness: [
       { value: "DaySpa", desc: "Spa & relaxation treatments" },
@@ -402,6 +518,20 @@ export default function SchemaBuilder(): JSX.Element {
     ],
   }
 
+  // Organization additional info selectable options
+  const ORG_ADDITIONAL_OPTIONS: { key: string; label: string }[] = [
+    { key: "legalName", label: "Legal Name" },
+    { key: "foundingDate", label: "Founding Date" },
+    { key: "iso6523Code", label: "ISO 6523 Code" },
+    { key: "duns", label: "DUNS" },
+    { key: "leiCode", label: "LEI Code" },
+    { key: "naicsCode", label: "NAICS Code" },
+    { key: "globalLocationNumber", label: "Global Location Number" },
+    { key: "vatId", label: "VAT ID" },
+    { key: "taxId", label: "Tax ID" },
+    { key: "numberOfEmployees", label: "Number of Employees" },
+  ]
+
   const EVENT_STATUSES = [
     { value: "", label: "None" },
     { value: "EventScheduled", label: "Scheduled" },
@@ -427,8 +557,11 @@ export default function SchemaBuilder(): JSX.Element {
     { value: "Organization", label: "Organization" },
   ]
 
+  // Timezone dropdown state (for Event timezone selector)
+  const [timezoneOpen, setTimezoneOpen] = useState<boolean>(false)
+  const [timezoneSearch, setTimezoneSearch] = useState<string>("")
+
   const TICKET_AVAILABILITY_OPTIONS = [
-    { value: "", label: "Not specified" },
     { value: "InStock", label: "In stock" },
     { value: "OutOfStock", label: "Out of stock" },
     { value: "OnlineOnly", label: "Online only" },
@@ -441,7 +574,6 @@ export default function SchemaBuilder(): JSX.Element {
   ]
 
   const ITEM_CONDITION_OPTIONS = [
-    { value: "", label: "Not specified" },
     { value: "NewCondition", label: "New" },
     { value: "UsedCondition", label: "Used" },
     { value: "RefurbishedCondition", label: "Refurbished" },
@@ -539,9 +671,6 @@ export default function SchemaBuilder(): JSX.Element {
     ],
     AU: [
       'New South Wales','Queensland','South Australia','Tasmania','Victoria','Western Australia','Australian Capital Territory','Northern Territory'
-    ],
-    KE: [
-      'Nairobi','Mombasa','Kisumu','Nakuru','Eldoret'
     ]
   }
 
@@ -743,8 +872,18 @@ export default function SchemaBuilder(): JSX.Element {
     setOpeningHoursState((prev) => [...prev, { days: "", opens: "", closes: "" }])
   }
   const updateOpeningHour = (index: number, key: "days" | "opens" | "closes", value: string) => {
-    // Validate time inputs for opens/closes (HH:MM 24-hour)
-    const isValidTime = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test((v || "").trim())
+    // Validate time inputs for opens/closes (HH:MM 24-hour). Accept single-digit hours like "8:00"
+    const isValidTime = (v: string) => /^([01]?\d|2[0-3]):[0-5]\d$/.test((v || "").trim())
+
+    // Normalize time to two-digit hour format when valid (e.g. "8:00" -> "08:00")
+    const normalizeTime = (v: string) => {
+      const trimmed = (v || "").trim()
+      const m = trimmed.match(/^([0-9]{1,2}):([0-5][0-9])$/)
+      if (!m) return trimmed
+      const hh = m[1].padStart(2, "0")
+      const mm = m[2]
+      return `${hh}:${mm}`
+    }
 
     if (key === "opens" || key === "closes") {
       if (value && value.trim() && !isValidTime(value.trim())) {
@@ -760,7 +899,8 @@ export default function SchemaBuilder(): JSX.Element {
 
     setOpeningHoursState((prev) => {
       const next = [...prev]
-      next[index] = { ...next[index], [key]: value }
+      const newVal = (key === "opens" || key === "closes") && value ? normalizeTime(value) : value
+      next[index] = { ...next[index], [key]: newVal }
       return next
     })
   }
@@ -1089,7 +1229,7 @@ export default function SchemaBuilder(): JSX.Element {
     departments.forEach((dept, i) => {
       if (dept.imageUrl) validateField(`dept_imageUrl_${i}`, dept.imageUrl, fields)
       if (dept.opens) {
-        if (!/^\d{2}:\d{2}$/.test(dept.opens.trim())) {
+        if (!/^\d{1,2}:[0-5]\d$/.test(dept.opens.trim())) {
           setErrors((prev) => ({ ...prev, [`dept_opens_${i}`]: "Time must be in HH:MM format (e.g. 08:00)" }))
         } else {
           setErrors((prev) => {
@@ -1100,7 +1240,7 @@ export default function SchemaBuilder(): JSX.Element {
         }
       }
       if (dept.closes) {
-        if (!/^\d{2}:\d{2}$/.test(dept.closes.trim())) {
+        if (!/^\d{1,2}:[0-5]\d$/.test(dept.closes.trim())) {
           setErrors((prev) => ({ ...prev, [`dept_closes_${i}`]: "Time must be in HH:MM format (e.g. 21:00)" }))
         } else {
           setErrors((prev) => {
@@ -1217,12 +1357,18 @@ export default function SchemaBuilder(): JSX.Element {
       contacts,
       ticketTypes,
       ticketDefaultCurrency,
+      orgExtras,
     }), null, 2),
-    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency]
+    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency, orgExtras]
   )
 
+  // Wrapped script tag version for preview/copy/download
+  const schemaScript = useMemo(() => {
+    return "<script type=\"application/ld+json\">\n" + schemaJSON + "\n</script>"
+  }, [schemaJSON])
+
   const handleCopy = async () => {
-    await copyToClipboard(schemaJSON)
+    await copyToClipboard(schemaScript)
     setCopied(true)
     setTimeout(() => setCopied(false), 1400)
   }
@@ -1230,14 +1376,14 @@ export default function SchemaBuilder(): JSX.Element {
   const handleDownload = () => {
     const fileBase = type === "Article" ? fields.articleType || "Article" : type
     const filename = `${fileBase} schema.json`
-    downloadText(filename, schemaJSON)
+    downloadText(filename, schemaScript)
     setDownloadMsgVisible(true)
     setTimeout(() => setDownloadMsgVisible(false), 1400)
   }
 
   const handleTest = async () => {
     try {
-      await copyToClipboard(schemaJSON)
+      await copyToClipboard(schemaScript)
       setTestMsgVisible(true)
       window.open("https://search.google.com/test/rich-results", "_blank", "noopener,noreferrer")
       setTimeout(() => setTestMsgVisible(false), 1400)
@@ -1248,7 +1394,7 @@ export default function SchemaBuilder(): JSX.Element {
 
   const handleValidate = async () => {
     try {
-      await copyToClipboard(schemaJSON)
+      await copyToClipboard(schemaScript)
       setValidateMsgVisible(true)
       window.open("https://validator.schema.org/", "_blank", "noopener,noreferrer")
       setTimeout(() => setValidateMsgVisible(false), 1400)
@@ -1871,6 +2017,11 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
                   ))}
+                  <div>
+                    <button type="button" className="action-btn" onClick={addBreadcrumb}>
+                      Add URL
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : type === "FAQ Page" ? (
@@ -2102,9 +2253,6 @@ export default function SchemaBuilder(): JSX.Element {
                                     {c.code} - {c.name}
                                   </li>
                                 ))}
-                                <li key="none-howto" className={(fields.currency || "") === "" ? "selected" : ""} onClick={() => { handleChange("currency", ""); setHowToCurrencyOpen(false); setHowToCurrencySearch("") }}>
-                                  Not specified
-                                </li>
                               </ul>
                             </div>
                           )}
@@ -2112,7 +2260,7 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    <div className="tool-field mt-4">
+                    <div className="tool-field">
                       <label className="tool-label">Image URL</label>
                       <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
                       {renderError("imageUrl")}
@@ -2220,7 +2368,7 @@ export default function SchemaBuilder(): JSX.Element {
                       {renderError("description")}
                     </div>
 
-                    <div className="tool-field mt-4">
+                    <div className="tool-field">
                       <label className="tool-label">Image URL</label>
                       <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
                       {renderError("imageUrl")}
@@ -2313,7 +2461,147 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(fields.attendanceMode || "") !== "" && (
+                          <>
+                            {/* Stream URL + Timezone (show for Online & Mixed, hide for Offline) */}
+                            {fields.attendanceMode !== 'OfflineEventAttendanceMode' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">Stream URL</label>
+                                  <input type="text" className="tool-input" value={fields.streamUrl || ""} placeholder="https://example.com/stream" onChange={(e) => handleChange("streamUrl", e.target.value)} />
+                                  {renderError("streamUrl")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Timezone</label>
+                                  <div className="custom-select-wrapper compact-select event-select-wrapper relative" style={{ width: "100%" }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={() => setTimezoneOpen((o) => !o)}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={timezoneOpen}
+                                    >
+                                      <span className="truncate block">{fields.timezone || "Timezone"}</span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {timezoneOpen && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                        <div className="p-2">
+                                          <input
+                                            type="text"
+                                            className="tool-input"
+                                            placeholder="Search timezone..."
+                                            value={timezoneSearch}
+                                            onChange={(e) => setTimezoneSearch(e.target.value)}
+                                          />
+                                        </div>
+                                        <ul>
+                                          {TIMEZONES.filter((z) => (z || "").toLowerCase().includes((timezoneSearch || "").toLowerCase())).map((z) => (
+                                            <li key={z} className={(fields.timezone || "") === z ? "selected" : ""} onClick={() => { handleChange("timezone", z); setTimezoneOpen(false); setTimezoneSearch("") }}>
+                                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>{z}</span>
+                                                <span className="text-[13px] text-gray-500 ml-2">{formatGmtOffset(getTimezoneOffsetMinutes(z))}</span>
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {renderError("timezone")}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Venue fields hidden for pure online events */}
+                            {fields.attendanceMode !== 'OnlineEventAttendanceMode' && (
+                              <>
+                              {/* Venue fields: name, street, city (single row), then region + postal code */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="tool-field">
+                                <label className="tool-label">Venue name</label>
+                                <input type="text" className="tool-input" value={fields.venueName || ""} placeholder="Venue name" onChange={(e) => handleChange("venueName", e.target.value)} />
+                                {renderError("venueName")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Street</label>
+                                <input type="text" className="tool-input" value={fields.venueStreet || ""} placeholder="Street address" onChange={(e) => handleChange("venueStreet", e.target.value)} />
+                                {renderError("venueStreet")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">City</label>
+                                <input type="text" className="tool-input" value={fields.venueCity || ""} placeholder="City" onChange={(e) => handleChange("venueCity", e.target.value)} />
+                                {renderError("venueCity")}
+                              </div>
+                            </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="tool-field">
+                                <label className="tool-label">State / Province / Region</label>
+                                <input
+                                  type="text"
+                                  className={`tool-input ${fields.venueCountry && fields.venueCountry !== 'US' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  value={fields.venueRegion || ""}
+                                  placeholder={fields.venueCountry && fields.venueCountry !== 'US' ? 'Disabled (non-US country)' : 'State / Province / Region'}
+                                  onChange={(e) => handleChange("venueRegion", e.target.value)}
+                                  disabled={Boolean(fields.venueCountry && fields.venueCountry !== 'US')}
+                                />
+                                {renderError("venueRegion")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Zip / Postal code</label>
+                                <input type="text" className="tool-input" value={fields.venuePostalCode || ""} placeholder="Zip / Postal code" onChange={(e) => handleChange("venuePostalCode", e.target.value)} />
+                                {renderError("venuePostalCode")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Country</label>
+                                <div className="custom-select-wrapper compact-select relative" style={{ width: '100%', minWidth: 140 }}>
+                                  <button
+                                    type="button"
+                                    className="custom-select-trigger tool-select"
+                                    onClick={() => setVenueCountryOpen((o) => !o)}
+                                    style={{ width: "100%", justifyContent: "space-between" }}
+                                    aria-expanded={venueCountryOpen}
+                                  >
+                                    <span className="truncate block">{(fields.venueCountry && (COUNTRY_LIST.find(c => c.code === fields.venueCountry)?.name || fields.venueCountry)) || "Select country"}</span>
+                                    <span className="text-xs">⏷</span>
+                                  </button>
+
+                                  {venueCountryOpen && (
+                                    <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                      <div className="p-2">
+                                        <input
+                                          type="text"
+                                          className="tool-input"
+                                          placeholder="Search country..."
+                                          value={venueCountrySearch}
+                                          onChange={(e) => setVenueCountrySearch(e.target.value)}
+                                        />
+                                      </div>
+                                      <ul>
+                                        {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((venueCountrySearch || "").toLowerCase())).map((c) => (
+                                          <li key={c.code || c.name} className={(fields.venueCountry || "") === (c.code || "") ? "selected" : ""} onClick={() => { handleChange("venueCountry", c.code || ""); setVenueCountryOpen(false); setVenueCountrySearch("") }}>
+                                            {c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                                {renderError("venueCountry")}
+                              </div>
+                              </div>
+                              </>
+                            )}
+                          </>
+                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="tool-field">
                       <label className="tool-label">Performer @type</label>
                       <div className="custom-select-wrapper compact-select event-select-wrapper relative" style={{ width: "100%" }}>
@@ -2348,9 +2636,9 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div>
                     <div className="mb-3">
-                      <div className="text-sm text-gray-600">Add an offer for each ticket type (e.g. "General admission", "VIP Package").</div>
+                      <div className="text-sm text-gray-600 mt-2">Add an offer for each ticket type (e.g. "General admission", "VIP Package").</div>
 
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                         <div className="flex items-center gap-3">
@@ -2387,9 +2675,6 @@ export default function SchemaBuilder(): JSX.Element {
                                       {c.code} - {c.name}
                                     </li>
                                   ))}
-                                  <li key="none" className={ticketDefaultCurrency === "" ? "selected" : ""} onClick={() => { setTicketDefaultCurrency(""); setTicketDefaultCurrencyOpen(false); setTicketCurrencySearch("") }}>
-                                    Not specified
-                                  </li>
                                 </ul>
                               </div>
                             )}
@@ -2400,7 +2685,7 @@ export default function SchemaBuilder(): JSX.Element {
 
                     <div className="flex flex-col gap-3">
                       {ticketTypes.map((t, idx) => (
-                        <div key={idx} className="space-y-2">
+                        <div key={idx} className="space-y-2 mt-2">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                             <div className="tool-field">
                               <label className="tool-label">Name</label>
@@ -2652,7 +2937,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="tool-field mt-4">
+                  <div className="tool-field">
                     <label className="tool-label">Job's description (in HTML)</label>
                     <textarea
                       className="tool-textarea"
@@ -2834,9 +3119,6 @@ export default function SchemaBuilder(): JSX.Element {
                                   {c.name}
                                 </li>
                               ))}
-                              <li key="none-country" className={(fields.country || "") === "" ? "selected" : ""} onClick={() => { handleChange("country", ""); setCountryOpen(false); setCountrySearch(""); setRegionCustomVisible(false) }}>
-                                Not specified
-                              </li>
                             </ul>
                           </div>
                         )}
@@ -2900,14 +3182,25 @@ export default function SchemaBuilder(): JSX.Element {
                           )}
                         </div>
                       ) : selectedCountryCode && !regionCustomVisible ? (
-                        // Country selected but no known states -> show disabled/grayed empty input
-                        <input
-                          type="text"
-                          className="tool-input opacity-50"
-                          value={""}
-                          placeholder=""
-                          disabled
-                        />
+                        // Country selected but no known states -> for Kenya show grayed disabled input with current value,
+                        // for other countries show an empty disabled input (fallback)
+                        selectedCountryCode === "KE" ? (
+                          <input
+                            type="text"
+                            className="tool-input opacity-50"
+                            value={fields.region || ""}
+                            placeholder="State or region"
+                            disabled
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="tool-input opacity-50"
+                            value={""}
+                            placeholder=""
+                            disabled
+                          />
+                        )
                       ) : (
                         <input
                           type="text"
@@ -3017,9 +3310,6 @@ export default function SchemaBuilder(): JSX.Element {
                                   {c.code} - {c.name}
                                 </li>
                               ))}
-                              <li key="none-salary" className={(fields.currency || "") === "" ? "selected" : ""} onClick={() => { handleChange("currency", ""); setSalaryCurrencyOpen(false); setSalaryCurrencySearch("") }}>
-                                Not specified
-                              </li>
                             </ul>
                           </div>
                         )}
@@ -3048,7 +3338,6 @@ export default function SchemaBuilder(): JSX.Element {
                               <li key="WEEK" className={(fields.salaryUnit || "") === "WEEK" ? "selected" : ""} onClick={() => { handleChange("salaryUnit", "WEEK"); setSalaryUnitOpen(false) }}>Week</li>
                               <li key="MONTH" className={(fields.salaryUnit || "") === "MONTH" ? "selected" : ""} onClick={() => { handleChange("salaryUnit", "MONTH"); setSalaryUnitOpen(false) }}>Month</li>
                               <li key="YEAR" className={(fields.salaryUnit || "") === "YEAR" ? "selected" : ""} onClick={() => { handleChange("salaryUnit", "YEAR"); setSalaryUnitOpen(false) }}>Year</li>
-                              <li key="none-period" className={(fields.salaryUnit || "") === "" ? "selected" : ""} onClick={() => { handleChange("salaryUnit", ""); setSalaryUnitOpen(false) }}>Not specified</li>
                             </ul>
                           </div>
                         )}
@@ -3146,6 +3435,18 @@ export default function SchemaBuilder(): JSX.Element {
                         onChange={(e) => handleChange("url", e.target.value)}
                       />
                       {renderError("url")}
+                    </div>
+ 
+                    <div className="tool-field">
+                      <label className="tool-label">@id (URL)</label>
+                      <input
+                        type="text"
+                        className="tool-input"
+                        value={fields["@id"] || ""}
+                        placeholder="https://example.com/#website"
+                        onChange={(e) => handleChange("@id", e.target.value)}
+                      />
+                      {renderError("@id")}
                     </div>
                   </div>
 
@@ -3273,9 +3574,6 @@ export default function SchemaBuilder(): JSX.Element {
                                               <div className="text-[13px] text-gray-500">{opt.desc}</div>
                                             </li>
                                           ))}
-                                          <li key="none-localbusiness" className={(fields.localBusinessType || "") === "" ? "selected" : ""} onClick={() => { handleChange("localBusinessType", ""); setLocalBusinessTypeOpen(false) }}>
-                                            Not specified
-                                          </li>
                                         </ul>
                                       </div>
                                     )}
@@ -3294,7 +3592,7 @@ export default function SchemaBuilder(): JSX.Element {
                                         style={{ width: "100%", justifyContent: "space-between" }}
                                         aria-expanded={moreSpecificOpen}
                                       >
-                                        <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select subtype"}</span>
+                                        <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select"}</span>
                                         <span className="text-xs">⏷</span>
                                       </button>
 
@@ -3307,9 +3605,6 @@ export default function SchemaBuilder(): JSX.Element {
                                                 <div className="text-[13px] text-gray-500">{o.desc}</div>
                                               </li>
                                             ))}
-                                            <li key="none-subtype" className={(fields.moreSpecificType || "") === "" ? "selected" : ""} onClick={() => { handleChange("moreSpecificType", ""); setMoreSpecificOpen(false) }}>
-                                              Not specified
-                                            </li>
                                           </ul>
                                         </div>
                                       )}
@@ -3351,9 +3646,6 @@ export default function SchemaBuilder(): JSX.Element {
                                           <div className="text-[13px] text-gray-500">{opt.desc}</div>
                                         </li>
                                       ))}
-                                      <li key="none-localbusiness" className={(fields.localBusinessType || "") === "" ? "selected" : ""} onClick={() => { handleChange("localBusinessType", ""); setLocalBusinessTypeOpen(false) }}>
-                                        Not specified
-                                      </li>
                                     </ul>
                                   </div>
                                 )}
@@ -3400,7 +3692,6 @@ export default function SchemaBuilder(): JSX.Element {
                                               <div className="font-semibold text-[15px]">{opt.name} {opt.code ? <span className="text-[13px] text-gray-500">({opt.code})</span> : null}</div>
                                             </li>
                                           ))}
-                                          <li key="none-country" className={(fields.country || "") === "" ? "selected" : ""} onClick={() => { handleChange("country", ""); setCountryOpen(false); setCountrySearch("") }}>Not specified</li>
                                         </ul>
                                       </div>
                                     )}
@@ -3432,14 +3723,16 @@ export default function SchemaBuilder(): JSX.Element {
                                                     <div className="font-semibold text-[15px]">{r}</div>
                                                   </li>
                                                 ))}
-                                                <li key="none-region" className={(fields.region || "") === "" ? "selected" : ""} onClick={() => { handleChange("region", ""); setRegionOpen(false); setRegionSearch("") }}>Not specified</li>
                                               </ul>
                                             </div>
                                           )}
                                         </div>
                                       )
                                     }
-                                    // fallback: simple text input
+                                    // fallback: simple text input — gray out (disabled) when country is Kenya
+                                    if (code === "KE") {
+                                      return <input type="text" className="tool-input opacity-50" value={fields.region || ""} placeholder="State or region" disabled />
+                                    }
                                     return <input type="text" className="tool-input" value={fields.region || ""} placeholder="State or region" onChange={(e) => handleChange("region", e.target.value)} />
                                   })()}
                                   {renderError("region")}
@@ -3480,7 +3773,6 @@ export default function SchemaBuilder(): JSX.Element {
                                           <div className="font-semibold text-[15px]">{opt.name} {opt.code ? <span className="text-[13px] text-gray-500">({opt.code})</span> : null}</div>
                                         </li>
                                       ))}
-                                      <li key="none-country" className={(fields.country || "") === "" ? "selected" : ""} onClick={() => { handleChange("country", ""); setCountryOpen(false); setCountrySearch("") }}>Not specified</li>
                                     </ul>
                                   </div>
                                 )}
@@ -3638,7 +3930,7 @@ export default function SchemaBuilder(): JSX.Element {
                                     style={{ width: "100%", justifyContent: "space-between" }}
                                     aria-expanded={moreSpecificOpen}
                                   >
-                                    <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select subtype"}</span>
+                                    <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select"}</span>
                                     <span className="text-xs">⏷</span>
                                   </button>
 
@@ -3651,9 +3943,6 @@ export default function SchemaBuilder(): JSX.Element {
                                             <div className="text-[13px] text-gray-500">{o.desc}</div>
                                           </li>
                                         ))}
-                                        <li key="none-subtype" className={(fields.moreSpecificType || "") === "" ? "selected" : ""} onClick={() => { handleChange("moreSpecificType", ""); setMoreSpecificOpen(false) }}>
-                                          Not specified
-                                        </li>
                                       </ul>
                                     </div>
                                   )}
@@ -3731,25 +4020,16 @@ export default function SchemaBuilder(): JSX.Element {
                                               const selected = (oh.days || "").split(",").map(s => s.trim()).filter(Boolean).includes(d)
                                               return (
                                                 <li key={d} className={selected ? "selected" : ""} onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  const cur = (oh.days || "").split(",").map(s => s.trim()).filter(Boolean)
-                                                  const next = cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]
-                                                  updateOpeningHour(idx, "days", next.join(","))
-                                                }}>
-                                                  <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
-                                                    <input
-                                                      type="checkbox"
-                                                      checked={selected}
-                                                      onChange={(e) => {
-                                                        e.stopPropagation()
-                                                        const cur = (oh.days || "").split(",").map(s => s.trim()).filter(Boolean)
-                                                        const next = cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]
-                                                        updateOpeningHour(idx, "days", next.join(","))
-                                                      }}
-                                                    />
-                                                    <span>{d}</span>
-                                                  </label>
-                                                </li>
+                                                      e.stopPropagation()
+                                                      const cur = (oh.days || "").split(",").map(s => s.trim()).filter(Boolean)
+                                                      const next = cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]
+                                                      updateOpeningHour(idx, "days", next.join(","))
+                                                    }}>
+                                                      <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
+                                                        {selected ? "✓ " : ""}
+                                                        <span>{d}</span>
+                                                      </label>
+                                                    </li>
                                               )
                                             })}
                                           </ul>
@@ -3821,18 +4101,6 @@ export default function SchemaBuilder(): JSX.Element {
                                             <div className="text-[13px] text-gray-500">{opt.desc}</div>
                                           </li>
                                         ))}
-                                        <li
-                                          key={`dept-${idx}-none`}
-                                          className={(d.localBusinessType || "") === "" ? "selected" : ""}
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            try { console.debug('Dept select clicked', { idx, value: "" }) } catch {}
-                                            updateDepartment(idx, "localBusinessType", "")
-                                            setDeptLocalBusinessOpenIndex(null)
-                                          }}
-                                        >
-                                          Not specified
-                                        </li>
                                       </ul>
                                     </div>
                                   )}
@@ -3850,7 +4118,7 @@ export default function SchemaBuilder(): JSX.Element {
                                       style={{ width: "100%", justifyContent: "space-between" }}
                                       aria-expanded={deptMoreSpecificOpenIndex === idx}
                                     >
-                                      <span className="truncate block">{(d.moreSpecificType && d.moreSpecificType.trim()) ? d.moreSpecificType : "Select Option"}</span>
+                                      <span className="truncate block">{(d.moreSpecificType && d.moreSpecificType.trim()) ? d.moreSpecificType : "Select"}</span>
                                       <span className="text-xs">⏷</span>
                                     </button>
 
@@ -3863,15 +4131,12 @@ export default function SchemaBuilder(): JSX.Element {
                                               <div className="text-[13px] text-gray-500">{o.desc}</div>
                                             </li>
                                           ))}
-                                          <li key={`${idx}-none-subtype`} className={(d.moreSpecificType || "") === "" ? "selected" : ""} onClick={() => { updateDepartment(idx, "moreSpecificType", ""); setDeptMoreSpecificOpenIndex(null) }}>
-                                            Not specified
-                                          </li>
                                         </ul>
                                       </div>
                                     )}
                                   </div>
                                 ) : (
-                                  <input type="text" className="tool-input opacity-50" disabled value={d.moreSpecificType || ""} placeholder="Select Option" onChange={(e) => updateDepartment(idx, "moreSpecificType", e.target.value)} />
+                                  <input type="text" className="tool-input opacity-50" disabled value={d.moreSpecificType || ""} placeholder="Select" onChange={(e) => updateDepartment(idx, "moreSpecificType", e.target.value)} />
                                 )}
                               </div>
                             </div>
@@ -3922,16 +4187,7 @@ export default function SchemaBuilder(): JSX.Element {
                                               updateDepartment(idx, "days", next.join(","))
                                             }}>
                                               <label className="flex items-center gap-2 py-1 px-2 cursor-pointer">
-                                                <input
-                                                  type="checkbox"
-                                                  checked={selected}
-                                                  onChange={(e) => {
-                                                    e.stopPropagation()
-                                                    const cur = (d.days || "").split(",").map(s => s.trim()).filter(Boolean)
-                                                    const next = cur.includes(day) ? cur.filter(x => x !== day) : [...cur, day]
-                                                    updateDepartment(idx, "days", next.join(","))
-                                                  }}
-                                                />
+                                                {selected ? "✓ " : ""}
                                                 <span>{day}</span>
                                               </label>
                                             </li>
@@ -3995,7 +4251,7 @@ export default function SchemaBuilder(): JSX.Element {
                 ) : type === "Organization" ? (
                   <>
                     {/* Organization @type + More specific @type selectors */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="tool-field">
                         <label className="tool-label">Organization @type</label>
                         <div className="custom-select-wrapper compact-select organization-select-wrapper relative" style={{ width: "100%" }}>
@@ -4042,7 +4298,7 @@ export default function SchemaBuilder(): JSX.Element {
                                   style={{ width: "100%", justifyContent: "space-between" }}
                                   aria-expanded={orgMoreSpecificOpen}
                                 >
-                                  <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select subtype"}</span>
+                                  <span className="truncate block">{(fields.moreSpecificType && fields.moreSpecificType.trim()) ? fields.moreSpecificType : "Select"}</span>
                                   <span className="text-xs">⏷</span>
                                 </button>
 
@@ -4095,6 +4351,86 @@ export default function SchemaBuilder(): JSX.Element {
                         <label className="tool-label">Logo URL</label>
                         <input type="text" className="tool-input" value={fields.logo || ""} placeholder="https://example.com/logo.png" onChange={(e) => handleChange("logo", e.target.value)} />
                         {renderError("logo")}
+                      </div>
+                    </div>
+
+                    {/* Organization Contact Email + @id (single row) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Contact Email</label>
+                        <input type="text" className="tool-input" value={fields.email || ""} placeholder="info@example.com" onChange={(e) => handleChange("email", e.target.value)} />
+                        {renderError("email")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">@id (URL)</label>
+                        <input type="text" className="tool-input" value={fields["@id"] || ""} placeholder="https://example.com/#organization" onChange={(e) => handleChange("@id", e.target.value)} />
+                        {renderError("@id")}
+                      </div>
+                    </div>
+
+                    {/* Organization Description */}
+                    <div className="tool-field">
+                      <label className="tool-label">Description</label>
+                      <textarea className="tool-textarea" rows={4} value={fields.description || ""} placeholder="Short description of the organization" onChange={(e) => handleChange("description", e.target.value)} />
+                      {renderError("description")}
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="mt-4">
+                      <h4 className="text-sm font-semibold mb-2">Additional Info</h4>
+                      <div className="space-y-3">
+                        {orgExtras.length > 0 ? (
+                          orgExtras.map((item, idx) => (
+                            <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                              {/* Dropdown (left) */}
+                              <div className="tool-field md:col-span-4">
+                                <label className="tool-label">Field</label>
+                                <div className="custom-select-wrapper compact-select relative" style={{ width: "100%" }}>
+                                  <button
+                                    type="button"
+                                    className="custom-select-trigger tool-select"
+                                    onClick={() => setOrgExtraKeyOpenIndex((o) => (o === idx ? null : idx))}
+                                    style={{ width: "100%", justifyContent: "space-between" }}
+                                    aria-expanded={orgExtraKeyOpenIndex === idx}
+                                  >
+                                    <span className="truncate block">{(() => {
+                                      const lab = ORG_ADDITIONAL_OPTIONS.find((o) => o.key === item.key)?.label
+                                      return lab || "Select field"
+                                    })()}</span>
+                                    <span className="text-xs">⏷</span>
+                                  </button>
+                                  {orgExtraKeyOpenIndex === idx && (
+                                    <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 320, overflow: "auto" }}>
+                                      <ul>
+                                        {ORG_ADDITIONAL_OPTIONS.map((o) => (
+                                          <li key={o.key} className={item.key === o.key ? "selected" : ""} onClick={() => { setOrgExtras((prev) => { const next = [...prev]; next[idx] = { ...next[idx], key: o.key }; return next }); setOrgExtraKeyOpenIndex(null) }}>{o.label}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Value (right) */}
+                              <div className="tool-field md:col-span-7">
+                                <label className="tool-label">Value</label>
+                                <input type="text" className="tool-input" value={item.value || ""} placeholder="Enter value" onChange={(e) => setOrgExtras((prev) => { const next = [...prev]; next[idx] = { ...next[idx], value: e.target.value }; return next })} />
+                              </div>
+
+                              {/* Remove */}
+                              <div className="flex items-center md:col-span-1 justify-end">
+                                <button type="button" className="toolbar-btn toolbar-btn--red" onClick={() => setOrgExtras((prev) => prev.filter((_, i) => i !== idx))}>Remove</button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500">No additional info added.</div>
+                        )}
+
+                        <div>
+                          <button type="button" className="action-btn" onClick={() => setOrgExtras((prev) => [...prev, { key: "legalName", value: "" }])}>Add</button>
+                        </div>
                       </div>
                     </div>
 
@@ -4347,6 +4683,17 @@ export default function SchemaBuilder(): JSX.Element {
                         "url",
                         "logo",
                         "email",
+                        "@id",
+                        "description",
+                        "legalName",
+                        "iso6523Code",
+                        "duns",
+                        "leiCode",
+                        "naicsCode",
+                        "globalLocationNumber",
+                        "vatId",
+                        "taxId",
+                        "numberOfEmployees",
                         "founder",
                         "foundingDate",
                         "street",
@@ -4529,9 +4876,6 @@ export default function SchemaBuilder(): JSX.Element {
                                                   {c.code} — {c.name}
                                                 </li>
                                               ))}
-                                              <li key="none-product-currency" className={(fields.currency || "") === "" ? "selected" : ""} onClick={() => { handleChange("currency", ""); setProductCurrencyOpen(false); setProductCurrencySearch("") }}>
-                                                Not specified
-                                              </li>
                                             </ul>
                                           </div>
                                         )}
@@ -4921,7 +5265,7 @@ export default function SchemaBuilder(): JSX.Element {
             </div>
 
             <pre className="tool-code">
-              <code>{schemaJSON}</code>
+              <code>{schemaScript}</code>
             </pre>
           </div>
         </div>

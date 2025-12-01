@@ -309,7 +309,7 @@ export default function HreflangValidator(): JSX.Element {
               </div>
             </div>
 
-            <div className="tool-field mt-4">
+            <div className="tool-field">
               <h3 className="tool-section-title">Parsed Tags</h3>
               {errors.length > 0 && errors.map((e, i) => <div key={i} className="text-sm text-red-600">{e}</div>)}
               {parsed.length === 0 ? <div className="text-sm text-gray-500">No tags parsed.</div> : (
@@ -383,7 +383,7 @@ export default function HreflangValidator(): JSX.Element {
               <button className="clear-btn" onClick={handleCopyGenerated} disabled={generated.length === 0}>Copy</button>
             </div>
 
-            <div className="tool-field mt-4">
+            <div className="tool-field">
               <h3 className="tool-section-title">Generated Tags</h3>
               {generated.length === 0 ? <div className="text-sm text-gray-500">No tags generated yet.</div> : (
                 <div>

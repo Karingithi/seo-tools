@@ -475,8 +475,8 @@ export default function SitemapChecker(): JSX.Element {
 
             {/* Server endpoint used automatically (server first, then client fallback) */}
 
-            {!(sitemapUrl && !isValidUrl(sitemapUrl)) ? (
-              <div className="tool-field mt-4">
+              {!(sitemapUrl && !isValidUrl(sitemapUrl)) ? (
+              <div className="tool-field">
                 <label className="tool-label">Raw XML (optional)</label>
                 <textarea
                   value={xmlText}
@@ -487,7 +487,7 @@ export default function SitemapChecker(): JSX.Element {
                 ></textarea>
               </div>
             ) : (
-              <div className="tool-field mt-4">
+              <div className="tool-field">
                 <label className="tool-label">Raw XML (optional)</label>
                 <div className="mt-2 text-sm text-orange-600">Raw XML input hidden while the sitemap URL is invalid. Clear or fix the URL to enable pasting XML.</div>
               </div>
@@ -495,7 +495,7 @@ export default function SitemapChecker(): JSX.Element {
 
             {fetchError && <div className="mt-3 text-sm text-red-600">{fetchError}</div>}
 
-            <div className="tool-field mt-4">
+            <div className="tool-field">
               <h3 className="tool-section-title">Parsed URLs</h3>
               <div className="text-sm text-gray-700 mb-2">Found <strong>{parsedUrls.length}</strong> entries.</div>
 

@@ -216,9 +216,19 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   ],
   Organization: [
     { label: "Organization Name", key: "name", placeholder: "Tembeya Wellness Retreats" },
+    { label: "@id (URL)", key: "@id", placeholder: "https://example.com/#organization" },
     { label: "URL", key: "url", placeholder: "https://tembeyawellnessretreats.com" },
     { label: "Logo URL", key: "logo", placeholder: "https://example.com/logo.png" },
     { label: "Contact Email", key: "email", placeholder: "info@example.com" },
+    { label: "Legal Name", key: "legalName", placeholder: "Registered legal name" },
+    { label: "ISO 6523 Code", key: "iso6523Code", placeholder: "e.g. 0088" },
+    { label: "DUNS", key: "duns", placeholder: "D-U-N-S number" },
+    { label: "LEI Code", key: "leiCode", placeholder: "Legal Entity Identifier" },
+    { label: "NAICS Code", key: "naicsCode", placeholder: "e.g. 541611" },
+    { label: "Global Location Number", key: "globalLocationNumber", placeholder: "GLN" },
+    { label: "VAT ID", key: "vatId", placeholder: "VAT identification number" },
+    { label: "Tax ID", key: "taxId", placeholder: "Company tax identifier" },
+    { label: "Number of Employees", key: "numberOfEmployees", placeholder: "e.g. 250" },
     { label: "Founder", key: "founder", placeholder: "Founder's name" },
     { label: "Founding date", key: "foundingDate", placeholder: "yyyy-mm-dd" },
     { label: "Street", key: "street", placeholder: "Street address" },
@@ -230,6 +240,7 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   "Website Sitelinks Searchbox": [
     { label: "Site Name", key: "name", placeholder: "Example Site" },
     { label: "Site URL", key: "url", placeholder: "https://example.com" },
+    { label: "@id (URL)", key: "@id", placeholder: "https://example.com/#website" },
     { label: "Search URL Template", key: "urlTemplate", placeholder: "https://example.com/search?q={search_term_string}" },
     { label: "Description", key: "description", placeholder: "Short description of your site" },
   ],
@@ -372,13 +383,68 @@ export function buildSchemaFromState(p: BuildParams): any {
   }
 
   if (type === "Event") {
-    if (fields.location) base.location = { "@type": "Place", name: fields.location }
+    // Build location from venue fields if provided (wrap in Place + PostalAddress)
+    const hasVenue = (fields.venueName || fields.venueStreet || fields.venueCity || fields.venuePostalCode || fields.venueCountry)
+    if (hasVenue) {
+      const place: any = { "@type": "Place" }
+      if (fields.venueName?.trim()) place.name = fields.venueName.trim()
+      const hasAddr = (fields.venueStreet || fields.venueCity || fields.venueRegion || fields.venuePostalCode || fields.venueCountry)
+      if (hasAddr) {
+        const addr: any = { "@type": "PostalAddress" }
+        if (fields.venueStreet?.trim()) addr.streetAddress = fields.venueStreet.trim()
+        if (fields.venueCity?.trim()) addr.addressLocality = fields.venueCity.trim()
+        if (fields.venueRegion?.trim()) addr.addressRegion = fields.venueRegion.trim()
+        if (fields.venuePostalCode?.trim()) addr.postalCode = fields.venuePostalCode.trim()
+        if (fields.venueCountry?.trim()) addr.addressCountry = fields.venueCountry.trim()
+        place.address = addr
+      }
+      base.location = place
+    } else if (fields.location) {
+      base.location = { "@type": "Place", name: fields.location }
+    }
+
+    // Helper: compute timezone offset (+HH:MM or -HH:MM) for given date/time and IANA timezone
+    const computeTzOffset = (date?: string, time?: string, tz?: string) => {
+      try {
+        const d = (date || "").trim()
+        if (!d) return 'Z'
+        const t = (time && time.trim()) ? time.trim() : '00:00'
+        // Build a local Date from the provided date/time (interpreted in the runtime's local zone)
+        const local = new Date(`${d}T${t}:00`)
+        if (!tz) {
+          // use local timezone offset
+          const off = -local.getTimezoneOffset()
+          const sign = off >= 0 ? '+' : '-'
+          const abs = Math.abs(off)
+          return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`
+        }
+        const fmt = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz,
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+        })
+        const parts = fmt.formatToParts(local).reduce((acc: any, p: any) => { acc[p.type] = p.value; return acc }, {})
+        const yy = Number(parts.year), mm = Number(parts.month) - 1, dd = Number(parts.day), hh = Number(parts.hour), min = Number(parts.minute), ss = Number(parts.second)
+        const utcForTz = Date.UTC(yy, mm, dd, hh, min, ss)
+        const diffMinutes = Math.round((utcForTz - local.getTime()) / 60000)
+        const sign = diffMinutes >= 0 ? '+' : '-'
+        const m = Math.abs(diffMinutes)
+        return `${sign}${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+      } catch {
+        return 'Z'
+      }
+    }
+
     const combineDateTime = (date?: string, time?: string) => {
       if (!date) return undefined
       const d = date.trim()
       const t = time?.trim() ? time.trim() : null
-      return t ? `${d}T${t}` : d
+      if (!t) return `${d}T00:00:00Z`
+      const tz = (fields.timezone || '').trim() || undefined
+      const offset = computeTzOffset(d, t, tz)
+      return offset === 'Z' ? `${d}T${t}:00Z` : `${d}T${t}:00${offset}`
     }
+
     const sdt = combineDateTime(fields.startDate, fields.startTime)
     const edt = combineDateTime(fields.endDate, fields.endTime)
     if (sdt) base.startDate = sdt
@@ -396,37 +462,107 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (p.ticketTypes && p.ticketTypes.length) {
       const offers = p.ticketTypes
         .map((t) => {
-          const has = (t.name || "").trim() || (t.price || "").trim()
+          const tt = t as any
+          // support both old keys (name, price, currency, availability, url, availableFrom)
+          // and the new offer* keys requested by the user
+          const rawName = (tt.offerName ?? tt.name ?? "")
+          const rawPrice = (tt.offerPrice ?? tt.price ?? "")
+          const rawCurrency = (tt.offerPriceCurrency ?? tt.currency ?? p.ticketDefaultCurrency ?? "")
+          const rawUrl = (tt.offerUrl ?? tt.url ?? "")
+          const rawAvailability = (tt.offerAvailability ?? tt.availability ?? "")
+          const rawValidFrom = (tt.offerValidFrom ?? tt.availableFrom ?? "")
+          const rawDescription = (tt.offerDescription ?? tt.description ?? "")
+          const has = (rawName || "").toString().trim() || (rawPrice || "").toString().trim()
           if (!has) return null
           const of: any = { "@type": "Offer" }
-          if (t.name?.trim()) of.name = t.name.trim()
-          if (t.price?.trim()) of.price = t.price.trim()
-          of.priceCurrency = (t.currency?.trim()) || (p.ticketDefaultCurrency?.trim()) || undefined
-          if (t.url?.trim()) of.url = t.url.trim()
-          if (t.availability?.trim()) {
-            const raw = t.availability.trim()
+          if ((rawName || "").toString().trim()) of.name = (rawName || "").toString().trim()
+          if ((rawDescription || "").toString().trim()) of.description = (rawDescription || "").toString().trim()
+          if ((rawPrice || "").toString().trim()) of.price = (rawPrice || "").toString().trim()
+          const currencyVal = (rawCurrency || "").toString().trim()
+          of.priceCurrency = currencyVal || undefined
+          if ((rawUrl || "").toString().trim()) of.url = (rawUrl || "").toString().trim()
+          if ((rawAvailability || "").toString().trim()) {
+            const raw = (rawAvailability || "").toString().trim()
             of.availability = raw.startsWith("http") ? raw : `https://schema.org/${raw}`
           }
-          if (t.availableFrom?.trim()) of.validFrom = t.availableFrom.trim()
+          if ((rawValidFrom || "").toString().trim()) of.validFrom = (rawValidFrom || "").toString().trim()
           return Object.keys(of).length > 1 ? of : null
         })
         .filter(Boolean) as any[]
       if (offers.length === 1) base.offers = offers[0]
       else if (offers.length > 1) base.offers = offers
     }
-    delete base.location
+
+    // Organizer mapping: support organizerType, organizerName, organizerUrl, organizerTelephone, organizerEmail, organizerLogo
+    const hasOrganizer = (fields.organizerName || fields.organizerUrl || fields.organizerTelephone || fields.organizerEmail || fields.organizerLogo)
+    if (hasOrganizer) {
+      const orgType = (fields.organizerType?.trim()) || "Organization"
+      const org: any = { "@type": orgType }
+      if (fields.organizerName?.trim()) org.name = fields.organizerName.trim()
+      if (fields.organizerUrl?.trim()) org.url = fields.organizerUrl.trim()
+      if (fields.organizerTelephone?.trim()) org.telephone = fields.organizerTelephone.trim()
+      if (fields.organizerEmail?.trim()) org.email = fields.organizerEmail.trim()
+      if (fields.organizerLogo?.trim()) org.logo = fields.organizerLogo.trim()
+      base.organizer = org
+    }
+
+    // Recurring event schedule mapping -> eventSchedule property (Schedule object)
+    // Support either a single schedule via fields.schedule* or multiple via p.schedules array
+    const scheduleFromFields = (fields.scheduleRepeatFrequency || fields.scheduleStartDate || fields.scheduleEndDate || fields.scheduleByDay || fields.scheduleStartTime || fields.scheduleEndTime)
+    const schedules: any[] = []
+    if (scheduleFromFields) {
+      const s: any = { "@type": "Schedule" }
+      if (fields.scheduleRepeatFrequency?.trim()) s.repeatFrequency = fields.scheduleRepeatFrequency.trim()
+      if (fields.scheduleStartDate?.trim()) s.startDate = fields.scheduleStartDate.trim()
+      if (fields.scheduleEndDate?.trim()) s.endDate = fields.scheduleEndDate.trim()
+      if (fields.scheduleByDay?.trim()) {
+        // allow comma-separated days
+        s.byDay = fields.scheduleByDay.split(/\s*,\s*/).map((d: string) => d.trim()).filter(Boolean)
+      }
+      if (fields.scheduleStartTime?.trim()) s.startTime = fields.scheduleStartTime.trim()
+      if (fields.scheduleEndTime?.trim()) s.endTime = fields.scheduleEndTime.trim()
+      if (Object.keys(s).length > 1) schedules.push(s)
+    }
+    // Support p.schedules array if provided (each item similar shape to fields)
+    if ((p as any).schedules && Array.isArray((p as any).schedules)) {
+      ((p as any).schedules as any[]).forEach((ps) => {
+        if (!ps) return
+        const s: any = { "@type": "Schedule" }
+        if (ps.repeatFrequency?.trim()) s.repeatFrequency = ps.repeatFrequency.trim()
+        if (ps.startDate?.trim()) s.startDate = ps.startDate.trim()
+        if (ps.endDate?.trim()) s.endDate = ps.endDate.trim()
+        if (ps.byDay) s.byDay = (ps.byDay || "").toString().split(/\s*,\s*/).map((d: string) => d.trim()).filter(Boolean)
+        if (ps.startTime?.trim()) s.startTime = ps.startTime.trim()
+        if (ps.endTime?.trim()) s.endTime = ps.endTime.trim()
+        if (Object.keys(s).length > 1) schedules.push(s)
+      })
+    }
+    if (schedules.length === 1) base.eventSchedule = schedules[0]
+    else if (schedules.length > 1) base.eventSchedule = schedules
     delete base.performerName
     delete base.performerType
     delete base.startTime
     delete base.endTime
     delete base.imageUrl
+    // remove non-schema/raw fields copied earlier
+    delete base.attendanceMode
+    delete base.timezone
     out = base
   }
 
   if (type === "Website Sitelinks Searchbox") {
     const site: any = { "@context": "https://schema.org", "@type": "WebSite" }
     if (fields.name?.trim()) site.name = fields.name.trim()
-    if (fields.url?.trim()) site.url = fields.url.trim()
+    // Prefer an explicit @id if provided; otherwise derive @id from the site URL with a #website fragment
+    if (fields["@id"]?.trim()) {
+      site["@id"] = fields["@id"].trim()
+    }
+    if (fields.url?.trim()) {
+      const raw = fields.url.trim()
+      const url = raw.replace(/\/$/, "") // remove trailing slash for consistent @id
+      site.url = raw
+      if (!site["@id"]) site["@id"] = `${url}#website`
+    }
     if (fields.description?.trim()) site.description = fields.description.trim()
     if (fields.urlTemplate?.trim()) {
       site.potentialAction = { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: fields.urlTemplate.trim() }, "query-input": "required name=search_term_string" }
@@ -707,6 +843,34 @@ export function buildSchemaFromState(p: BuildParams): any {
         })
         .filter(Boolean) as any[]
       if (cps.length) org.contactPoint = cps
+    }
+    // Ensure explicit email field is present on Organization when provided
+    if (fields.email?.trim()) org.email = fields.email.trim()
+    // Prefer an explicit @id for Organization; otherwise derive from the URL
+    if (fields["@id"]?.trim()) {
+      org["@id"] = fields["@id"].trim()
+    } else if (fields.url?.trim()) {
+      const raw = fields.url.trim()
+      const url = raw.replace(/\/$/, "")
+      org["@id"] = `${url}#organization`
+    }
+    // Apply Additional Info repeater values if provided
+    const extras = (p as any).orgExtras as Array<{ key: string; value: string }> | undefined
+    if (extras && Array.isArray(extras)) {
+      extras.forEach((e) => {
+        const k = (e?.key || "").trim()
+        const vRaw = (e?.value || "").trim()
+        if (!k || !vRaw) return
+        switch (k) {
+          case "numberOfEmployees": {
+            const n = Number(vRaw)
+            org.numberOfEmployees = Number.isFinite(n) ? n : vRaw
+            break
+          }
+          default:
+            org[k] = vRaw
+        }
+      })
     }
     out = org
   }
