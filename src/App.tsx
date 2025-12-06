@@ -9,6 +9,7 @@ import RobotsTxtValidator from "./pages/RobotsTxtValidator"
 import SitemapChecker from "./pages/SitemapChecker"
 import HreflangValidator from "./pages/HreflangValidator"
 import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
+import HeaderTagViewer from "./pages/HeaderTagViewer"
 
 export default function App() {
   return (
@@ -120,6 +121,15 @@ export default function App() {
         />
 
         {/* === 404 Fallback === */}
+        {/* === Header Tag Structure Viewer === */}
+        <Route
+          path="/header-tag-structure-viewer"
+          element={
+            <Layout title="Header Tag Structure Viewer" subtitle="Inspect the H1–H6 heading hierarchy for HTML or a URL." showBackLink={true}>
+              <HeaderTagViewer />
+            </Layout>
+          }
+        />
         <Route
           path="*"
           element={

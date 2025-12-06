@@ -620,6 +620,15 @@ code {
   color: var(--secondary, #070026);
   transition: all 0.2s ease;
   outline: none;
+  min-height: 46px;
+}
+
+.custom-select-trigger > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-content: flex-start;
+  flex: 1;
 }
 
 .custom-select-trigger:hover {
@@ -640,7 +649,6 @@ code {
 }
 
 /* Match height with inputs */
-.custom-select-trigger,
 .tool-input,
 .tool-select {
   height: 46px;
@@ -748,18 +756,16 @@ code {
 
 /* Compact DayPicker popup styling */
 .date-picker-popup {
-  /* Let the popup size itself while keeping sensible bounds:
-     - `width: auto` allows the content to decide width
-     - `min-width` gives a reasonable minimum on narrow screens
-     - `max-width: 90vw` prevents overflow on small viewports
-     - `inline-block` lets the popup shrink to fit content when necessary */
+  /* Compact DayPicker popup: keep compact width and cap height so it doesn't grow too tall */
   width: auto;
   min-width: 240px;
   max-width: 90vw;
-  padding: 4px;
+  max-height: 360px;
+  padding: 6px;
   border-radius: 8px;
   display: inline-block;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .date-picker-popup .rdp {
@@ -781,13 +787,151 @@ code {
   padding: 2px;
 }
 
+/* Help icon next to field labels (small superscript question mark) */
+.help-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 50%;
+  background: #f3f4f6; /* light gray */
+  color: #6b7280; /* gray-500 */
+  font-weight: 600;
+  font-size: 10px;
+  text-decoration: none;
+}
+.help-icon:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+.help-icon:focus {
+  outline: 2px solid rgba(99,102,241,0.25);
+  outline-offset: 2px;
+}
+.tool-label sup {
+  vertical-align: super;
+}
+
 .date-picker-popup .rdp-weekdays,
 .date-picker-popup .rdp-day {
   line-height: 1;
 }
 
 .date-picker-popup .rdp-caption {
-  padding: 4px 6px;
+  padding: 6px 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Reduce default tool-select height inside the date picker so caption controls aren't very tall */
+.date-picker-popup .tool-select {
+  height: 36px !important;
+  line-height: 1.25 !important;
+  padding: 6px 8px !important;
+}
+
+.date-picker-popup .datepicker-month-wrapper .tool-select option {
+  font-weight: 500;
+}
+
+.date-picker-popup .custom-select-trigger span {
+  font-weight: 500;
+}
+
+/* Style the caption dropdowns (month/year selects) to match the app's custom selects */
+.date-picker-popup .rdp-caption_select select {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.date-picker-popup .rdp-caption_select select option {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Additional high-specificity rules to ensure option styling across browsers */
+.date-picker-popup select.rdp-caption_select__select,
+.date-picker-popup .rdp-caption_select select,
+.rdp .rdp-caption_select select,
+.date-picker-popup select,
+.date-picker-popup select option,
+.rdp select option {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+/* Keep caption displayed value (label) bold/medium */
+.date-picker-popup .rdp-caption_label,
+.date-picker-popup .rdp-caption_select {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+.date-picker-popup .rdp-caption_select {
+  display: inline-block;
+}
+
+/* Provide a compact months container so the popup height is controlled; allow internal scrolling if needed */
+.date-picker-popup .rdp-months {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Custom year list inside popup */
+.date-picker-popup .datepicker-year-wrapper {
+  position: relative;
+}
+.date-picker-popup .datepicker-year-wrapper .custom-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.date-picker-popup .datepicker-year-list {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  z-index: 60;
+  width: 10rem;
+  /* show 6 items: each item will be 36px tall */
+  max-height: calc(36px * 6);
+  overflow-y: auto;
+}
+.date-picker-popup .datepicker-year-list .custom-select-item {
+  height: 36px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.date-picker-popup .datepicker-year-list .custom-select-item.selected {
+  background: #f9f5eb;
+  font-weight: 600;
+}
+
+/* Permanent year input styling inside caption */
+.date-picker-popup .year-input {
+  width: 72px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Let the DayPicker months container size itself based on its content
@@ -799,8 +943,8 @@ code {
 
 /* Reduce the size of the DayPicker day buttons for a denser calendar */
 .date-picker-popup .rdp-day_button {
-  width: 36px !important;
-  height: 36px !important;
+  width: 34px !important;
+  height: 34px !important;
   padding: 2px !important;
   font-size: 12px !important;
   line-height: 1 !important;

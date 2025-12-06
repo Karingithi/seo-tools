@@ -45,6 +45,8 @@ export default function SchemaBuilder(): JSX.Element {
   const [eventStatusOpen, setEventStatusOpen] = useState(false)
   const [attendanceModeOpen, setAttendanceModeOpen] = useState(false)
   const [performerTypeOpen, setPerformerTypeOpen] = useState(false)
+  // Organizer type dropdown for Event organizer @type
+  const [organizerTypeOpen, setOrganizerTypeOpen] = useState(false)
   // Ticket availability open index (for per-ticket custom dropdown)
   const [ticketAvailabilityOpenIndex, setTicketAvailabilityOpenIndex] = useState<number | null>(null)
   // Ticket currency open index for per-ticket currency dropdown
@@ -107,6 +109,8 @@ export default function SchemaBuilder(): JSX.Element {
 
   // Social profiles repeater for Person schema
   const [socialProfiles, setSocialProfiles] = useState<string[]>([])
+  // Education repeater for Person schema
+  const [education, setEducation] = useState<Array<{ name: string; url: string }>>([])
   // Reviews repeater for Product schema: array of review objects
   const [reviews, setReviews] = useState<Array<{
     name: string
@@ -190,12 +194,32 @@ export default function SchemaBuilder(): JSX.Element {
   const removeHowToSupply = (index: number) => setHowToSupplies((prev) => prev.filter((_, i) => i !== index))
 
   const addHowToStep = () => setHowToSteps((prev) => [...prev, { instruction: "" }])
-  const updateHowToStep = (index: number, key: keyof (typeof howToSteps)[0], value: string) => setHowToSteps((prev) => {
-    const next = [...prev]
-    next[index] = { ...next[index], [key]: value }
-    return next
-  })
-  const removeHowToStep = (index: number) => setHowToSteps((prev) => prev.filter((_, i) => i !== index))
+  const updateHowToStep = (index: number, key: keyof (typeof howToSteps)[0], value: string) => {
+    setHowToSteps((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], [key]: value }
+      return next
+    })
+    // Immediate validation for URL/image fields on change so users see errors right away
+    if (key === "url") validateField(`howto_step_url_${index}`, value || "", fields)
+    if (key === "imageUrl") validateField(`howto_step_image_${index}`, value || "", fields)
+  }
+  const removeHowToStep = (index: number) => {
+    const next = howToSteps.filter((_, i) => i !== index)
+    setHowToSteps(next)
+    // Clear previous step-related errors and revalidate remaining steps to keep keys in sync
+    setErrors((prev) => {
+      const nextErr = { ...prev }
+      Object.keys(nextErr).forEach((k) => {
+        if (k.startsWith("howto_step_url_") || k.startsWith("howto_step_image_")) delete nextErr[k]
+      })
+      return nextErr
+    })
+    next.forEach((s, i) => {
+      validateField(`howto_step_url_${i}`, s.url || "", fields)
+      validateField(`howto_step_image_${i}`, s.imageUrl || "", fields)
+    })
+  }
 
   const updateTicketType = (index: number, key: string, value: string) => {
     setTicketTypes((prev) => {
@@ -209,62 +233,78 @@ export default function SchemaBuilder(): JSX.Element {
 
   // Close schema type dropdown when clicking outside
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest(".custom-select-wrapper")) {
-        // Close any open custom dropdowns across the page
-        const closeAllDropdowns = () => {
-          try {
-            setDropdownOpen(false)
-            setArticleTypeOpen(false)
-            setAuthorTypeOpen(false)
-            setEventStatusOpen(false)
-            setAttendanceModeOpen(false)
-            setPerformerTypeOpen(false)
-            setTicketAvailabilityOpenIndex(null)
-            setHowToCurrencyOpen(false)
-            setHowToCurrencySearch("")
-            setSalaryCurrencyOpen(false)
-            setSalaryCurrencySearch("")
-            setSalaryUnitOpen(false)
-            setLocalBusinessTypeOpen(false)
-            setMoreSpecificOpen(false)
-            setCountryOpen(false)
-            setCountrySearch("")
-            setRegionOpen(false)
-            setRegionSearch("")
-            setEmploymentTypeOpen(false)
-            setOrgTypeOpen(false)
-            setOrgMoreSpecificOpen(false)
-            setContactTypeOpenIndex(null)
-            setAreaCountryOpenIndex(null)
-            setAreaCountrySearch("")
-            setOptionsOpenIndex(null)
-            setLanguageOpenIndex(null)
-            setLanguageSearch("")
-            setTicketDefaultCurrencyOpen(false)
-            setTicketCurrencySearch("")
-            setTimezoneOpen(false)
-            setTimezoneSearch("")
-            setVenueCountryOpen(false)
-            setVenueCountrySearch("")
-            setDeptLocalBusinessOpenIndex(null)
-            setDeptMoreSpecificOpenIndex(null)
-            setOpeningDaysOpenIndex(null)
-            setDeptOpeningDaysOpenIndex(null)
-            setProductIdOpen(false)
-            setProductAvailabilityOpen(false)
-            setProductItemConditionOpen(false)
-            setProductCurrencyOpen(false)
-          } catch {
-            // ignore errors in teardown
-          }
-        }
-
-        closeAllDropdowns()
+    const closeAllDropdowns = () => {
+      try {
+        setDropdownOpen(false)
+        setArticleTypeOpen(false)
+        setAuthorTypeOpen(false)
+        setEventStatusOpen(false)
+        setAttendanceModeOpen(false)
+        setPerformerTypeOpen(false)
+        setTicketAvailabilityOpenIndex(null)
+        setHowToCurrencyOpen(false)
+        setHowToCurrencySearch("")
+        setSalaryCurrencyOpen(false)
+        setSalaryCurrencySearch("")
+        setSalaryUnitOpen(false)
+        setLocalBusinessTypeOpen(false)
+        setMoreSpecificOpen(false)
+        setCountryOpen(false)
+        setCountrySearch("")
+        setRegionOpen(false)
+        setRegionSearch("")
+        setEmploymentTypeOpen(false)
+        setOrgTypeOpen(false)
+        setOrgMoreSpecificOpen(false)
+        setContactTypeOpenIndex(null)
+        setAreaCountryOpenIndex(null)
+        setAreaCountrySearch("")
+        setOptionsOpenIndex(null)
+        setLanguageOpenIndex(null)
+        setLanguageSearch("")
+        setTicketDefaultCurrencyOpen(false)
+        setTicketCurrencySearch("")
+        setTimezoneOpen(false)
+        setTimezoneSearch("")
+        setVenueCountryOpen(false)
+        setVenueCountrySearch("")
+        setDeptLocalBusinessOpenIndex(null)
+        setDeptMoreSpecificOpenIndex(null)
+        setOpeningDaysOpenIndex(null)
+        setDeptOpeningDaysOpenIndex(null)
+        setProductIdOpen(false)
+        setProductAvailabilityOpen(false)
+        setProductItemConditionOpen(false)
+        setProductCurrencyOpen(false)
+        setKnowsLangOpen(false)
+        setKnowsLangSearch("")
+      } catch {
+        // ignore errors in teardown
       }
     }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
+
+    const handleClickOutside = (e: MouseEvent | Event) => {
+      const target = (e as MouseEvent).target as HTMLElement | null
+      if (!target) return
+
+      // If the user clicked inside any custom-select-wrapper, ignore this click.
+      // Button clicks inside will still fire their onClick handlers naturally.
+      if (target.closest('.custom-select-wrapper')) return
+
+      // Otherwise close all open dropdowns.
+      closeAllDropdowns()
+    }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeAllDropdowns()
+    }
+
+    document.addEventListener("click", handleClickOutside)
+    document.addEventListener("keydown", handleEscape)
+    return () => {
+      document.removeEventListener("click", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
+    }
   }, [])
 
   // Schema-related constants have been extracted to `src/utils/schema/builders.ts` and are imported above.
@@ -274,11 +314,15 @@ export default function SchemaBuilder(): JSX.Element {
     if (!entry) return null
 
     const schemaLinks = (entry.schema || []).map((s) => (
-      <a key={s.url} className="block mt-1 text-primary" href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+      <li key={s.url} className="mt-1">
+        <a className="text-primary" href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+      </li>
     ))
 
     const googleLinks = (entry.google || []).map((g) => (
-      <a key={g.url} className="block mt-1 text-primary" href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a>
+      <li key={g.url} className="mt-1">
+        <a className="text-primary" href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a>
+      </li>
     ))
 
     return (
@@ -287,11 +331,11 @@ export default function SchemaBuilder(): JSX.Element {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <strong className="text-base">Schema.org:</strong>
-            <div className="mt-1">{schemaLinks.length ? schemaLinks : null}</div>
+            <div className="mt-1">{schemaLinks.length ? <ul className="list-disc ml-5">{schemaLinks}</ul> : null}</div>
           </div>
           <div>
             <strong className="text-base">Google docs:</strong>
-            <div className="mt-1">{googleLinks.length ? googleLinks : null}</div>
+            <div className="mt-1">{googleLinks.length ? <ul className="list-disc ml-5">{googleLinks}</ul> : null}</div>
           </div>
         </div>
       </div>
@@ -649,6 +693,20 @@ export default function SchemaBuilder(): JSX.Element {
       .sort((a, b) => a.name.localeCompare(b.name)),
     [])
 
+  // Knows language multi-select UI state (syncs with fields.knowsLanguage)
+  const [knowsLangOpen, setKnowsLangOpen] = useState<boolean>(false)
+  const [knowsLangSearch, setKnowsLangSearch] = useState<string>("")
+  const [knowsLangSelected, setKnowsLangSelected] = useState<string[]>([])
+
+  useEffect(() => {
+    const arr = (fields.knowsLanguage || "")
+      .toString()
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+    setKnowsLangSelected(arr)
+  }, [fields.knowsLanguage])
+
   // (Intl.DisplayNames handled via `displayNames` below)
 
   // Localized display names helper for languages
@@ -959,6 +1017,19 @@ export default function SchemaBuilder(): JSX.Element {
     })
   }
 
+  // Education repeater handlers
+  const addEducation = () => setEducation((prev) => [...prev, { name: "", url: "" }])
+
+  const handleEducationFieldChange = (index: number, key: keyof (typeof education)[0], value: string) => {
+    setEducation((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], [key]: value }
+      return next
+    })
+  }
+
+  const removeEducation = (index: number) => setEducation((prev) => prev.filter((_, i) => i !== index))
+
   // Reviews handlers (structured review objects)
   const addReview = () => setReviews((prev) => [...prev, { name: "", body: "", rating: "", date: "", author: "", publisher: "" }])
 
@@ -1110,6 +1181,14 @@ export default function SchemaBuilder(): JSX.Element {
       return
     }
 
+    // Time fields validation (HH:MM 24-hour)
+    if (key === "startTime" || key === "endTime") {
+      if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(trimmed)) nextErrors[key] = "Time must be in HH:MM (24-hour) format"
+      else delete nextErrors[key]
+      setErrors(nextErrors)
+      return
+    }
+
     // Organization founding date
     if (key === "foundingDate") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) nextErrors[key] = "Date must be in yyyy-mm-dd format"
@@ -1207,6 +1286,13 @@ export default function SchemaBuilder(): JSX.Element {
         break
       }
 
+      case "totalTime": {
+        // Accept plain minutes (e.g. "40") or basic ISO 8601 minute duration (e.g. "PT40M")
+        if (/^\d+$/.test(trimmed) || /^PT\d+M$/.test(trimmed)) setError(key)
+        else setError(key, "Enter minutes (e.g. 40) or ISO duration (e.g. PT40M)")
+        break
+      }
+
       default:
         setError(key)
     }
@@ -1223,6 +1309,21 @@ export default function SchemaBuilder(): JSX.Element {
   useEffect(() => {
     videoThumbnails.forEach((t, i) => validateField(`videoThumbs_${i}`, t, fields))
   }, [videoThumbnails, fields])
+
+  // Validate HowTo steps' image and URL fields whenever they change
+  useEffect(() => {
+    howToSteps.forEach((s, i) => {
+      validateField(`howto_step_url_${i}`, s.url || "", fields)
+      validateField(`howto_step_image_${i}`, s.imageUrl || "", fields)
+    })
+  }, [howToSteps, fields])
+
+  // Validate top-level HowTo image/url fields when editing How-to
+  useEffect(() => {
+    if (type !== "How-to") return
+    validateField("imageUrl", fields.imageUrl || "", fields)
+    validateField("url", fields.url || "", fields)
+  }, [type, fields.imageUrl, fields.url, fields])
 
   // Validate department image URLs and opening hours
   useEffect(() => {
@@ -1313,6 +1414,39 @@ export default function SchemaBuilder(): JSX.Element {
         return next
       }
 
+      // When user changes venue country, clear venueRegion if we don't have states for it
+      if (key === "venueCountry") {
+        const countryVal = (val || "").toUpperCase()
+        // If we don't have a states list for the selected country, clear venueRegion
+        if (!countryVal || !STATES_BY_COUNTRY[countryVal]) {
+          const next = { ...prev, [key]: val, venueRegion: "" }
+          validateField(key, val, next)
+          validateField("venueRegion", "", next)
+          return next
+        }
+      }
+
+      // When user changes the top-level country, clear region if we don't have states for it
+      if (key === "country") {
+        const countryVal = (val || "").toUpperCase()
+        if (!countryVal || !STATES_BY_COUNTRY[countryVal]) {
+          const next = { ...prev, [key]: val, region: "" }
+          validateField(key, val, next)
+          validateField("region", "", next)
+          return next
+        }
+      }
+
+      // If user attempts to set venueRegion but country is not US, ignore the value (clear it)
+      if (key === "venueRegion") {
+        const selected = prev.venueCountry || ""
+        if ((selected || "").toUpperCase() !== "US") {
+          const next = { ...prev, venueRegion: "" }
+          validateField("venueRegion", "", next)
+          return next
+        }
+      }
+
       // If user changes the top-level Organization @type, mirror Organization behavior:
       // - if there are subtypes in ORG_SUBTYPE_MAP for the selected parent, set `moreSpecificType` to the first available option when the current value isn't valid
       // - otherwise clear `moreSpecificType`
@@ -1342,13 +1476,14 @@ export default function SchemaBuilder(): JSX.Element {
   // Build JSON-LD schema (local copy kept for reference; actual usage via buildSchemaFromState)
   
   const schemaJSON = useMemo(
-    () => JSON.stringify(buildSchemaFromState({
+    () => JSON.stringify(buildSchemaFromState(({
       type,
       fields,
       images,
       breadcrumbs,
       faqItemsState,
       socialProfiles,
+      education,
       videoThumbnails,
       videoMinutes,
       videoSeconds,
@@ -1358,8 +1493,12 @@ export default function SchemaBuilder(): JSX.Element {
       ticketTypes,
       ticketDefaultCurrency,
       orgExtras,
-    }), null, 2),
-    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency, orgExtras]
+      // How-to specific arrays
+      howToTools,
+      howToSupplies,
+      howToSteps,
+    } as any)), null, 2),
+    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, education, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency, orgExtras, howToTools, howToSupplies, howToSteps]
   )
 
   // Wrapped script tag version for preview/copy/download
@@ -1541,7 +1680,7 @@ export default function SchemaBuilder(): JSX.Element {
 
             {type === "How-to" && (
               <div className="text-sm text-gray-500 mt-0">
-                Steps: one per line. Tools/supplies accept comma-separated or newline lists. Total time: ISO 8601 duration (e.g. <code>PT30M</code>).
+                Steps: one per line. Tools/supplies accept comma-separated or newline lists. Total time: plain minutes — preview converts to ISO 8601 duration (e.g. <code>40</code> → <code>PT40M</code>).
               </div>
             )}
 
@@ -2026,7 +2165,6 @@ export default function SchemaBuilder(): JSX.Element {
               </div>
             ) : type === "FAQ Page" ? (
               <div>
-                <p className="text-sm text-gray-600 mb-3">Add questions and answers to create a valid FAQ schema.</p>
                 <div className="space-y-4">
                   {faqItemsState.map((f, idx) => (
                     <div key={idx} className="space-y-2">
@@ -2076,21 +2214,21 @@ export default function SchemaBuilder(): JSX.Element {
               </div>
             ) : type === "Person" ? (
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="tool-field">
-                    <label className="tool-label">Name</label>
-                    <input
-                      type="text"
-                      className="tool-input"
-                      value={fields.name || ""}
-                      placeholder="Full name"
-                      onChange={(e) => handleChange("name", e.target.value)}
-                    />
-                    {renderError("name")}
-                  </div>
+                <div className="tool-field">
+                  <label className="tool-label">Name</label>
+                  <input
+                    type="text"
+                    className="tool-input"
+                    value={fields.name || ""}
+                    placeholder="Full name"
+                    onChange={(e) => handleChange("name", e.target.value)}
+                  />
+                  {renderError("name")}
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="tool-field">
-                    <label className="tool-label">URL</label>
+                    <label className="tool-label">Website URL</label>
                     <input
                       type="text"
                       className="tool-input"
@@ -2100,24 +2238,84 @@ export default function SchemaBuilder(): JSX.Element {
                     />
                     {renderError("url")}
                   </div>
+
+                  <div className="tool-field">
+                    <label className="tool-label">Picture URL</label>
+                    <input
+                      type="text"
+                      className="tool-input"
+                      value={fields.pictureUrl || ""}
+                      placeholder="https://example.com/photo.jpg"
+                      onChange={(e) => handleChange("pictureUrl", e.target.value)}
+                    />
+                    {renderError("pictureUrl")}
+                  </div>
                 </div>
 
-                    <div className="mt-4">
-                      <div className="tool-field">
-                        <label className="tool-label">Picture URL</label>
-                        <input
-                          type="text"
-                          className="tool-input"
-                          value={fields.pictureUrl || ""}
-                          placeholder="https://example.com/photo.jpg"
-                          onChange={(e) => handleChange("pictureUrl", e.target.value)}
-                        />
-                        {renderError("pictureUrl")}
+                <div className="mt-4">
+                  <div className="tool-field">
+                    <label className="tool-label">Short Biography / Description</label>
+                    <textarea className="tool-textarea" rows={3} value={fields.description || ""} placeholder="Short bio or summary" onChange={(e) => handleChange("description", e.target.value)} />
+                    {renderError("description")}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="tool-field">
+                    <label className="tool-label">Date of Birth</label>
+                    <DatePickerInput
+                      value={fields.birthDate}
+                      onChange={(iso) => handleChange("birthDate", iso)}
+                      placeholder="yyyy-mm-dd"
+                    />
+                    {renderError("birthDate")}
+                  </div>
+
+                  <div className="tool-field relative">
+                    <label className="tool-label">Knows language(s)</label>
+                    <div className="multi-select-input custom-select-wrapper" style={{ position: 'relative' }}>
+                      <button type="button" className="custom-select-trigger" onClick={() => setKnowsLangOpen((o) => !o)} aria-expanded={knowsLangOpen}>
+                        <div>
+                          {knowsLangSelected.length === 0 ? (
+                            <span className="text-gray-500">Select languages...</span>
+                          ) : (
+                            knowsLangSelected.map((l) => (
+                              <span key={l} className="px-2 py-1 bg-gray-100 rounded text-sm whitespace-nowrap">
+                                {l}
+                              </span>
+                            ))
+                          )}
+                        </div>
+                        <span style={{ fontSize: 12, flexShrink: 0, marginLeft: '0.5rem' }}>⏷</span>
+                      </button>
+
+                      <div className={`custom-select-list absolute left-0 mt-1 z-50 bg-white border rounded ${knowsLangOpen ? 'open' : ''}`} style={{ width: '100%', maxHeight: 260, overflow: 'auto', display: knowsLangOpen ? 'block' : 'none' }}>
+                        <div className="p-2">
+                          <input type="text" className="tool-input" placeholder="Filter languages..." value={knowsLangSearch} onChange={(e) => setKnowsLangSearch(e.target.value)} />
+                        </div>
+                        <ul>
+                          {LANG_LIST.filter((it) => (`${it.name} ${it.code}`).toLowerCase().includes((knowsLangSearch || '').toLowerCase())).map((l) => (
+                            <li key={l.code} className={knowsLangSelected.includes(l.name) ? 'selected' : ''} onClick={() => {
+                              const sel = knowsLangSelected.includes(l.name) ? knowsLangSelected.filter(s => s !== l.name) : [...knowsLangSelected, l.name]
+                              setKnowsLangSelected(sel)
+                              handleChange('knowsLanguage', sel.join(', '))
+                            }}>
+                              {knowsLangSelected.includes(l.name) ? "✓ " : ""}{l.name} <span className="text-[13px] text-gray-500">{l.code}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="p-2 border-t flex justify-between">
+                          <button type="button" className="toolbar-btn" onClick={() => { setKnowsLangSelected([]); handleChange('knowsLanguage', '') }}>Clear</button>
+                          <button type="button" className="action-btn" onClick={() => setKnowsLangOpen(false)}>Done</button>
+                        </div>
                       </div>
                     </div>
+                    {renderError('knowsLanguage')}
+                  </div>
+                </div>
 
-                    <div className="mt-4">
-                      <label className="tool-label block mb-2">Social profiles</label>
+                <div className="mt-4">
+                  <label className="tool-label block mb-2">Social profiles</label>
                       <div className="flex flex-col gap-2">
                         {socialProfiles && socialProfiles.length > 0 ? (
                           socialProfiles.map((s, idx) => (
@@ -2156,19 +2354,9 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div className="tool-field">
-                        <label className="tool-label">Company</label>
-                        <input
-                          type="text"
-                          className="tool-input"
-                          value={fields.worksFor || ""}
-                          placeholder="Company or Organization"
-                          onChange={(e) => handleChange("worksFor", e.target.value)}
-                        />
-                        {renderError("worksFor")}
-                      </div>
+                    {/* Education repeater moved to bottom of Person form */}
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div className="tool-field">
                         <label className="tool-label">Job title</label>
                         <input
@@ -2179,6 +2367,248 @@ export default function SchemaBuilder(): JSX.Element {
                           onChange={(e) => handleChange("jobTitle", e.target.value)}
                         />
                         {renderError("jobTitle")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">Organization Name</label>
+                        <input
+                          type="text"
+                          className="tool-input"
+                          value={fields.worksFor || ""}
+                          placeholder="Company or Organization"
+                          onChange={(e) => handleChange("worksFor", e.target.value)}
+                        />
+                        {renderError("worksFor")}
+                      </div>
+                    </div>
+
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Organization URL</label>
+                        <input type="text" className="tool-input" value={fields.worksForUrl || ""} placeholder="https://example.com" onChange={(e) => handleChange("worksForUrl", e.target.value)} />
+                        {renderError("worksForUrl")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">Department</label>
+                        <input type="text" className="tool-input" value={fields.department || ""} placeholder="Department name" onChange={(e) => handleChange("department", e.target.value)} />
+                        {renderError("department")}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Public Email</label>
+                        <input type="text" className="tool-input" value={fields.publicEmail || ""} placeholder="public@example.com" onChange={(e) => handleChange("publicEmail", e.target.value)} />
+                        {renderError("publicEmail")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">Public Phone Number</label>
+                        <input type="text" className="tool-input" value={fields.publicPhone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("publicPhone", e.target.value)} />
+                        {renderError("publicPhone")}
+                      </div>
+                    </div>
+                    {/* Additional recommended Person fields */}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="tool-field">
+                        <label className="tool-label">Street</label>
+                        <input type="text" className="tool-input" value={fields.street || ""} placeholder="123 Main St" onChange={(e) => handleChange("street", e.target.value)} />
+                        {renderError("street")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">City</label>
+                        <input type="text" className="tool-input" value={fields.city || ""} placeholder="Anytown" onChange={(e) => handleChange("city", e.target.value)} />
+                        {renderError("city")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">Zip / Postal code</label>
+                        <input type="text" className="tool-input" value={fields.postalCode || ""} placeholder="90210" onChange={(e) => handleChange("postalCode", e.target.value)} />
+                        {renderError("postalCode")}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="tool-field">
+                        <label className="tool-label">State/Province/Region</label>
+                        {StateSelectComp && selectedCountryCode && !regionCustomVisible ? (
+                          <StateSelectComp
+                            className="tool-input"
+                            country={selectedCountryCode}
+                            countryCode={selectedCountryCode}
+                            value={fields.region || ""}
+                            onChange={(v: any) => {
+                              const val = typeof v === "string" ? v : (v && (v.target ? v.target.value : v))
+                              if (val === "__other__") {
+                                setRegionCustomVisible(true)
+                                handleChange("region", "")
+                              } else {
+                                handleChange("region", val || "")
+                              }
+                            }}
+                          />
+                        ) : selectedCountryCode && STATES_BY_COUNTRY[selectedCountryCode] && !regionCustomVisible ? (
+                          <div className="custom-select-wrapper compact-select region-select-wrapper relative" style={{ width: '100%' }}>
+                            <button
+                              type="button"
+                              className="custom-select-trigger tool-select"
+                              onClick={() => setRegionOpen((o) => !o)}
+                              style={{ width: "100%", justifyContent: "space-between" }}
+                              aria-expanded={regionOpen}
+                            >
+                              <span className="truncate block">{fields.region || "Select state / region"}</span>
+                              <span className="text-xs">⏷</span>
+                            </button>
+
+                            {regionOpen && (
+                              <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                <div className="p-2">
+                                  <input
+                                    type="text"
+                                    className="tool-input"
+                                    placeholder="Search region..."
+                                    value={regionSearch}
+                                    onChange={(e) => setRegionSearch(e.target.value)}
+                                  />
+                                </div>
+                                <ul>
+                                  {STATES_BY_COUNTRY[selectedCountryCode].filter((s) => s.toLowerCase().includes((regionSearch || "").toLowerCase())).map((s) => (
+                                    <li key={s} className={(fields.region || "") === s ? "selected" : ""} onClick={() => { handleChange("region", s); setRegionOpen(false); setRegionSearch("") }}>
+                                      {s}
+                                    </li>
+                                  ))}
+                                  <li key="__other__" onClick={() => { setRegionCustomVisible(true); handleChange("region", ""); setRegionOpen(false) }}>
+                                    Other...
+                                  </li>
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ) : selectedCountryCode && !regionCustomVisible ? (
+                          selectedCountryCode === "KE" ? (
+                            <input
+                              type="text"
+                              className="tool-input opacity-50"
+                              value={fields.region || ""}
+                              placeholder="State or region"
+                              disabled
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="tool-input opacity-50"
+                              value={""}
+                              placeholder=""
+                              disabled
+                            />
+                          )
+                        ) : (
+                          <input
+                            type="text"
+                            className="tool-input"
+                            value={fields.region || ""}
+                            placeholder="State or region"
+                            onChange={(e) => handleChange("region", e.target.value)}
+                          />
+                        )}
+                        {renderError("region")}
+                      </div>
+
+                      <div className="tool-field">
+                        <label className="tool-label">Country</label>
+                        <div className={`custom-select-wrapper compact-select relative`} style={{ width: '100%' }}>
+                          <button
+                            type="button"
+                            className="custom-select-trigger tool-select"
+                            onClick={() => setCountryOpen((o) => !o)}
+                            style={{ width: "100%", justifyContent: "space-between" }}
+                            aria-expanded={countryOpen}
+                          >
+                            <span className="truncate block">{(fields.country && (COUNTRY_LIST.find(c => c.code === fields.country)?.name || fields.country)) || (fields.country || "Select country")}</span>
+                            <span className="text-xs">⏷</span>
+                          </button>
+
+                          {countryOpen && (
+                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                              <div className="p-2">
+                                <input
+                                  type="text"
+                                  className="tool-input"
+                                  placeholder="Search country..."
+                                  value={countrySearch}
+                                  onChange={(e) => setCountrySearch(e.target.value)}
+                                />
+                              </div>
+                              <ul>
+                                {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((countrySearch || "").toLowerCase())).map((c) => (
+                                  <li key={c.code || c.name} className={(fields.country || "") === (c.code || "") ? "selected" : ""} onClick={() => { handleChange("country", c.code || ""); setCountryOpen(false); setCountrySearch(""); setRegionCustomVisible(false) }}>
+                                    {c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        {renderError("country")}
+                      </div>
+                    </div>
+
+                    {/* 'Alumni of (Institution)' removed per request */}
+
+                    <div className="mt-4">
+                      <label className="tool-label block mb-2">Education Background</label>
+                      <div className="flex flex-col gap-2">
+                        {education && education.length > 0 ? (
+                          education.map((edu, idx) => (
+                            <div key={idx}>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-end">
+                                <div className="tool-field">
+                                  <label className="tool-label">School / University Name</label>
+                                  <input
+                                    type="text"
+                                    className="tool-input"
+                                    value={edu.name}
+                                    placeholder="School / University Name"
+                                    onChange={(e) => handleEducationFieldChange(idx, "name", e.target.value)}
+                                  />
+                                </div>
+                                <div className="tool-field">
+                                  <label className="tool-label">School / University URL</label>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      className="tool-input flex-1"
+                                      value={edu.url}
+                                      placeholder="https://example.edu"
+                                      onChange={(e) => handleEducationFieldChange(idx, "url", e.target.value)}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="toolbar-btn toolbar-btn--red square-btn"
+                                      onClick={() => removeEducation(idx)}
+                                      aria-label="Remove education"
+                                      title="Remove"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500">No institution added.</div>
+                        )}
+
+                        <div>
+                          <button type="button" className="action-btn" onClick={addEducation}>
+                            <Plus className="inline w-4 h-4 mr-2" /> Add Education
+                          </button>
+                        </div>
                       </div>
                     </div>
               </div>
@@ -2211,11 +2641,11 @@ export default function SchemaBuilder(): JSX.Element {
                       {renderError("description")}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <div className="tool-field">
-                        <label className="tool-label">Total time</label>
-                        <input type="text" className="tool-input" value={fields.totalTime || ""} placeholder="PT30M" onChange={(e) => handleChange("totalTime", e.target.value)} />
-                      </div>
+                          <label className="tool-label">Total time (minutes)</label>
+                          <input type="number" min={0} className="tool-input" value={fields.totalTime || ""} placeholder="Minutes (e.g. 40)" onChange={(e) => handleChange("totalTime", String(e.target.value))} />
+                        </div>
 
                       <div className="tool-field">
                         <label className="tool-label">Estimated cost</label>
@@ -2267,9 +2697,9 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div>
                     <div className="mb-3">
-                      <div className="text-sm text-gray-600">Add supplies and tools used in this HowTo.</div>
+                      <div className="text-sm text-gray-600 mb-2">Add supplies and tools used in this HowTo.</div>
 
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                         <div className="md:col-span-1">
@@ -2282,47 +2712,63 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      {howToSupplies.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <input type="text" className="tool-input flex-1" value={s} placeholder={`Supply #${idx + 1}`} onChange={(e) => updateHowToSupply(idx, e.target.value)} />
-                          <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToSupply(idx)} aria-label="Remove supply" title="Remove">×</button>
-                        </div>
-                      ))}
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <div className="text-sm font-semibold mb-2">Supplies</div>
+                        {howToSupplies.length ? (
+                          howToSupplies.map((s, idx) => (
+                            <div key={idx} className="flex items-center gap-2 mb-2">
+                              <input type="text" className="tool-input flex-1" value={s} placeholder={`Supply #${idx + 1}`} onChange={(e) => updateHowToSupply(idx, e.target.value)} />
+                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToSupply(idx)} aria-label="Remove supply" title="Remove">×</button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500">No supplies added yet.</div>
+                        )}
+                      </div>
 
-                      {howToTools.map((t, idx) => (
-                        <div key={`tool-${idx}`} className="flex items-center gap-2">
-                          <input type="text" className="tool-input flex-1" value={t} placeholder={`Tool #${idx + 1}`} onChange={(e) => updateHowToTool(idx, e.target.value)} />
-                          <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToTool(idx)} aria-label="Remove tool" title="Remove">×</button>
-                        </div>
-                      ))}
+                      <div>
+                        <div className="text-sm font-semibold mb-2">Tools</div>
+                        {howToTools.length ? (
+                          howToTools.map((t, idx) => (
+                            <div key={`tool-${idx}`} className="flex items-center gap-2 mb-2">
+                              <input type="text" className="tool-input flex-1" value={t} placeholder={`Tool #${idx + 1}`} onChange={(e) => updateHowToTool(idx, e.target.value)} />
+                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToTool(idx)} aria-label="Remove tool" title="Remove">×</button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500">No tools added yet.</div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div>
                     <div className="text-sm text-gray-600 mb-3">Steps: add instructions and optional step image, name and URL.</div>
                     <div className="flex flex-col gap-4">
                       {howToSteps.map((step, idx) => (
                         <div key={idx} className="space-y-2">
                           <div className="tool-field">
-                            <label className="tool-label">Step #{idx + 1}: Instructions</label>
+                            <label className="tool-label">Step #{idx + 1}</label>
+                            <input type="text" className="tool-input" value={step.name || ""} placeholder="Optional step title" onChange={(e) => updateHowToStep(idx, "name", e.target.value)} />
+                          </div>
+
+                          <div className="tool-field">
+                            <label className="tool-label">Instructions</label>
                             <textarea className="tool-textarea" rows={3} value={step.instruction || ""} placeholder={`Step ${idx + 1} instruction`} onChange={(e) => updateHowToStep(idx, "instruction", e.target.value)} />
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="tool-field">
                               <label className="tool-label">Image URL</label>
-                              <input type="text" className="tool-input" value={step.imageUrl || ""} placeholder="https://example.com/step-image.jpg" onChange={(e) => updateHowToStep(idx, "imageUrl", e.target.value)} />
-                            </div>
-
-                            <div className="tool-field">
-                              <label className="tool-label">Name</label>
-                              <input type="text" className="tool-input" value={step.name || ""} placeholder="Optional step title" onChange={(e) => updateHowToStep(idx, "name", e.target.value)} />
+                                  <input type="text" className="tool-input" value={step.imageUrl || ""} placeholder="https://example.com/step-image.jpg" onChange={(e) => updateHowToStep(idx, "imageUrl", e.target.value)} />
+                                  {renderError(`howto_step_image_${idx}`)}
                             </div>
 
                             <div className="tool-field">
                               <label className="tool-label">URL</label>
-                              <input type="text" className="tool-input" value={step.url || ""} placeholder="https://example.com/more-info" onChange={(e) => updateHowToStep(idx, "url", e.target.value)} />
+                                  <input type="text" className="tool-input" value={step.url || ""} placeholder="https://example.com/more-info" onChange={(e) => updateHowToStep(idx, "url", e.target.value)} />
+                                  {renderError(`howto_step_url_${idx}`)}
                             </div>
                           </div>
 
@@ -2461,10 +2907,9 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                        {(fields.attendanceMode || "") !== "" && (
-                          <>
+                        <>
                             {/* Stream URL + Timezone (show for Online & Mixed, hide for Offline) */}
-                            {fields.attendanceMode !== 'OfflineEventAttendanceMode' && (
+                            {fields.attendanceMode !== '' && fields.attendanceMode !== 'OfflineEventAttendanceMode' && (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
                                   <label className="tool-label">Stream URL</label>
@@ -2514,133 +2959,234 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
                               </div>
                             )}
-
-                            {/* Venue fields hidden for pure online events */}
-                            {fields.attendanceMode !== 'OnlineEventAttendanceMode' && (
+                            {/* Venue fields hidden for pure online events (appear directly under Attendance) */}
+                            {fields.attendanceMode !== '' && fields.attendanceMode !== 'OnlineEventAttendanceMode' && (
                               <>
-                              {/* Venue fields: name, street, city (single row), then region + postal code */}
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div className="tool-field">
-                                <label className="tool-label">Venue name</label>
-                                <input type="text" className="tool-input" value={fields.venueName || ""} placeholder="Venue name" onChange={(e) => handleChange("venueName", e.target.value)} />
-                                {renderError("venueName")}
-                              </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  <div className="tool-field">
+                                      <label className="tool-label">Venue name</label>
+                                      <input
+                                        type="text"
+                                        className={`tool-input ${fields.attendanceMode === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        value={fields.venueName || ""}
+                                        placeholder="Venue name"
+                                        onChange={(e) => handleChange("venueName", e.target.value)}
+                                        disabled={fields.attendanceMode === ''}
+                                      />
+                                      {renderError("venueName")}
+                                    </div>
 
-                              <div className="tool-field">
-                                <label className="tool-label">Street</label>
-                                <input type="text" className="tool-input" value={fields.venueStreet || ""} placeholder="Street address" onChange={(e) => handleChange("venueStreet", e.target.value)} />
-                                {renderError("venueStreet")}
-                              </div>
+                                  <div className="tool-field">
+                                    <label className="tool-label">Street</label>
+                                    <input
+                                      type="text"
+                                      className={`tool-input ${fields.attendanceMode === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      value={fields.venueStreet || ""}
+                                      placeholder="Street address"
+                                      onChange={(e) => handleChange("venueStreet", e.target.value)}
+                                      disabled={fields.attendanceMode === ''}
+                                    />
+                                    {renderError("venueStreet")}
+                                  </div>
 
-                              <div className="tool-field">
-                                <label className="tool-label">City</label>
-                                <input type="text" className="tool-input" value={fields.venueCity || ""} placeholder="City" onChange={(e) => handleChange("venueCity", e.target.value)} />
-                                {renderError("venueCity")}
-                              </div>
+                                  <div className="tool-field">
+                                    <label className="tool-label">City</label>
+                                    <input
+                                      type="text"
+                                      className={`tool-input ${fields.attendanceMode === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      value={fields.venueCity || ""}
+                                      placeholder="City"
+                                      onChange={(e) => handleChange("venueCity", e.target.value)}
+                                      disabled={fields.attendanceMode === ''}
+                                    />
+                                    {renderError("venueCity")}
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  <div className="tool-field">
+                                    <label className="tool-label">State / Province / Region</label>
+                                    <input
+                                      type="text"
+                                      className={`tool-input ${fields.attendanceMode === '' || (fields.venueCountry && fields.venueCountry !== 'US') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      value={fields.venueRegion || ""}
+                                      placeholder={fields.venueCountry && fields.venueCountry !== 'US' ? 'Select region' : 'State / Province / Region'}
+                                      onChange={(e) => handleChange("venueRegion", e.target.value)}
+                                      disabled={fields.attendanceMode === '' || Boolean(fields.venueCountry && fields.venueCountry !== 'US')}
+                                    />
+                                    {renderError("venueRegion")}
+                                  </div>
+
+                                  <div className="tool-field">
+                                    <label className="tool-label">Zip / Postal code</label>
+                                    <input
+                                      type="text"
+                                      className={`tool-input ${fields.attendanceMode === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      value={fields.venuePostalCode || ""}
+                                      placeholder="Zip / Postal code"
+                                      onChange={(e) => handleChange("venuePostalCode", e.target.value)}
+                                      disabled={fields.attendanceMode === ''}
+                                    />
+                                    {renderError("venuePostalCode")}
+                                  </div>
+
+                                  <div className="tool-field">
+                                    <label className="tool-label">Country</label>
+                                    <div className={`custom-select-wrapper compact-select relative ${fields.attendanceMode === '' ? 'opacity-50' : ''}`} style={{ width: '100%', minWidth: 140 }}>
+                                      <button
+                                        type="button"
+                                        className="custom-select-trigger tool-select"
+                                        onClick={() => { if (fields.attendanceMode === '') return; setVenueCountryOpen((o) => !o) }}
+                                        style={{ width: "100%", justifyContent: "space-between" }}
+                                        aria-expanded={venueCountryOpen}
+                                        aria-disabled={fields.attendanceMode === ''}
+                                      >
+                                        <span className="truncate block">{(fields.venueCountry && (COUNTRY_LIST.find(c => c.code === fields.venueCountry)?.name || fields.venueCountry)) || "Select country"}</span>
+                                        <span className="text-xs">⏷</span>
+                                      </button>
+
+                                      {venueCountryOpen && (
+                                        <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                          <div className="p-2">
+                                            <input
+                                              type="text"
+                                              className="tool-input"
+                                              placeholder="Search country..."
+                                              value={venueCountrySearch}
+                                              onChange={(e) => setVenueCountrySearch(e.target.value)}
+                                            />
+                                          </div>
+                                          <ul>
+                                            {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((venueCountrySearch || "").toLowerCase())).map((c) => (
+                                              <li key={c.code || c.name} className={(fields.venueCountry || "") === (c.code || "") ? "selected" : ""} onClick={() => { if (fields.attendanceMode === '') return; handleChange("venueCountry", c.code || ""); setVenueCountryOpen(false); setVenueCountrySearch("") }}>
+                                                {c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                    {renderError("venueCountry")}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {/* Organizer details for Event */}
+                            <hr className="my-4" />
+                            <div>
+                              <strong className="text-base">Organizer Details</strong>
                             </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="tool-field">
-                                <label className="tool-label">State / Province / Region</label>
-                                <input
-                                  type="text"
-                                  className={`tool-input ${fields.venueCountry && fields.venueCountry !== 'US' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                  value={fields.venueRegion || ""}
-                                  placeholder={fields.venueCountry && fields.venueCountry !== 'US' ? 'Disabled (non-US country)' : 'State / Province / Region'}
-                                  onChange={(e) => handleChange("venueRegion", e.target.value)}
-                                  disabled={Boolean(fields.venueCountry && fields.venueCountry !== 'US')}
-                                />
-                                {renderError("venueRegion")}
-                              </div>
-
-                              <div className="tool-field">
-                                <label className="tool-label">Zip / Postal code</label>
-                                <input type="text" className="tool-input" value={fields.venuePostalCode || ""} placeholder="Zip / Postal code" onChange={(e) => handleChange("venuePostalCode", e.target.value)} />
-                                {renderError("venuePostalCode")}
-                              </div>
-
-                              <div className="tool-field">
-                                <label className="tool-label">Country</label>
-                                <div className="custom-select-wrapper compact-select relative" style={{ width: '100%', minWidth: 140 }}>
+                                <label className="tool-label">Organizer @type</label>
+                                <div className="custom-select-wrapper compact-select relative" style={{ width: "100%" }}>
                                   <button
                                     type="button"
                                     className="custom-select-trigger tool-select"
-                                    onClick={() => setVenueCountryOpen((o) => !o)}
+                                    onClick={() => setOrganizerTypeOpen((o) => !o)}
                                     style={{ width: "100%", justifyContent: "space-between" }}
-                                    aria-expanded={venueCountryOpen}
+                                    aria-expanded={organizerTypeOpen}
                                   >
-                                    <span className="truncate block">{(fields.venueCountry && (COUNTRY_LIST.find(c => c.code === fields.venueCountry)?.name || fields.venueCountry)) || "Select country"}</span>
+                                    <span className="truncate block">{(fields.organizerType || "") || "Select type"}</span>
                                     <span className="text-xs">⏷</span>
                                   </button>
 
-                                  {venueCountryOpen && (
-                                    <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
-                                      <div className="p-2">
-                                        <input
-                                          type="text"
-                                          className="tool-input"
-                                          placeholder="Search country..."
-                                          value={venueCountrySearch}
-                                          onChange={(e) => setVenueCountrySearch(e.target.value)}
-                                        />
-                                      </div>
+                                  {organizerTypeOpen && (
+                                    <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
                                       <ul>
-                                        {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((venueCountrySearch || "").toLowerCase())).map((c) => (
-                                          <li key={c.code || c.name} className={(fields.venueCountry || "") === (c.code || "") ? "selected" : ""} onClick={() => { handleChange("venueCountry", c.code || ""); setVenueCountryOpen(false); setVenueCountrySearch("") }}>
-                                            {c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}
+                                        <li className={(fields.organizerType || "") === "Organization" ? "selected" : ""} onClick={() => { handleChange("organizerType", "Organization"); setOrganizerTypeOpen(false) }}>Organization</li>
+                                        <li className={(fields.organizerType || "") === "Person" ? "selected" : ""} onClick={() => { handleChange("organizerType", "Person"); setOrganizerTypeOpen(false) }}>Person</li>
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Organizer name</label>
+                                <input type="text" className="tool-input" value={fields.organizerName || ""} placeholder="Organizer name" onChange={(e) => handleChange("organizerName", e.target.value)} />
+                                {renderError("organizerName")}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="tool-field">
+                                <label className="tool-label">Organizer URL</label>
+                                <input type="text" className="tool-input" value={fields.organizerUrl || ""} placeholder="https://example.com" onChange={(e) => handleChange("organizerUrl", e.target.value)} />
+                                {renderError("organizerUrl")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Telephone</label>
+                                <input type="text" className="tool-input" value={fields.organizerTelephone || ""} placeholder="+1-555-555-5555" onChange={(e) => handleChange("organizerTelephone", e.target.value)} />
+                                {renderError("organizerTelephone")}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="tool-field">
+                                <label className="tool-label">Email</label>
+                                <input type="text" className="tool-input" value={fields.organizerEmail || ""} placeholder="name@example.com" onChange={(e) => handleChange("organizerEmail", e.target.value)} />
+                                {renderError("organizerEmail")}
+                              </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Logo URL</label>
+                                <input type="text" className="tool-input" value={fields.organizerLogo || ""} placeholder="https://example.com/logo.png" onChange={(e) => handleChange("organizerLogo", e.target.value)} />
+                                {renderError("organizerLogo")}
+                              </div>
+                            </div>
+
+                            {/* Performer fields (appear under Attendance) */}
+                            <hr className="my-4" />
+                            <div>
+                              <strong className="text-base">Performer Details</strong>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="tool-field">
+                                <label className="tool-label">Performer @type</label>
+                                <div className="custom-select-wrapper compact-select event-select-wrapper relative" style={{ width: "100%" }}>
+                                  <button
+                                    type="button"
+                                    className="custom-select-trigger tool-select"
+                                    onClick={() => setPerformerTypeOpen((o) => !o)}
+                                    style={{ width: "100%", justifyContent: "space-between" }}
+                                    aria-expanded={performerTypeOpen}
+                                  >
+                                    <span className="truncate block">{(PERFORMER_TYPES.find(p => p.value === (fields.performerType || "")) || { label: "Select type" }).label}</span>
+                                    <span className="text-xs">⏷</span>
+                                  </button>
+
+                                  {performerTypeOpen && (
+                                    <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
+                                      <ul>
+                                        {PERFORMER_TYPES.map((opt) => (
+                                          <li key={opt.value} className={(fields.performerType || "") === opt.value ? "selected" : ""} onClick={() => { handleChange("performerType", opt.value); setPerformerTypeOpen(false) }}>
+                                            {opt.label}
                                           </li>
                                         ))}
                                       </ul>
                                     </div>
                                   )}
                                 </div>
-                                {renderError("venueCountry")}
                               </div>
+
+                              <div className="tool-field">
+                                <label className="tool-label">Performer's name</label>
+                                <input type="text" className="tool-input" value={fields.performerName || ""} placeholder="Performer's name" onChange={(e) => handleChange("performerName", e.target.value)} />
                               </div>
-                              </>
-                            )}
+                            </div>
+
+                            
                           </>
-                        )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="tool-field">
-                      <label className="tool-label">Performer @type</label>
-                      <div className="custom-select-wrapper compact-select event-select-wrapper relative" style={{ width: "100%" }}>
-                        <button
-                          type="button"
-                          className="custom-select-trigger tool-select"
-                          onClick={() => setPerformerTypeOpen((o) => !o)}
-                          style={{ width: "100%", justifyContent: "space-between" }}
-                          aria-expanded={performerTypeOpen}
-                        >
-                          <span className="truncate block">{(PERFORMER_TYPES.find(p => p.value === (fields.performerType || "")) || { label: "Select type" }).label}</span>
-                          <span className="text-xs">⏷</span>
-                        </button>
-
-                        {performerTypeOpen && (
-                          <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%" }}>
-                            <ul>
-                              {PERFORMER_TYPES.map((opt) => (
-                                <li key={opt.value} className={(fields.performerType || "") === opt.value ? "selected" : ""} onClick={() => { handleChange("performerType", opt.value); setPerformerTypeOpen(false) }}>
-                                  {opt.label}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="tool-field">
-                      <label className="tool-label">Performer's name</label>
-                      <input type="text" className="tool-input" value={fields.performerName || ""} placeholder="Performer's name" onChange={(e) => handleChange("performerName", e.target.value)} />
-                    </div>
-                  </div>
+                  
 
                   <div>
                     <div className="mb-3">
                       <div className="text-sm text-gray-600 mt-2">Add an offer for each ticket type (e.g. "General admission", "VIP Package").</div>
 
-                      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                         <div className="flex items-center gap-3">
                           <button type="button" className="action-btn" onClick={addTicketType}><Plus className="inline w-4 h-4 mr-2" /> Add Ticket Type</button>
                         </div>
@@ -3045,7 +3591,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div className="tool-field">
                       <label className="tool-label">Date posted</label>
                       <DatePickerInput
@@ -3079,7 +3625,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <div className="tool-field">
                       <label className="tool-label">Country</label>
                       <div className="custom-select-wrapper compact-select relative country-select-wrapper" style={{ width: '100%' }}>
@@ -3346,7 +3892,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-4">
+                  <div>
                     <div className="tool-field">
                       <label className="tool-label">Responsibilities</label>
                       <textarea
@@ -3438,7 +3984,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
  
                     <div className="tool-field">
-                      <label className="tool-label">@id (URL)</label>
+                      <label className="tool-label">@id (URL) <sup><a className="help-icon" href="https://www.schemaapp.com/schema-markup/what-is-an-id-in-structured-data/" target="_blank" rel="noopener noreferrer" title="Learn more about @id">?</a></sup></label>
                       <input
                         type="text"
                         className="tool-input"
@@ -3490,17 +4036,31 @@ export default function SchemaBuilder(): JSX.Element {
                         // Group Image URL + @id into one row when adjacent
                         if (field.key === "imageUrl") {
                           const nextField = i + 1 < flat.length ? flat[i + 1] : null
+                          const nextNext = i + 2 < flat.length ? flat[i + 2] : null
+                          // If the sequence is imageUrl -> @id -> url, prefer to group @id + url together;
+                          // render the image by itself here and allow the next iteration to group @id+url.
+                          if (nextField && nextField.key === "@id" && nextNext && nextNext.key === "url") {
+                            elems.push(
+                              <div key={`image-alone-${i}`} className="tool-field">
+                                <label className="tool-label">Business Image URL</label>
+                                <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
+                                {renderError("imageUrl")}
+                              </div>
+                            )
+                            continue
+                          }
+
                           if (nextField && nextField.key === "@id") {
                             elems.push(
                               <div key="image-and-id-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
-                                  <label className="tool-label">Image URL</label>
+                                  <label className="tool-label">Business Image URL</label>
                                   <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
                                   {renderError("imageUrl")}
                                 </div>
 
                                 <div className="tool-field">
-                                  <label className="tool-label">@id (URL)</label>
+                                  <label className="tool-label">@id (URL) <sup><a className="help-icon" href="https://www.schemaapp.com/schema-markup/what-is-an-id-in-structured-data/" target="_blank" rel="noopener noreferrer" title="Learn more about @id">?</a></sup></label>
                                   <input type="text" className="tool-input" value={fields["@id"] || ""} placeholder="https://example.com#id" onChange={(e) => handleChange("@id", e.target.value)} />
                                   {renderError("@id")}
                                 </div>
@@ -3511,15 +4071,67 @@ export default function SchemaBuilder(): JSX.Element {
                           }
                         }
 
-                        // Group URL + Phone + Price range when adjacent (3-column row)
+                        // Group @id + Website URL into one row when adjacent
+                        if (field.key === "@id") {
+                          const nextField = i + 1 < flat.length ? flat[i + 1] : null
+                          if (nextField && nextField.key === "url") {
+                            elems.push(
+                              <div key="id-url-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">@id (URL) <sup><a className="help-icon" href="https://www.schemaapp.com/schema-markup/what-is-an-id-in-structured-data/" target="_blank" rel="noopener noreferrer" title="Learn more about @id">?</a></sup></label>
+                                  <input type="text" className="tool-input" value={fields["@id"] || ""} placeholder="https://example.com#id" onChange={(e) => handleChange("@id", e.target.value)} />
+                                  {renderError("@id")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Website URL</label>
+                                  <input type="text" className="tool-input" value={fields.url || ""} placeholder="https://example.com" onChange={(e) => handleChange("url", e.target.value)} />
+                                  {renderError("url")}
+                                </div>
+                              </div>
+                            )
+                            i++
+                            continue
+                          }
+                        }
+
+                        // Group URL + Phone + Email (or Price range) when adjacent (3-column row)
                         if (field.key === "url") {
                           const n1 = i + 1 < flat.length ? flat[i + 1] : null
                           const n2 = i + 2 < flat.length ? flat[i + 2] : null
+                          // Prefer Website + Phone + Email when email is present
+                          if (n1 && n1.key === "telephone" && n2 && n2.key === "email") {
+                            elems.push(
+                              <div key="url-phone-email-row" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">Website URL</label>
+                                  <input type="text" className="tool-input" value={fields.url || ""} placeholder="https://example.com" onChange={(e) => handleChange("url", e.target.value)} />
+                                  {renderError("url")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Phone</label>
+                                  <input type="text" className="tool-input" value={fields.telephone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("telephone", e.target.value)} />
+                                  {renderError("telephone")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Email</label>
+                                  <input type="text" className="tool-input" value={fields.email || ""} placeholder="info@example.com" onChange={(e) => handleChange("email", e.target.value)} />
+                                  {renderError("email")}
+                                </div>
+                              </div>
+                            )
+                            i += 2
+                            continue
+                          }
+
+                          // Fallback: the original Website + Phone + PriceRange grouping when no email nearby
                           if (n1 && n1.key === "telephone" && n2 && n2.key === "priceRange") {
                             elems.push(
-                              <div key="url-phone-price-row" className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div key="url-phone-price-row" className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="tool-field">
-                                  <label className="tool-label">URL</label>
+                                  <label className="tool-label">Website URL</label>
                                   <input type="text" className="tool-input" value={fields.url || ""} placeholder="https://example.com" onChange={(e) => handleChange("url", e.target.value)} />
                                   {renderError("url")}
                                 </div>
@@ -3538,6 +4150,85 @@ export default function SchemaBuilder(): JSX.Element {
                               </div>
                             )
                             i += 2
+                            continue
+                          }
+                        }
+
+                        // Group Phone + Email + Price range into one row when adjacent
+                        if (field.key === "telephone") {
+                          const n1 = i + 1 < flat.length ? flat[i + 1] : null
+                          const n2 = i + 2 < flat.length ? flat[i + 2] : null
+                          if (n1 && n1.key === "email" && n2 && n2.key === "priceRange") {
+                            elems.push(
+                              <div key="phone-email-price-row" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">Phone</label>
+                                  <input type="text" className="tool-input" value={fields.telephone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("telephone", e.target.value)} />
+                                  {renderError("telephone")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Email</label>
+                                  <input type="text" className="tool-input" value={fields.email || ""} placeholder="info@example.com" onChange={(e) => handleChange("email", e.target.value)} />
+                                  {renderError("email")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Price range</label>
+                                  <input type="text" className="tool-input" value={fields.priceRange || ""} placeholder="$$" onChange={(e) => handleChange("priceRange", e.target.value)} />
+                                  {renderError("priceRange")}
+                                </div>
+                              </div>
+                            )
+                            i += 2
+                            continue
+                          }
+                        }
+
+                        // Group Logo + Business Image into one row when adjacent
+                        if (field.key === "logo") {
+                          const nextField = i + 1 < flat.length ? flat[i + 1] : null
+                          if (nextField && nextField.key === "imageUrl") {
+                            elems.push(
+                              <div key="logo-image-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">Logo URL</label>
+                                  <input type="text" className="tool-input" value={fields.logo || ""} placeholder="https://example.com/logo.png" onChange={(e) => handleChange("logo", e.target.value)} />
+                                  {renderError("logo")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Business Image URL</label>
+                                  <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
+                                  {renderError("imageUrl")}
+                                </div>
+                              </div>
+                            )
+                            i++
+                            continue
+                          }
+                        }
+
+                        // Ratings + Reviews heading and two-column row when adjacent
+                        if (field.key === "ratingValue") {
+                          const nextField = i + 1 < flat.length ? flat[i + 1] : null
+                          if (nextField && nextField.key === "reviewCount") {
+                            elems.push(
+                              <div key="ratings-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="tool-field">
+                                  <label className="tool-label">Average Rating (1-5)</label>
+                                  <input type="text" className="tool-input" value={fields.ratingValue || ""} placeholder="4.5" onChange={(e) => handleChange("ratingValue", e.target.value)} />
+                                  {renderError("ratingValue")}
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Number of Reviews</label>
+                                  <input type="text" className="tool-input" value={fields.reviewCount || ""} placeholder="12" onChange={(e) => handleChange("reviewCount", e.target.value)} />
+                                  {renderError("reviewCount")}
+                                </div>
+                              </div>
+                            )
+                            i++
                             continue
                           }
                         }
@@ -3787,7 +4478,8 @@ export default function SchemaBuilder(): JSX.Element {
                         if (field.key === "latitude") {
                           const n1 = i + 1 < flat.length ? flat[i + 1] : null
                           if (n1 && n1.key === "longitude") {
-                            elems.push(
+                            // Insert Geographic Information heading above the latitude/longitude row
+                                    elems.push(
                               <div key="lat-lon-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
                                   <label className="tool-label">Latitude</label>
@@ -3813,8 +4505,9 @@ export default function SchemaBuilder(): JSX.Element {
                           const next2 = i + 2 < flat.length ? flat[i + 2] : null
                           // If the next fields are city and postalCode, render three columns
                           if (next1 && next1.key === "city" && next2 && next2.key === "postalCode") {
+                            // Insert Address Information heading above the street/city/postal row
                             elems.push(
-                              <div key="street-city-postal-row" className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div key="street-city-postal-row" className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="tool-field">
                                   <label className="tool-label">Street</label>
                                   <input
@@ -3964,13 +4657,29 @@ export default function SchemaBuilder(): JSX.Element {
                         }
 
                         // Default rendering for other fields
-                        elems.push(
-                          <div key={field.key} className="tool-field">
-                            <label className="tool-label">{field.label}</label>
-                            <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
-                            {renderError(field.key)}
-                          </div>
-                        )
+                        if (field.key === "name") {
+                          // Add a separator + section heading above the business name
+                          elems.push(
+                          )
+                        }
+
+                        if (field.key === "description") {
+                          elems.push(
+                            <div key={field.key} className="tool-field">
+                              <label className="tool-label">{field.label}</label>
+                              <textarea className="tool-textarea" rows={4} value={fields.description || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
+                              {renderError(field.key)}
+                            </div>
+                          )
+                        } else {
+                          elems.push(
+                            <div key={field.key} className="tool-field">
+                              <label className="tool-label">{field.label}</label>
+                              <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
+                              {renderError(field.key)}
+                            </div>
+                          )
+                        }
                       }
                       return elems
                     })()}
@@ -4048,7 +4757,7 @@ export default function SchemaBuilder(): JSX.Element {
                               <input type="text" className="tool-input" value={oh.closes} placeholder="21:00" onChange={(e) => updateOpeningHour(idx, "closes", e.target.value)} />
                             </div>
                             <div className="flex items-center md:col-span-1 justify-end">
-                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeOpeningHour(idx)} title="Remove">
+                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn self-center" onClick={() => removeOpeningHour(idx)} title="Remove">
                                 ×
                               </button>
                             </div>
@@ -4239,7 +4948,7 @@ export default function SchemaBuilder(): JSX.Element {
                             </div>
                           ))
                         ) : (
-                          <div className="text-sm text-gray-500">No social profiles added.</div>
+                          <div className="text-sm mb-1 text-gray-500">No social profiles added.</div>
                         )}
 
                         <div>
@@ -4363,7 +5072,7 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
 
                       <div className="tool-field">
-                        <label className="tool-label">@id (URL)</label>
+                        <label className="tool-label">@id (URL) <sup><a className="help-icon" href="https://www.schemaapp.com/schema-markup/what-is-an-id-in-structured-data/" target="_blank" rel="noopener noreferrer" title="Learn more about @id">?</a></sup></label>
                         <input type="text" className="tool-input" value={fields["@id"] || ""} placeholder="https://example.com/#organization" onChange={(e) => handleChange("@id", e.target.value)} />
                         {renderError("@id")}
                       </div>

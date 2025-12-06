@@ -233,22 +233,25 @@ export default function MetaTagGenerator(): JSX.Element {
 
   // === Global outside click + Escape handler for dropdowns ===
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null
+    const handleClickOutside = (e: MouseEvent | Event) => {
+      const target = (e as MouseEvent).target as HTMLElement | null
       if (!target) return
-      if (!target.closest(".custom-select-wrapper")) {
-        setOpenDropdown(null)
-      }
+
+      // If clicking inside any custom-select-wrapper (trigger or list), let it handle naturally.
+      if (target.closest('.custom-select-wrapper')) return
+
+      // Otherwise close any open dropdown.
+      setOpenDropdown(null)
     }
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpenDropdown(null)
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("click", handleClickOutside)
     document.addEventListener("keydown", handleEscape)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("click", handleClickOutside)
       document.removeEventListener("keydown", handleEscape)
     }
   }, [])

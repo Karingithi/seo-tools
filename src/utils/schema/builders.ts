@@ -2,7 +2,7 @@
 import { DAY_ORDER } from "./constants"
 import { applyProductOffersAndRatings } from "./product"
 import type { BuildParams } from "./types"
-import { compact } from "./utils"
+import { compact, toNumber } from "./utils"
 
 // Exported UI/data constants to be consumed by the SchemaBuilder UI.
 export const schemaDescriptions: Record<string, string> = {
@@ -146,10 +146,13 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
     { label: "LocalBusiness @type", key: "localBusinessType", placeholder: "LocalBusiness" },
     { label: "More specific @type", key: "moreSpecificType", placeholder: "Select Option" },
     { label: "Name", key: "name", placeholder: "Business Name" },
+    { label: "Business description", key: "description", placeholder: "Short description" },
+    { label: "Logo URL", key: "logo", placeholder: "https://example.com/logo.png" },
     { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
     { label: "@id (URL)", key: "@id", placeholder: "https://example.com#id" },
     { label: "URL", key: "url", placeholder: "https://example.com" },
     { label: "Phone", key: "telephone", placeholder: "+1-555-123-4567" },
+    { label: "Email", key: "email", placeholder: "info@example.com" },
     { label: "Price range", key: "priceRange", placeholder: "$$" },
     { label: "Street", key: "street", placeholder: "123 Main St" },
     { label: "City", key: "city", placeholder: "Nairobi" },
@@ -160,6 +163,8 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
     { label: "Longitude", key: "longitude", placeholder: "e.g. 36.8219" },
     { label: "Opening Hours", key: "openingHours", placeholder: "Mo-Fr 09:00-17:00" },
     { label: "Open 24/7", key: "open24_7", placeholder: "false" },
+    { label: "Average Rating (1-5)", key: "ratingValue", placeholder: "4.5" },
+    { label: "Number of Reviews", key: "reviewCount", placeholder: "12" },
     { label: "Social profiles", key: "sameAs", placeholder: "https://facebook.com/..." },
   ],
   Event: [
@@ -251,6 +256,17 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
     { label: "Social profiles", key: "sameAs", placeholder: "https://twitter.com/janesmith, https://linkedin.com/in/janesmith" },
     { label: "Job title", key: "jobTitle", placeholder: "e.g. Senior Marketing Manager, Author, Data Analyst" },
     { label: "Company", key: "worksFor", placeholder: "e.g. Acme Corporation, Self-employed" },
+    { label: "Description", key: "description", placeholder: "Short bio or summary" },
+    { label: "Date of Birth", key: "birthDate", placeholder: "yyyy-mm-dd" },
+    { label: "School/University Name (for alumniOf)", key: "alumniOf", placeholder: "University Name" },
+    { label: "Street", key: "street", placeholder: "123 Main St" },
+    { label: "City", key: "city", placeholder: "Anytown" },
+    { label: "State/Region", key: "region", placeholder: "CA" },
+    { label: "Zip / Postal code", key: "postalCode", placeholder: "90210" },
+    { label: "Country", key: "country", placeholder: "US" },
+    { label: "Knows language(s)", key: "knowsLanguage", placeholder: "English, Spanish" },
+    { label: "Occupation name", key: "hasOccupation", placeholder: "Digital Marketing Specialist" },
+    { label: "Occupation description", key: "hasOccupationDescription", placeholder: "Brief occupation description" },
   ],
 }
 
@@ -367,13 +383,66 @@ export function buildSchemaFromState(p: BuildParams): any {
     const person: any = { "@context": "https://schema.org", "@type": "Person" }
     if (fields.name?.trim()) person.name = fields.name.trim()
     if (fields.url?.trim()) person.url = fields.url.trim()
-    if (fields.pictureUrl?.trim()) person.image = fields.pictureUrl.trim()
+    if (fields.image?.trim()) person.image = fields.image.trim()
+    else if (fields.pictureUrl?.trim()) person.image = fields.pictureUrl.trim()
     const sa = (p.socialProfiles && p.socialProfiles.length)
       ? p.socialProfiles.map((s) => s.trim()).filter(Boolean)
       : (fields.sameAs?.trim() ? fields.sameAs.split(",").map((s) => s.trim()).filter(Boolean) : [])
     if (sa.length) person.sameAs = sa
-    if (fields.worksFor?.trim()) person.worksFor = { "@type": "Organization", name: fields.worksFor.trim() }
+    if (fields.worksFor?.trim()) {
+      const org: any = { "@type": "Organization", name: fields.worksFor.trim() }
+      if (fields.worksForUrl?.trim()) org.url = fields.worksForUrl.trim()
+      person.worksFor = org
+    }
     if (fields.jobTitle?.trim()) person.jobTitle = fields.jobTitle.trim()
+    if (fields.description?.trim()) person.description = fields.description.trim()
+    if (fields.telephone?.trim()) person.telephone = fields.telephone.trim()
+    if (fields.email?.trim()) person.email = fields.email.trim()
+
+    // Address for Person (PostalAddress)
+    const personHasAddr = fields.street || fields.city || fields.region || fields.postalCode || fields.country
+    if (personHasAddr) {
+      const addr: any = { "@type": "PostalAddress" }
+      if (fields.street?.trim()) addr.streetAddress = fields.street.trim()
+      if (fields.city?.trim()) addr.addressLocality = fields.city.trim()
+      if (fields.region?.trim()) addr.addressRegion = fields.region.trim()
+      if (fields.postalCode?.trim()) addr.postalCode = fields.postalCode.trim()
+      if (fields.country?.trim()) addr.addressCountry = fields.country.trim()
+      person.address = addr
+    }
+
+    if (fields.alumniOf?.trim()) person.alumniOf = { "@type": "EducationalOrganization", name: fields.alumniOf.trim() }
+    
+    // Education repeater
+    if (p.education && p.education.length > 0) {
+      const eduArray = p.education
+        .map((edu) => {
+          const eduObj: any = { "@type": "EducationalOrganization" }
+          if (edu.name?.trim()) eduObj.name = edu.name.trim()
+          if (edu.url?.trim()) eduObj.url = edu.url.trim()
+          return eduObj
+        })
+        .filter((edu) => edu.name) // Only include if at least name is present
+      if (eduArray.length > 0) {
+        person.alumniOf = eduArray.length === 1 ? eduArray[0] : eduArray
+      }
+    }
+    
+    if (fields.knowsLanguage?.trim()) {
+      const langs = fields.knowsLanguage.split(",").map((s) => s.trim()).filter(Boolean)
+      person.knowsLanguage = langs.length === 1 ? langs[0] : langs
+    }
+
+    if (fields.hasOccupation?.trim() || fields.hasOccupationDescription?.trim()) {
+      const occ: any = { "@type": "Occupation" }
+      if (fields.hasOccupation?.trim()) occ.name = fields.hasOccupation.trim()
+      if (fields.hasOccupationDescription?.trim()) occ.description = fields.hasOccupationDescription.trim()
+      person.hasOccupation = occ
+    }
+    if (fields.birthDate?.trim()) {
+      // Expect yyyy-mm-dd
+      person.birthDate = fields.birthDate.trim()
+    }
     out = person
   }
 
@@ -383,9 +452,25 @@ export function buildSchemaFromState(p: BuildParams): any {
   }
 
   if (type === "Event") {
-    // Build location from venue fields if provided (wrap in Place + PostalAddress)
+    // Build location based on attendance mode
+    const mode = (fields.attendanceMode || '').trim()
     const hasVenue = (fields.venueName || fields.venueStreet || fields.venueCity || fields.venuePostalCode || fields.venueCountry)
-    if (hasVenue) {
+    const hasStreamUrl = (fields.streamUrl || fields.url)
+    
+    // For online-only events, use VirtualLocation
+    if (mode === 'OnlineEventAttendanceMode' || mode === 'https://schema.org/OnlineEventAttendanceMode') {
+      if (hasStreamUrl) {
+        const virtualUrl = (fields.streamUrl?.trim() || fields.url?.trim())
+        if (virtualUrl) {
+          base.location = {
+            "@type": "VirtualLocation",
+            "url": virtualUrl
+          }
+        }
+      }
+    }
+    // For offline or mixed events with physical venue, use Place with PostalAddress
+    else if (hasVenue) {
       const place: any = { "@type": "Place" }
       if (fields.venueName?.trim()) place.name = fields.venueName.trim()
       const hasAddr = (fields.venueStreet || fields.venueCity || fields.venueRegion || fields.venuePostalCode || fields.venueCountry)
@@ -399,7 +484,24 @@ export function buildSchemaFromState(p: BuildParams): any {
         place.address = addr
       }
       base.location = place
-    } else if (fields.location) {
+      
+      // For mixed events, also add VirtualLocation if stream URL is provided
+      if ((mode === 'MixedEventAttendanceMode' || mode === 'https://schema.org/MixedEventAttendanceMode') && hasStreamUrl) {
+        const virtualUrl = (fields.streamUrl?.trim() || fields.url?.trim())
+        if (virtualUrl) {
+          // location can be an array for mixed events [Place, VirtualLocation]
+          base.location = [
+            place,
+            {
+              "@type": "VirtualLocation",
+              "url": virtualUrl
+            }
+          ]
+        }
+      }
+    }
+    // Fallback for legacy location field
+    else if (fields.location) {
       base.location = { "@type": "Place", name: fields.location }
     }
 
@@ -458,7 +560,18 @@ export function buildSchemaFromState(p: BuildParams): any {
       const mode = fields.attendanceMode.trim()
       base.eventAttendanceMode = mode.startsWith("http") ? mode : `https://schema.org/${mode}`
     }
-    if (fields.imageUrl?.trim()) base.image = fields.imageUrl.trim()
+    // Support both 'image' and 'imageUrl' for backwards compatibility
+    if (fields.image?.trim()) base.image = fields.image.trim()
+    else if (fields.imageUrl?.trim()) base.image = fields.imageUrl.trim()
+    
+    // url property serves as both event page URL and online attendance link
+    // Priority: explicit url field, then streamUrl (for backwards compatibility), then imageUrl as fallback
+    if (fields.url?.trim()) {
+      base.url = fields.url.trim()
+    } else if (fields.streamUrl?.trim()) {
+      base.url = fields.streamUrl.trim()
+    }
+    
     if (p.ticketTypes && p.ticketTypes.length) {
       const offers = p.ticketTypes
         .map((t) => {
@@ -485,12 +598,22 @@ export function buildSchemaFromState(p: BuildParams): any {
             const raw = (rawAvailability || "").toString().trim()
             of.availability = raw.startsWith("http") ? raw : `https://schema.org/${raw}`
           }
-          if ((rawValidFrom || "").toString().trim()) of.validFrom = (rawValidFrom || "").toString().trim()
+          if ((rawValidFrom || "").toString().trim()) {
+            const vf = (rawValidFrom || "").toString().trim()
+            // Add timezone offset if validFrom is date-only (yyyy-mm-dd)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(vf)) {
+              const tz = (fields.timezone || '').trim() || undefined
+              const offset = computeTzOffset(vf, '00:00', tz)
+              of.validFrom = offset === 'Z' ? `${vf}T00:00:00Z` : `${vf}T00:00:00${offset}`
+            } else {
+              of.validFrom = vf
+            }
+          }
           return Object.keys(of).length > 1 ? of : null
         })
         .filter(Boolean) as any[]
-      if (offers.length === 1) base.offers = offers[0]
-      else if (offers.length > 1) base.offers = offers
+      // Always use array format for offers (recommended by Google)
+      if (offers.length > 0) base.offers = offers
     }
 
     // Organizer mapping: support organizerType, organizerName, organizerUrl, organizerTelephone, organizerEmail, organizerLogo
@@ -539,14 +662,31 @@ export function buildSchemaFromState(p: BuildParams): any {
     }
     if (schedules.length === 1) base.eventSchedule = schedules[0]
     else if (schedules.length > 1) base.eventSchedule = schedules
+    
+    // Clean up redundant flat properties - these are now in structured objects
     delete base.performerName
     delete base.performerType
     delete base.startTime
     delete base.endTime
     delete base.imageUrl
+    // Remove flat venue properties (now in location.address)
+    delete base.venueName
+    delete base.venueStreet
+    delete base.venueCity
+    delete base.venueRegion
+    delete base.venuePostalCode
+    delete base.venueCountry
+    // Remove flat organizer properties (now in organizer object)
+    delete base.organizerType
+    delete base.organizerName
+    delete base.organizerUrl
+    delete base.organizerTelephone
+    delete base.organizerEmail
+    delete base.organizerLogo
     // remove non-schema/raw fields copied earlier
     delete base.attendanceMode
     delete base.timezone
+    delete base.streamUrl
     out = base
   }
 
@@ -639,7 +779,12 @@ export function buildSchemaFromState(p: BuildParams): any {
     const howto: any = { "@context": "https://schema.org", "@type": "HowTo" }
     if (fields.name?.trim()) howto.name = fields.name.trim()
     if (fields.description?.trim()) howto.description = fields.description.trim()
-    if (fields.totalTime?.trim()) howto.totalTime = fields.totalTime.trim()
+    if (fields.totalTime?.trim()) {
+      const raw = fields.totalTime.trim()
+      // If user entered plain minutes (e.g. "40"), convert to ISO 8601 duration PT40M
+      if (/^\d+$/.test(raw)) howto.totalTime = `PT${raw}M`
+      else howto.totalTime = raw
+    }
     const parseList = (s?: string) => {
       if (!s) return []
       const arr = s.includes("\n") ? s.split(/\r?\n/) : s.split(",")
@@ -649,8 +794,8 @@ export function buildSchemaFromState(p: BuildParams): any {
     const suppliesOut = (p as any).howToSupplies as string[] | undefined
     const toolsArr = toolsOut && toolsOut.length ? toolsOut.map((x) => x.trim()).filter(Boolean) : parseList(fields.tools)
     const supplyArr = suppliesOut && suppliesOut.length ? suppliesOut.map((x) => x.trim()).filter(Boolean) : parseList(fields.supply)
-    if (toolsArr.length) howto.tool = toolsArr
-    if (supplyArr.length) howto.supply = supplyArr
+    if (toolsArr.length) howto.tool = toolsArr.map((n) => ({ "@type": "HowToTool", name: n }))
+    if (supplyArr.length) howto.supply = supplyArr.map((n) => ({ "@type": "HowToSupply", name: n }))
     const stepsState = (p as any).howToSteps as Array<{ instruction: string; imageUrl?: string; name?: string; url?: string }>
     if (stepsState && stepsState.length && stepsState.some((s) => (s.instruction || "").trim())) {
       const steps = stepsState
@@ -661,9 +806,27 @@ export function buildSchemaFromState(p: BuildParams): any {
       const steps = fields.steps.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
       howto.step = steps.map((s, i) => ({ "@type": "HowToStep", position: i + 1, text: s }))
     }
-    delete howto.tools
-    delete howto.supply
-    delete howto.steps
+    // Include main image if provided (support p.images or fields.imageUrl)
+    if (p.images && p.images.length) {
+      const imgs = p.images.map((s: string) => (s || "").trim()).filter(Boolean)
+      if (imgs.length === 1) howto.image = imgs[0]
+      else if (imgs.length > 1) howto.image = imgs
+    } else if (fields.imageUrl?.trim()) {
+      howto.image = fields.imageUrl.trim()
+    }
+
+    // Include estimatedCost as MonetaryAmount when currency is provided
+    if (fields.estimatedCost?.trim()) {
+      const raw = fields.estimatedCost.trim()
+      const currencyVal = (fields.currency || "").trim() || undefined
+      if (currencyVal) {
+        howto.estimatedCost = { "@type": "MonetaryAmount", currency: currencyVal, value: raw }
+      } else {
+        // fallback to plain text
+        howto.estimatedCost = raw
+      }
+    }
+
     out = howto
   }
 
@@ -692,6 +855,15 @@ export function buildSchemaFromState(p: BuildParams): any {
       job.jobLocation = { "@type": "Place", address: addr }
     }
     if (fields.isRemote === "true") job.jobLocationType = "TELECOMMUTE"
+    // Resolve conflict: if TELECOMMUTE and a full street address exists, strip detailed address to avoid contradiction
+    if (job.jobLocationType === "TELECOMMUTE" && job.jobLocation && job.jobLocation.address) {
+      const a = job.jobLocation.address as any
+      if (a && a.streetAddress) {
+        // Keep only country when remote; remove street/city/postal to avoid conflicting data
+        const countryOnly = a.addressCountry ? { "@type": "PostalAddress", addressCountry: a.addressCountry } : null
+        job.jobLocation.address = countryOnly || undefined
+      }
+    }
     const minRaw = fields.minSalary?.trim() ? Number(fields.minSalary.trim()) : NaN
     const maxRaw = fields.maxSalary?.trim() ? Number(fields.maxSalary.trim()) : NaN
     const currency = fields.currency?.trim() || "USD"
@@ -703,11 +875,110 @@ export function buildSchemaFromState(p: BuildParams): any {
       if (unitText) value.unitText = unitText
       job.baseSalary = { "@type": "MonetaryAmount", currency, value }
     }
-    if (fields.responsibilities?.trim()) job.responsibilities = fields.responsibilities.trim()
-    if (fields.skills?.trim()) job.skills = fields.skills.split(/\r?\n|,\s*/).map((s) => s.trim()).filter(Boolean)
-    if (fields.qualifications?.trim()) job.qualifications = fields.qualifications.trim()
-    if (fields.educationRequirements?.trim()) job.educationRequirements = fields.educationRequirements.trim()
-    if (fields.experienceRequirements?.trim()) job.experienceRequirements = fields.experienceRequirements.trim()
+    // Normalize and sanitize multi-line fields
+    const escapeNewlines = (s: string) => String(s).replace(/\r?\n/g, "\\n")
+
+    if (fields.responsibilities?.trim()) {
+      let r = fields.responsibilities.trim()
+      // Auto-prefix bare www. links with https://
+      r = r.replace(/(^|\s)(www\.[^\s]+)/g, (_, pre, url) => `${pre}https://${url}`)
+      job.responsibilities = escapeNewlines(r)
+    }
+
+    if (fields.skills?.trim()) {
+      // Split on newlines or commas, then coalesce small fragments like 'or related field'
+      const parts = fields.skills.split(/\r?\n|,\s*/).map((s) => s.trim()).filter(Boolean)
+      const merged: string[] = []
+      parts.forEach((p) => {
+        if (!p) return
+        // If this part looks like a continuation (starts with lowercase or 'or ' / 'and '), append to previous
+        if (merged.length > 0 && (/^(or |and )/i.test(p) || /^[a-z]/.test(p) || p.length <= 3)) {
+          merged[merged.length - 1] = `${merged[merged.length - 1]} ${p}`
+        } else {
+          merged.push(p)
+        }
+      })
+      job.skills = merged
+    }
+
+    if (fields.qualifications?.trim()) job.qualifications = escapeNewlines(fields.qualifications.trim())
+
+    if (fields.educationRequirements?.trim()) {
+      const eduRaw = fields.educationRequirements.trim()
+      const eduLower = eduRaw.toLowerCase()
+      const mapToCredentialCategory = (): string | null => {
+        if (/no\s*requirements|none/i.test(eduLower)) return 'no requirements'
+        if (/high school/i.test(eduLower)) return 'high school'
+        if (/associate/i.test(eduLower)) return 'associate degree'
+        if (/bachelor/i.test(eduLower)) return 'bachelor degree'
+        if (/(postgraduate|master|m\.?a\b|m\.?s\b|phd|doctor)/i.test(eduLower)) return 'postgraduate degree'
+        if (/professional certificate|certificate/i.test(eduLower)) return 'professional certificate'
+        return null
+      }
+      const cred = mapToCredentialCategory()
+      if (cred) {
+        if (cred === 'no requirements') job.educationRequirements = 'no requirements'
+        else job.educationRequirements = { '@type': 'EducationalOccupationalCredential', credentialCategory: cred }
+      } else {
+        // fallback to freeform text when we can't canonicalize
+        job.educationRequirements = eduRaw
+      }
+    }
+
+    if (fields.experienceRequirements?.trim()) {
+      const exRaw = fields.experienceRequirements.trim()
+      const parseMonths = (text: string): number | null => {
+        // Try to parse ranges first (e.g. "3-5 years"), respecting "or" vs "and"
+        const rangeMatch = text.match(/(\d{1,3})\s*(?:-|–|to)\s*(\d{1,3})\s*(years?|yrs?|months?)/i)
+        if (rangeMatch) {
+          const a = parseInt(rangeMatch[1], 10)
+          const b = parseInt(rangeMatch[2], 10)
+          const unit = /month/i.test(rangeMatch[3]) ? 'months' : 'years'
+          const useMin = /\bor\b/i.test(text)
+          const chosen = useMin ? Math.min(a, b) : Math.max(a, b)
+          return unit === 'months' ? chosen : chosen * 12
+        }
+        // Find all occurrences like "3 years" or "36 months"
+        const nums = Array.from(text.matchAll(/(\d{1,3})\s*(years?|yrs?|months?)/gi))
+        if (nums.length) {
+          const vals = nums.map((m) => {
+            const n = parseInt(m[1], 10)
+            const unit = /month/i.test(m[2]) ? 'months' : 'years'
+            return unit === 'months' ? n : n * 12
+          })
+          if (/\bor\b/i.test(text)) return Math.min(...vals)
+          if (/\band\b/i.test(text)) return Math.max(...vals)
+          return vals[0]
+        }
+        // Bare number -> treat as years
+        const bare = text.match(/^\s*(\d{1,3})\s*$/)
+        if (bare) return parseInt(bare[1], 10) * 12
+        return null
+      }
+      const months = parseMonths(exRaw)
+      if (months !== null) job.experienceRequirements = { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: months }
+      else job.experienceRequirements = exRaw
+    }
+
+    // If UI exposes a boolean indicating experience may be used in place of education,
+    // include it and ensure both properties are present per Google's guidance.
+    const expInPlace = (fields.experienceInPlaceOfEducation || fields.experienceInPlaceOfEducation === 'true' || '').toString().trim().toLowerCase()
+    if (expInPlace === 'true' || expInPlace === '1' || expInPlace === 'yes' || expInPlace === 'on') {
+      job.experienceInPlaceOfEducation = true
+      if (!job.educationRequirements) job.educationRequirements = 'no requirements'
+      if (!job.experienceRequirements) job.experienceRequirements = 'no requirements'
+    }
+
+    // Sanitize education/experience strings: remove stray trailing commas and normalize curly quotes
+    const normalizeText = (t: string) => String(t).replace(/[\u2018\u2019\u201C\u201D]/g, "'").replace(/\s*,\s*$/g, '').trim()
+    if (job.educationRequirements && typeof job.educationRequirements === 'string') job.educationRequirements = normalizeText(job.educationRequirements)
+    if (job.experienceRequirements && typeof job.experienceRequirements === 'string') job.experienceRequirements = normalizeText(job.experienceRequirements)
+
+    // applicantLocationRequirements: prefer explicit country (if provided) to indicate where applicants must be located
+    if (fields.country?.trim()) {
+      // Use Country object when only a country code or name is provided
+      job.applicantLocationRequirements = { "@type": "Country", name: fields.country.trim() }
+    }
     delete job.jobDescription
     delete job.hiringOrganizationUrl
     delete job.companyLogo
@@ -729,9 +1000,11 @@ export function buildSchemaFromState(p: BuildParams): any {
     const biz: any = { "@context": "https://schema.org", "@type": bizType }
     if (fields.name?.trim()) biz.name = fields.name.trim()
     if (fields.url?.trim()) biz.url = fields.url.trim()
+    if (fields.logo?.trim()) biz.logo = fields.logo.trim()
     if (fields.imageUrl?.trim()) biz.image = fields.imageUrl.trim()
     if (fields["@id"]?.trim()) biz["@id"] = fields["@id"].trim()
     if (fields.telephone?.trim()) biz.telephone = fields.telephone.trim()
+    if (fields.email?.trim()) biz.email = fields.email.trim()
     if (fields.priceRange?.trim()) biz.priceRange = fields.priceRange.trim()
     const hasAddress = fields.street || fields.city || fields.region || fields.postalCode || fields.country
     if (hasAddress) {
@@ -792,6 +1065,13 @@ export function buildSchemaFromState(p: BuildParams): any {
     }
     const openingHoursSpecs = buildOpeningHoursSpecs()
     if (openingHoursSpecs.length) biz.openingHoursSpecification = openingHoursSpecs
+    // AggregateRating for Local Business (average rating + number of reviews)
+    if ((fields.ratingValue || "").trim()) {
+      const rating: any = { "@type": "AggregateRating", ratingValue: (fields.ratingValue || "").trim() }
+      const rc = toNumber((fields.reviewCount || "").trim())
+      if (rc != null) rating.reviewCount = rc
+      biz.aggregateRating = rating
+    }
     if (p.departments && p.departments.length) {
       const deps = p.departments.map((d) => {
         const deptType = (d.moreSpecificType?.trim()) || (d.localBusinessType?.trim()) || "LocalBusiness"
@@ -818,6 +1098,8 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete biz.open24_7
     delete biz.localBusinessType
     delete biz.moreSpecificType
+    delete biz.ratingValue
+    delete biz.reviewCount
     out = biz
   }
 

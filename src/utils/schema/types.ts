@@ -5,6 +5,7 @@ export type Department = { localBusinessType: string; moreSpecificType: string; 
 export type ContactPoint = { contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }
 export type TicketType = { name: string; price: string; currency?: string; availableFrom?: string; url?: string; availability?: string }
 export type OrgExtra = { key: string; value: string }
+export type EducationItem = { name: string; url: string }
 
 export type BuildParams = {
   type: string
@@ -13,6 +14,7 @@ export type BuildParams = {
   breadcrumbs: BreadcrumbItem[]
   faqItemsState: FAQItem[]
   socialProfiles: string[]
+  education: EducationItem[]
   videoThumbnails: string[]
   videoMinutes: string
   videoSeconds: string
@@ -22,6 +24,11 @@ export type BuildParams = {
   ticketTypes: TicketType[]
   ticketDefaultCurrency: string
   orgExtras?: OrgExtra[]
+  // How-to specific repeaters (optional)
+  howToTools?: string[]
+  howToSupplies?: string[]
+  howToSteps?: Array<{ instruction: string; imageUrl?: string; name?: string; url?: string }>
 }
 
 export type Review = { name: string; body: string; rating: string; date: string; author: string; publisher: string }
+

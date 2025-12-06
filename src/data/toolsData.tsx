@@ -66,4 +66,10 @@ export const toolsData: Tool[] = [
     link: "/llms-txt-generator",
     description: "Generate an llms.txt to control how LLM crawlers access your site.",
   },
+  {
+    name: "Header Tag Structure Viewer",
+    icon: SchemaIconUrl,
+    link: "/header-tag-structure-viewer",
+    description: "Inspect page heading tag hierarchy (H1–H6) from HTML or a URL.",
+  },
 ]

@@ -725,8 +725,10 @@
     font-size: 13px;
   }
 
+  /* Caption label (month + year display) — make slightly larger and medium weight */
   .rdp-caption_label {
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   .rdp-weekday {
