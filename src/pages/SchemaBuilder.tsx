@@ -2314,6 +2314,7 @@ export default function SchemaBuilder(): JSX.Element {
                 countrySearch={countrySearch}
                 setCountrySearch={setCountrySearch}
                 COUNTRY_LIST={COUNTRY_LIST}
+                STATES_BY_COUNTRY={STATES_BY_COUNTRY}
               />
             ) : (
               /* How-to — custom layout (supplies, tools, steps) */
