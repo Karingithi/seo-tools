@@ -10,15 +10,15 @@
   "containerEnv": {
     "NODE_ENV": "development"
   },
-  "extensions": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "eamodio.gitlens",
-    "orta.vscode-jest",
-    "ms-azuretools.vscode-docker"
-  ],
   "customizations": {
     "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "orta.vscode-jest",
+        "ms-azuretools.vscode-docker"
+      ],
       "settings": {
         "editor.formatOnSave": true,
         "terminal.integrated.defaultProfile.linux": "bash"
