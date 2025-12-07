@@ -22,8 +22,8 @@ import SchemaPreview from "../components/SchemaPreview"
 import ProductForm from "../components/ProductForm"
 import EventForm from "../components/EventForm"
 import OrganizationForm from "../components/OrganizationForm"
-import PersonForm from "../components/PersonForm"
-import HowToForm from "../components/HowToForm"
+import PersonForm, { type PersonFields } from "../components/PersonForm"
+import HowToForm, { type HowToFields } from "../components/HowToForm"
 
 import { downloadText, copyToClipboard } from "../utils"
 
@@ -813,7 +813,7 @@ export default function SchemaBuilder(): JSX.Element {
     return /url/.test(lk) || /logo/.test(lk) || /^images_\d+$/.test(k) || k === "images"
   }
 
-  const renderError = (key?: string) => {
+  const renderError = (key?: string): JSX.Element | null => {
     if (!key) return null
     const msg = errors[key]
     if (!msg) return null
@@ -2283,7 +2283,7 @@ export default function SchemaBuilder(): JSX.Element {
               </div>
             ) : type === "Person" ? (
               <PersonForm
-                fields={fields}
+                fields={fields as Partial<PersonFields>}
                 handleChange={handleChange}
                 renderError={renderError}
                 knowsLangOpen={knowsLangOpen}
@@ -2321,7 +2321,7 @@ export default function SchemaBuilder(): JSX.Element {
               /* How-to — custom layout (supplies, tools, steps) */
               type === "How-to" ? (
                 <HowToForm
-                  fields={fields}
+                  fields={fields as Partial<HowToFields>}
                   handleChange={handleChange}
                   renderError={renderError}
                   howToCurrencyOpen={howToCurrencyOpen}

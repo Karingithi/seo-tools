@@ -3,8 +3,18 @@ import { Plus } from "lucide-react"
 
 type HowToStep = { instruction: string; image?: string; name?: string; url?: string }
 
+export type HowToFields = {
+  name?: string
+  description?: string
+  totalTime?: string
+  estimatedCost?: string
+  currency?: string
+  image?: string
+  [k: string]: any
+}
+
 export type HowToFormProps = {
-  fields: Record<string, any>
+  fields: Partial<HowToFields>
   handleChange: (key: string, value: any) => void
   renderError: (key: string) => JSX.Element | null
   howToCurrencyOpen: boolean

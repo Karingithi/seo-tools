@@ -5,8 +5,29 @@ import { Plus } from "lucide-react"
 type LanguageItem = { name: string; code: string }
 type EducationItem = { name?: string; url?: string }
 
+export type PersonFields = {
+  name?: string
+  url?: string
+  pictureUrl?: string
+  description?: string
+  publicEmail?: string
+  publicPhone?: string
+  birthDate?: string
+  knowsLanguage?: string
+  jobTitle?: string
+  worksFor?: string
+  worksForUrl?: string
+  department?: string
+  street?: string
+  city?: string
+  postalCode?: string
+  region?: string
+  country?: string
+  [k: string]: any
+}
+
 export type PersonFormProps = {
-  fields: Record<string, any>
+  fields: Partial<PersonFields>
   handleChange: (key: string, value: any) => void
   renderError: (key: string) => JSX.Element | null
   knowsLangOpen: boolean
