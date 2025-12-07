@@ -4,7 +4,6 @@ import { Plus, Minus } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 import { buildSchemaFromState, schemaFields, schemaDescriptions, schemaExamples, HELP_LINKS } from "../utils/schema/builders"
 import { } from "react-router-dom"
-import DatePickerInput from "../components/DatePickerInput"
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from 'react-country-state-fields'
@@ -24,6 +23,7 @@ import EventForm from "../components/EventForm"
 import OrganizationForm from "../components/OrganizationForm"
 import { PersonForm, type PersonFields, HowToForm, type HowToFields, VideoForm, type VideoFields, JobPostingForm, type JobPostingFields } from "../components/schema"
 import ArticleForm from "../components/schema/ArticleForm"
+import type { ArticleFields } from "../types/article"
 import FaqForm from "../components/schema/FaqForm"
 
 import { downloadText, copyToClipboard } from "../utils"
@@ -42,7 +42,6 @@ export default function SchemaBuilder(): JSX.Element {
   // Dropdown open states
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [articleTypeOpen, setArticleTypeOpen] = useState(false)
-  const [authorTypeOpen, setAuthorTypeOpen] = useState(false)
   // Event-related custom select opens
   const [eventStatusOpen, setEventStatusOpen] = useState(false)
   const [attendanceModeOpen, setAttendanceModeOpen] = useState(false)
@@ -239,7 +238,6 @@ export default function SchemaBuilder(): JSX.Element {
       try {
         setDropdownOpen(false)
         setArticleTypeOpen(false)
-        setAuthorTypeOpen(false)
         setEventStatusOpen(false)
         setAttendanceModeOpen(false)
         setPerformerTypeOpen(false)
@@ -1773,11 +1771,11 @@ export default function SchemaBuilder(): JSX.Element {
 
             {type === "Article" ? (
               <ArticleForm
-                fields={fields}
+                fields={fields as ArticleFields}
                 handleChange={handleChange}
                 renderError={renderError}
                 articleTypeOpen={articleTypeOpen}
-                setArticleTypeOpen={setArticleTypeOpen}
+                toggleArticleTypeOpen={() => setArticleTypeOpen((o) => !o)}
                 images={images}
                 addImage={addImage}
                 removeImage={removeImage}
