@@ -315,7 +315,16 @@ export function buildSchemaFromState(p: BuildParams): any {
   const base: any = { "@context": "https://schema.org", "@type": type }
 
   Object.entries(fields).forEach(([k, v]) => {
-    if (v && v.trim()) base[k] = v.trim()
+    // Only call .trim() on strings; handle arrays safely.
+    if (typeof v === 'string') {
+      if (v.trim()) base[k] = v.trim()
+    } else if (Array.isArray(v)) {
+      const arr = (v as any[]).map((x: any) => (x == null ? '' : String(x)).trim()).filter(Boolean)
+      if (arr.length) base[k] = arr
+    } else if (v != null) {
+      // For other non-null types, store as-is
+      base[k] = v
+    }
   })
 
   let out: any = null
@@ -908,8 +917,36 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (fields.workHours?.trim()) job.workHours = fields.workHours.trim()
     if (fields.hiringOrganization?.trim()) {
       job.hiringOrganization = { "@type": "Organization", name: fields.hiringOrganization.trim() }
-      if (fields.hiringOrganizationUrl?.trim()) job.hiringOrganization.sameAs = fields.hiringOrganizationUrl.trim()
-      if (fields.companyLogo?.trim()) job.hiringOrganization.logo = fields.companyLogo.trim()
+      // Helper: normalize URLs (auto-prefix bare www. with https://)
+      const normalizeUrl = (u: any) => {
+        if (!u && u !== 0) return ''
+        const s = String(u).trim()
+        if (!s) return ''
+        if (/^www\./i.test(s)) return `https://${s}`
+        return s
+      }
+
+      // Map the Company URL into the organization's `url` property (not `sameAs`), normalizing when possible.
+      const normUrl = normalizeUrl(fields.hiringOrganizationUrl)
+      if (normUrl) job.hiringOrganization.url = normUrl
+      const normLogo = normalizeUrl(fields.companyLogo)
+      if (normLogo) job.hiringOrganization.logo = normLogo
+
+      // Map profile/social URLs (array or comma/newline-separated) into hiringOrganization.sameAs as a normalized array
+      if (fields.hiringOrganizationSameAs) {
+        if (Array.isArray(fields.hiringOrganizationSameAs)) {
+          const arr = (fields.hiringOrganizationSameAs as any[])
+            .map((s) => normalizeUrl(s))
+            .filter(Boolean)
+          if (arr.length > 0) job.hiringOrganization.sameAs = arr
+        } else if (typeof fields.hiringOrganizationSameAs === 'string' && fields.hiringOrganizationSameAs.trim()) {
+          const arr = String(fields.hiringOrganizationSameAs)
+            .split(/\r?\n|,\s*/)
+            .map((s) => normalizeUrl(s))
+            .filter(Boolean)
+          if (arr.length > 0) job.hiringOrganization.sameAs = arr
+        }
+      }
     }
     if (fields.identifier?.trim()) job.identifier = { "@type": "PropertyValue", value: fields.identifier.trim() }
     const hasAddress = fields.street || fields.city || fields.region || fields.postalCode || fields.country

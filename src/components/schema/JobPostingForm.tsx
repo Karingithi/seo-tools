@@ -1,43 +1,11 @@
-import { useState, type ComponentType } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DatePickerInput from '../DatePickerInput'
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import currencyCodes from 'currency-codes'
-import type { StateProps } from 'react-country-state-fields'
+import type { JobPostingFormProps } from '../../types/jobposting'
 
 countries.registerLocale(enLocale)
-
-export type JobPostingFields = {
-  title?: string
-  identifier?: string
-  jobDescription?: string
-  hiringOrganization?: string
-  hiringOrganizationUrl?: string
-  companyLogo?: string
-  industry?: string
-  employmentType?: string
-  workHours?: string
-  datePosted?: string
-  validThrough?: string
-  isRemote?: string
-  country?: string
-  region?: string
-  minSalary?: string
-  maxSalary?: string
-  salaryCurrency?: string
-  salaryUnit?: string
-  [k: string]: any
-}
-
-export type JobPostingFormProps = {
-  fields: Partial<JobPostingFields>
-  handleChange: (key: string, value: any) => void
-  renderError?: (key?: string) => JSX.Element | null
-  // Optional helpers if provided by the parent (will fall back to internal handling)
-  StateSelectComp?: ComponentType<StateProps> | null
-  COUNTRY_LIST?: Array<{ code?: string; name: string }>
-  STATES_BY_COUNTRY?: Record<string, string[]>
-}
 
 const EMPLOYMENT_TYPE_OPTIONS = [
   { value: '', label: 'Select employment type' },
@@ -62,6 +30,22 @@ function buildAllCurrencies() {
   return (currencyCodes.codes().map((c: any) => ({ code: c, name: c })) as Array<{ code: string; name: string }> )
 }
 
+// Normalize an input URL for immediate client-side feedback.
+// Matches builder behaviour: trim and auto-prefix bare 'www.' with https://
+const normalizeInputUrl = (v: any) => {
+  if (v == null) return ''
+  let s = String(v).trim()
+  if (!s) return ''
+  if (/^www\./i.test(s)) return `https://${s}`
+  return s
+}
+
+const capitalize = (s: string) => {
+  if (!s) return ''
+  const str = String(s)
+  return str.charAt(0) + str.slice(1).toLowerCase()
+}
+
 export default function JobPostingForm(props: JobPostingFormProps): JSX.Element {
   const {
     fields,
@@ -82,6 +66,25 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
   const [salaryCurrencySearch, setSalaryCurrencySearch] = useState<string>('')
   const [salaryUnitOpen, setSalaryUnitOpen] = useState<boolean>(false)
 
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!rootRef.current) return
+      const t = e.target as Node
+      if (!rootRef.current.contains(t)) {
+        setEmploymentTypeOpen(false)
+        setCountryOpen(false)
+        setRegionOpen(false)
+        setSalaryCurrencyOpen(false)
+        setSalaryUnitOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   const ALL_CURRENCIES = buildAllCurrencies()
 
   const getSelectedCountryCode = (countryVal?: string) => {
@@ -93,7 +96,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
   const selectedCountryCode = getSelectedCountryCode(fields.country)
 
   return (
-    <div>
+    <div ref={rootRef}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="tool-field">
           <label className="tool-label">Job title</label>
@@ -153,9 +156,77 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             className="tool-input"
             value={fields.hiringOrganizationUrl || ''}
             placeholder="https://example.com"
-            onChange={(e) => handleChange('hiringOrganizationUrl', e.target.value)}
+            onChange={(e) => handleChange('hiringOrganizationUrl', normalizeInputUrl(e.target.value))}
           />
           {renderError('hiringOrganizationUrl')}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 mt-2">
+        <div className="tool-field">
+          <label className="tool-label">Company profiles (LinkedIn, Facebook, etc.)</label>
+          {(() => {
+            const raw = fields.hiringOrganizationSameAs
+            const list: string[] = Array.isArray(raw)
+              ? raw.slice()
+              : (typeof raw === 'string' && raw.trim() ? String(raw).split(/\r?\n|,\s*/).map(s => s.trim()).filter(Boolean) : [])
+
+            return (
+              <div>
+                {list.map((url, idx) => {
+                  const val = url || ''
+                  const isUrlValid = (() => {
+                    try {
+                      const u = new URL(String(val))
+                      return u.protocol === 'http:' || u.protocol === 'https:'
+                    } catch {
+                      return false
+                    }
+                  })()
+
+                  return (
+                    <div key={idx} className="mt-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          className="tool-input"
+                          value={val}
+                          placeholder="https://www.linkedin.com/company/example"
+                          onChange={(e) => {
+                            const next = list.slice()
+                            next[idx] = normalizeInputUrl(e.target.value)
+                            handleChange('hiringOrganizationSameAs', next)
+                          }}
+                        />
+                        <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => {
+                          const next = list.slice().filter((_, i) => i !== idx)
+                          handleChange('hiringOrganizationSameAs', next)
+                        }} aria-label="Remove profile" title="Remove">×</button>
+                      </div>
+                      {!val ? (
+                        <div className="text-sm text-gray-500 mt-1">Enter a profile URL.</div>
+                      ) : isUrlValid ? (
+                        <div className="text-sm text-green-600 mt-1">Looks good</div>
+                      ) : (
+                        <div className="validation-message">Invalid URL format</div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                <div className="mt-2">
+                  <button type="button" className="action-btn" onClick={() => {
+                    const next = list.slice()
+                    next.push('')
+                    handleChange('hiringOrganizationSameAs', next)
+                  }}>Add profile</button>
+                </div>
+
+                <div className="text-sm text-gray-500 mt-1">Add one profile URL per row. These will be mapped to <code>hiringOrganization.sameAs</code>.</div>
+                {renderError('hiringOrganizationSameAs')}
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -167,7 +238,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             className="tool-input"
             value={fields.companyLogo || ''}
             placeholder="https://example.com/logo.png"
-            onChange={(e) => handleChange('companyLogo', e.target.value)}
+            onChange={(e) => handleChange('companyLogo', normalizeInputUrl(e.target.value))}
           />
           {renderError('companyLogo')}
         </div>
@@ -363,7 +434,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
         <div className="tool-field">
           <label className="tool-label">Min salary</label>
           <input type="text" className="tool-input" value={fields.minSalary || ''} placeholder="Min salary" onChange={(e) => handleChange('minSalary', e.target.value)} />
@@ -376,10 +447,10 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           {renderError('maxSalary')}
         </div>
 
-        <div className="tool-field">
+        <div className="tool-field col-span-full">
           <label className="tool-label">Currency / Period</label>
           <div className="flex gap-2">
-            <div className="relative" style={{ flex: 1 }}>
+            <div className="relative" style={{ width: '50%' }}>
               <button type="button" className="custom-select-trigger tool-select" onClick={() => setSalaryCurrencyOpen((o) => !o)} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={salaryCurrencyOpen}>
                 <span className="truncate block">{(fields.salaryCurrency && fields.salaryCurrency.trim()) ? (fields.salaryCurrency) : 'Select currency'}</span>
                 <span className="text-xs">⏷</span>
@@ -396,16 +467,16 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
               )}
             </div>
 
-            <div className="relative" style={{ width: 120 }}>
+            <div className="relative" style={{ width: '50%' }}>
               <button type="button" className="custom-select-trigger tool-select" onClick={() => setSalaryUnitOpen((o) => !o)} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={salaryUnitOpen}>
-                <span className="truncate block">{(fields.salaryUnit && fields.salaryUnit.trim()) ? ((fields.salaryUnit || '').toUpperCase()) : 'Select period'}</span>
+                <span className="truncate block">{(fields.salaryUnit && fields.salaryUnit.trim()) ? capitalize(fields.salaryUnit) : 'Select period'}</span>
                 <span className="text-xs">⏷</span>
               </button>
               {salaryUnitOpen && (
                 <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%' }}>
                   <ul>
                     {SALARY_UNITS.map((u) => (
-                      <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); setSalaryUnitOpen(false) }}>{u}</li>
+                      <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); setSalaryUnitOpen(false) }}>{capitalize(u)}</li>
                     ))}
                   </ul>
                 </div>

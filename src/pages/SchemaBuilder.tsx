@@ -23,6 +23,8 @@ import ProductForm from "../components/ProductForm"
 import EventForm from "../components/EventForm"
 import OrganizationForm from "../components/OrganizationForm"
 import { PersonForm, type PersonFields, HowToForm, type HowToFields, VideoForm, type VideoFields, JobPostingForm, type JobPostingFields } from "../components/schema"
+import ArticleForm from "../components/schema/ArticleForm"
+import FaqForm from "../components/schema/FaqForm"
 
 import { downloadText, copyToClipboard } from "../utils"
 
@@ -1143,7 +1145,7 @@ export default function SchemaBuilder(): JSX.Element {
     })
   }, [])
 
-  const validateField = (key: string, value: string, allFields: Record<string, string>) => {
+  const validateField = (key: string, value: any, allFields: Record<string, any>) => {
     const nextErrors = { ...errors }
 
     const setError = (k: string, msg?: string) => {
@@ -1151,7 +1153,35 @@ export default function SchemaBuilder(): JSX.Element {
       else delete nextErrors[k]
     }
 
-    const trimmed = value ? value.trim() : ""
+    const isArray = Array.isArray(value)
+    const trimmed = !isArray && value ? String(value).trim() : ""
+
+    if (isArray) {
+      // Special-case: arrays are used for repeater fields (e.g. hiringOrganizationSameAs)
+      const lk = key.toLowerCase()
+      if (lk.includes("sameas")) {
+        const arr = (value as any[]).map((s) => (s ? String(s).trim() : "")).filter(Boolean)
+        if (arr.length === 0) {
+          setError(key)
+          setErrors(nextErrors)
+          return
+        }
+        // Validate each URL is well-formed; if any invalid, set a field-level error
+        const invalid = arr.some((u) => !isValidUrl(u))
+        if (invalid) setError(key, "One or more profile URLs are invalid")
+        else setError(key)
+        setErrors(nextErrors)
+        return
+      }
+
+      // For other arrays, treat empty as optional
+      if ((value as any[]).length === 0) {
+        setError(key)
+        setErrors(nextErrors)
+        return
+      }
+      // Fall through: convert non-empty array to a joined string for any remaining checks
+    }
 
     if (!trimmed) {
       // Optional fields: remove existing error
@@ -1430,17 +1460,17 @@ export default function SchemaBuilder(): JSX.Element {
   }
 
   // Generic field handler
-  const handleChange = (key: string, value: string) => {
+  const handleChange = (key: string, value: any) => {
     setFields((prev) => {
       let val = value
 
-      // Strip letters from phone/telephone fields
-      if (key.toLowerCase().includes("phone") || key.toLowerCase().includes("telephone")) {
+      // Strip letters from phone/telephone fields (only operate on strings)
+      if ((key.toLowerCase().includes("phone") || key.toLowerCase().includes("telephone")) && typeof value === 'string') {
         val = value.replace(/[a-zA-Z]/g, "")
       }
 
-      // Enforce strict headline limit while typing if enabled
-      if (key === "headline" && prev.strictHeadlineLimit === "true") {
+      // Enforce strict headline limit while typing if enabled (only for strings)
+      if (key === "headline" && prev.strictHeadlineLimit === "true" && typeof value === 'string') {
         val = value.slice(0, 110)
       }
 
@@ -1742,428 +1772,17 @@ export default function SchemaBuilder(): JSX.Element {
             )}
 
             {type === "Article" ? (
-              <>
-                {/* First row: Article @type + Article URL */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {schemaFields[type].slice(0, 2).map((field) => (
-                    <div key={field.key} className="tool-field">
-                      <label className="tool-label">{field.label}</label>
-                      {field.key === "articleType" ? (
-                        <div
-                          className="custom-select-wrapper article-select-wrapper relative"
-                          style={{ width: "100%" }}
-                        >
-                          <button
-                            type="button"
-                            className="custom-select-trigger tool-select"
-                            aria-expanded={articleTypeOpen}
-                            onClick={() => setArticleTypeOpen((o) => !o)}
-                            style={{ width: "100%", justifyContent: "space-between" }}
-                          >
-                            <span className="truncate block">
-                              {fields.articleType || "Article"}
-                            </span>
-                            <span className="text-xs">⏷</span>
-                          </button>
-
-                          {articleTypeOpen && (
-                            <div
-                              className="custom-select-list absolute left-0 mt-1 z-50"
-                              style={{ width: "100%" }}
-                            >
-                              <ul>
-                                <li
-                                  className={
-                                    (fields.articleType || "Article") === "Article"
-                                      ? "selected"
-                                      : ""
-                                  }
-                                  onClick={() => {
-                                    handleChange("articleType", "Article")
-                                    setArticleTypeOpen(false)
-                                  }}
-                                >
-                                  <div className="font-semibold text-[15px]">Article</div>
-                                  <div className="text-[13px] text-gray-500">
-                                    General article
-                                  </div>
-                                </li>
-                                <li
-                                  className={
-                                    fields.articleType === "NewsArticle" ? "selected" : ""
-                                  }
-                                  onClick={() => {
-                                    handleChange("articleType", "NewsArticle")
-                                    setArticleTypeOpen(false)
-                                  }}
-                                >
-                                  <div className="font-semibold text-[15px]">NewsArticle</div>
-                                  <div className="text-[13px] text-gray-500">
-                                    News reporting
-                                  </div>
-                                </li>
-                                <li
-                                  className={
-                                    fields.articleType === "BlogPosting" ? "selected" : ""
-                                  }
-                                  onClick={() => {
-                                    handleChange("articleType", "BlogPosting")
-                                    setArticleTypeOpen(false)
-                                  }}
-                                >
-                                  <div className="font-semibold text-[15px]">BlogPosting</div>
-                                  <div className="text-[13px] text-gray-500">
-                                    Blog content
-                                  </div>
-                                </li>
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <>
-                          <input
-                            type="text"
-                            className="tool-input"
-                            value={fields[field.key] || ""}
-                            placeholder={field.placeholder}
-                            onChange={(e) => handleChange(field.key, e.target.value)}
-                          />
-                          {renderError(field.key)}
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Remaining Article fields */}
-                {schemaFields[type].slice(2).map((field) => {
-                  // Skip keys that are specially handled in paired layouts
-                  if (
-                    field.key === "authorName" ||
-                    field.key === "publisherLogo" ||
-                    field.key === "dateModified"
-                  )
-                    return null
-
-                  if (field.key === "headline") {
-                    const count = (fields.headline || "").length
-                    return (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <input
-                          type="text"
-                          className="tool-input"
-                          value={fields.headline || ""}
-                          placeholder={field.placeholder}
-                          onChange={(e) => handleChange("headline", e.target.value)}
-                        />
-                        <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm mt-0">
-                          {count}/110 characters
-                        </div>
-                        {renderError("headline")}
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "strictHeadlineLimit") {
-                    const checked = fields.strictHeadlineLimit === "true"
-                    return (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(e) => {
-                              const newVal = e.target.checked ? "true" : "false"
-                              if (newVal === "true") {
-                                const clipped = (fields.headline || "").slice(0, 110)
-                                handleChange("headline", clipped)
-                                handleChange("strictHeadlineLimit", newVal)
-                                validateField("headline", clipped, {
-                                  ...fields,
-                                  strictHeadlineLimit: newVal,
-                                })
-                              } else {
-                                handleChange("strictHeadlineLimit", newVal)
-                                const headlineVal = fields.headline || ""
-                                validateField("headline", headlineVal, {
-                                  ...fields,
-                                  strictHeadlineLimit: newVal,
-                                })
-                              }
-                            }}
-                          />
-                          <span className="text-sm">
-                            Enable strict 110-character limit
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "description") {
-                    return (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <textarea
-                          className="tool-textarea"
-                          value={fields[field.key] || ""}
-                          placeholder={field.placeholder}
-                          onChange={(e) => handleChange(field.key, e.target.value)}
-                        />
-                        {renderError(field.key)}
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "authorType") {
-                    return (
-                      <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Author Type */}
-                        <div className="tool-field">
-                          <label className="tool-label">{field.label}</label>
-                          <div
-                            className="custom-select-wrapper author-select-wrapper relative"
-                            style={{ width: "100%" }}
-                          >
-                            <button
-                              type="button"
-                              className="custom-select-trigger tool-select"
-                              aria-expanded={authorTypeOpen}
-                              onClick={() => setAuthorTypeOpen((o) => !o)}
-                              style={{ width: "100%", justifyContent: "space-between" }}
-                            >
-                              <span className="truncate block">
-                                {fields.authorType || "Person"}
-                              </span>
-                              <span className="text-xs">⏷</span>
-                            </button>
-
-                            {authorTypeOpen && (
-                              <div
-                                className="custom-select-list absolute left-0 mt-1 z-50"
-                                style={{ width: "100%" }}
-                              >
-                                <ul>
-                                  <li
-                                    className={
-                                      (fields.authorType || "Person") === "Person"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                    onClick={() => {
-                                      handleChange("authorType", "Person")
-                                      setAuthorTypeOpen(false)
-                                    }}
-                                  >
-                                    <div className="font-semibold text-[15px]">Person</div>
-                                    <div className="text-[13px] text-gray-500">
-                                      Individual
-                                    </div>
-                                  </li>
-                                  <li
-                                    className={
-                                      fields.authorType === "Organization"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                    onClick={() => {
-                                      handleChange("authorType", "Organization")
-                                      setAuthorTypeOpen(false)
-                                    }}
-                                  >
-                                    <div className="font-semibold text-[15px]">
-                                      Organization
-                                    </div>
-                                    <div className="text-[13px] text-gray-500">
-                                      Brand or company
-                                    </div>
-                                  </li>
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                          {renderError(field.key)}
-                        </div>
-
-                        {/* Author Name */}
-                        <div className="tool-field">
-                          <label className="tool-label">Author Name</label>
-                          <input
-                            type="text"
-                            className="tool-input"
-                            value={fields.authorName || ""}
-                            placeholder="e.g. Jane Doe"
-                            onChange={(e) =>
-                              handleChange("authorName", e.target.value)
-                            }
-                          />
-                          {renderError("authorName")}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "publisherName") {
-                    return (
-                      <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="tool-field">
-                          <label className="tool-label">{field.label}</label>
-                          <input
-                            type="text"
-                            className="tool-input"
-                            value={fields.publisherName || ""}
-                            placeholder={field.placeholder}
-                            onChange={(e) =>
-                              handleChange("publisherName", e.target.value)
-                            }
-                          />
-                          {renderError("publisherName")}
-                        </div>
-
-                        <div className="tool-field">
-                          <label className="tool-label">Publisher Logo URL</label>
-                          <input
-                            type="text"
-                            className="tool-input"
-                            value={fields.publisherLogo || ""}
-                            placeholder="https://example.com/logo.png"
-                            onChange={(e) =>
-                              handleChange("publisherLogo", e.target.value)
-                            }
-                          />
-                          {renderError("publisherLogo")}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "datePublished") {
-                    return (
-                      <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Date Published */}
-                        <div className="tool-field relative">
-                          <label className="tool-label">Date Published</label>
-                          <DatePickerInput
-                            value={fields.datePublished}
-                            onChange={(iso) => {
-                                handleChange("datePublished", iso)
-                              }}
-                            placeholder={field.placeholder}
-                          />
-                          {renderError("datePublished")}
-                        </div>
-
-                        {/* Date Modified */}
-                        <div className="tool-field relative">
-                          <label className="tool-label">Date Modified</label>
-                          <DatePickerInput
-                            value={fields.dateModified}
-                            onChange={(iso) => {
-                                handleChange("dateModified", iso)
-                              }}
-                            placeholder={field.placeholder}
-                          />
-                          {renderError("dateModified")}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "articleBody") {
-                    return (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <textarea
-                          className="tool-textarea"
-                          rows={8}
-                          value={fields.articleBody || ""}
-                          placeholder={field.placeholder}
-                          onChange={(e) =>
-                            handleChange("articleBody", e.target.value)
-                          }
-                        />
-                        {renderError(field.key)}
-                      </div>
-                    )
-                  }
-
-                  if (field.key === "images") {
-                    return (
-                      <div key={field.key} className="tool-field">
-                        <label className="tool-label">{field.label}</label>
-                        <div className="flex flex-col gap-2">
-                          {images.map((img, idx) => (
-                            <div key={idx}>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="text"
-                                  className="tool-input flex-1"
-                                  value={img}
-                                  placeholder={field.placeholder}
-                                  onChange={(e) =>
-                                    handleImageChange(idx, e.target.value)
-                                  }
-                                />
-                                <button
-                                  type="button"
-                                  className="toolbar-btn toolbar-btn--red square-btn"
-                                  onClick={() => removeImage(idx)}
-                                  aria-label="Remove image"
-                                  title="Remove"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                              {renderError(`images_${idx}`)}
-                            </div>
-                          ))}
-
-                          <div>
-                            <button
-                              type="button"
-                              className="action-btn"
-                              onClick={addImage}
-                            >
-                              Add Image
-                            </button>
-                          </div>
-
-                          {images.length === 0 && (
-                            <div className="text-sm text-gray-500 mt-1">
-                              You can add multiple image URLs. Each will be
-                              added to the JSON-LD <code>image</code> property.
-                            </div>
-                          )}
-                        </div>
-                        {renderError(field.key)}
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div key={field.key} className="tool-field">
-                      <label className="tool-label">{field.label}</label>
-                      <input
-                        type="text"
-                        className="tool-input"
-                        value={fields[field.key] || ""}
-                        placeholder={field.placeholder}
-                        onChange={(e) =>
-                          handleChange(field.key, e.target.value)
-                        }
-                      />
-                      {renderError(field.key)}
-                    </div>
-                  )
-                })}
-
-              </>
-
-              
-
+              <ArticleForm
+                fields={fields}
+                handleChange={handleChange}
+                renderError={renderError}
+                articleTypeOpen={articleTypeOpen}
+                setArticleTypeOpen={setArticleTypeOpen}
+                images={images}
+                addImage={addImage}
+                removeImage={removeImage}
+                handleImageChange={handleImageChange}
+              />
             ) : type === "Breadcrumb" ? (
               <div>
                 
@@ -2215,54 +1834,13 @@ export default function SchemaBuilder(): JSX.Element {
                 </div>
               </div>
             ) : type === "FAQ Page" ? (
-              <div>
-                <div className="space-y-4">
-                  {faqItemsState.map((f, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="tool-field">
-                        <label className="tool-label">Question</label>
-                        <input
-                          type="text"
-                          className="tool-input"
-                          value={f.question}
-                          placeholder={`Question ${idx + 1}`}
-                          onChange={(e) => updateFaqItem(idx, "question", e.target.value)}
-                        />
-                        {renderError(`faq_question_${idx}`)}
-                      </div>
-                      <div className="tool-field">
-                        <label className="tool-label">Answer</label>
-                        <textarea
-                          className="tool-textarea"
-                          rows={3}
-                          value={f.answer}
-                          placeholder={`Answer ${idx + 1}`}
-                          onChange={(e) => updateFaqItem(idx, "answer", e.target.value)}
-                        />
-                        {renderError(`faq_answer_${idx}`)}
-                      </div>
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          className="toolbar-btn toolbar-btn--red square-btn"
-                          onClick={() => removeFaqItem(idx)}
-                          aria-label="Remove question"
-                          title="Remove"
-                        >
-                          ×
-                        </button>
-                      </div>
-                      <hr />
-                    </div>
-                  ))}
-
-                  <div>
-                    <button type="button" className="action-btn" onClick={addFaqItem}>
-                      Add Question
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <FaqForm
+                faqItems={faqItemsState}
+                updateFaqItem={updateFaqItem}
+                addFaqItem={addFaqItem}
+                removeFaqItem={removeFaqItem}
+                renderError={renderError}
+              />
             ) : type === "Person" ? (
               <PersonForm
                 fields={fields as Partial<PersonFields>}
