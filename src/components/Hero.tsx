@@ -74,6 +74,8 @@ export default function Hero({
               "Schema Markup Generator",
               "Meta Tag Generator",
               "Robots.txt Generator",
+              "Hreflang Validator",
+              "XML Sitemap Checker",
               "LLMs.txt Generator",
             ]
             const match = highlightPhrases.find((phrase) =>

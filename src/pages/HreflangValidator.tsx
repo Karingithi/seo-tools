@@ -4,6 +4,21 @@ import { isValidUrl } from "../utils/url"
 import RelatedTools from "../components/RelatedTools"
 import { copyToClipboard } from "../utils"
 
+const FAQ_ITEMS = [
+  {
+    q: "What is the x-default hreflang tag?",
+    a: "The x-default tag points to a default page for users who don't match any specified locale. It's useful for landing pages or language selectors.",
+  },
+  {
+    q: "Do hreflang links need absolute URLs?",
+    a: "Yes — use absolute URLs (including https://) for hreflang href values. Relative URLs may not be recognized by search engines.",
+  },
+  {
+    q: "Why aren't my tags detected on a fetched page?",
+    a: "Some sites block cross-origin requests (CORS) or require authentication. Try the Raw HTML paste, or use the server-side fetch option if available.",
+  },
+]
+
 export default function HreflangValidator(): JSX.Element {
   const [input, setInput] = useState<string>("")
   const [baseUrl, setBaseUrl] = useState<string>("")
@@ -286,8 +301,9 @@ export default function HreflangValidator(): JSX.Element {
     <>
       <Seo title="Hreflang Tag Validator & Generator" description="Validate and generate hreflang link alternate tags for multilingual pages." keywords="hreflang, international SEO, alternate links" url="https://cralite.com/tools/hreflang-validator" />
 
-      <section className="tool-section">
-        <div className="tool-grid">
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <div className="tool-grid">
           <div className="tool-form">
             <h2 className="tool-h2">Hreflang Tag Validator & Generator</h2>
             <p className="text-sm text-gray-600 mb-4">Paste your page HTML containing &lt;link rel="alternate" hreflang="..." href="..." /&gt; tags to validate, or generate tags from a base URL and locale list.</p>
@@ -395,6 +411,58 @@ export default function HreflangValidator(): JSX.Element {
               )}
             </div>
           </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Hreflang Validator</h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Paste HTML containing &lt;link rel="alternate" hreflang="..." href="..." /&gt; tags or fetch a page URL to parse. Use the generator to build tags from a base URL then copy them into your site's &lt;head&gt;.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">1</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Parse or Fetch</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Paste HTML or fetch a page URL to extract existing hreflang tags for inspection.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">2</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Generate Tags</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Provide a Base URL and locale pairs to generate well-formed &lt;link rel="alternate"&gt; tags.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">3</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Deploy & Validate</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Copy the generated tags into your site's head and re-parse the live page to confirm they are present and correct.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+          {FAQ_ITEMS.map((item, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={idx === 0}>
+              <summary className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary">{item.q}</summary>
+              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+            </details>
+          ))}
         </div>
       </section>
 

@@ -119,13 +119,13 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   "FAQ Page": [],
   Product: [
     { label: "Product Name", key: "name", placeholder: "Ergonomic Office Chair — Model X100" },
-    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/products/chair.jpg" },
+    { label: "Image", key: "image", placeholder: "https://example.com/products/chair.jpg" },
     { label: "SKU", key: "sku", placeholder: "SKU-12345" },
     { label: "MPN", key: "mpn", placeholder: "MPN-98765" },
     { label: "GTIN-8", key: "gtin8", placeholder: "01234567" },
     { label: "GTIN-13", key: "gtin13", placeholder: "0123456789012" },
     { label: "GTIN-14", key: "gtin14", placeholder: "00123456789012" },
-    { label: "Brand", key: "brand", placeholder: "Acme Furnishings" },
+    { label: "Brand", key: "brand", placeholder: '{ "@type": "Brand", "name": "EcoCharge Gear" }' },
     { label: "Price", key: "price", placeholder: "129.99" },
     { label: "Low price", key: "lowPrice", placeholder: "99.99" },
     { label: "High price", key: "highPrice", placeholder: "149.99" },
@@ -148,7 +148,7 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
     { label: "Name", key: "name", placeholder: "Business Name" },
     { label: "Business description", key: "description", placeholder: "Short description" },
     { label: "Logo URL", key: "logo", placeholder: "https://example.com/logo.png" },
-    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
+    { label: "Image", key: "image", placeholder: "https://example.com/photo.jpg" },
     { label: "@id (URL)", key: "@id", placeholder: "https://example.com#id" },
     { label: "URL", key: "url", placeholder: "https://example.com" },
     { label: "Phone", key: "telephone", placeholder: "+1-555-123-4567" },
@@ -448,6 +448,56 @@ export function buildSchemaFromState(p: BuildParams): any {
 
   if (type === "Product") {
     applyProductOffersAndRatings(base, fields)
+
+    // Post-process Product-specific canonicalizations / cleanup
+    // 1) Prefer `image` as the property
+    if (fields.image?.trim()) base.image = fields.image.trim()
+
+    // 2) Normalize `brand` to a Brand object when provided as a simple string
+    //    e.g. "brand": "Acme" -> { "@type": "Brand", "name": "Acme" }
+    if (base.brand) {
+      if (typeof base.brand === 'string') {
+        const raw = base.brand.trim()
+        if (raw.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(raw)
+            if (parsed && (parsed.name || parsed['@type'])) {
+              if (!parsed['@type']) parsed['@type'] = 'Brand'
+              base.brand = parsed
+            } else {
+              base.brand = { "@type": "Brand", name: raw }
+            }
+          } catch (e) {
+            base.brand = { "@type": "Brand", name: raw }
+          }
+        } else {
+          base.brand = { "@type": "Brand", name: raw }
+        }
+      } else if (typeof base.brand === 'object') {
+        if (!base.brand['@type']) base.brand['@type'] = 'Brand'
+      }
+    }
+
+    // 3) If offers provide the offer URL, avoid duplicating a top-level `url`.
+    //    Remove top-level `url` when any offer contains a `url` property.
+    try {
+      const offers = base.offers
+      const offersHaveUrl = Array.isArray(offers)
+        ? offers.some((o: any) => o && (o.url || (Array.isArray(o.offers) && o.offers.some((oo: any) => oo && oo.url))))
+        : (offers && (offers.url || (offers.offers && Array.isArray(offers.offers) && offers.offers.some((oo: any) => oo && oo.url))))
+      if (offersHaveUrl && base.url) delete base.url
+    } catch (e) {
+      // non-fatal
+    }
+
+    // 4) Remove top-level `offerType` if present — offers are represented in `offers`.
+    if (base.offerType) delete base.offerType
+
+    // 5) Remove any top-level `author` or `publisher` properties for Product
+    //    (these are not standard for Product and can confuse validators)
+    if (base.author) delete base.author
+    if (base.publisher) delete base.publisher
+
     out = base
   }
 
@@ -560,12 +610,11 @@ export function buildSchemaFromState(p: BuildParams): any {
       const mode = fields.attendanceMode.trim()
       base.eventAttendanceMode = mode.startsWith("http") ? mode : `https://schema.org/${mode}`
     }
-    // Support both 'image' and 'imageUrl' for backwards compatibility
+    // Support `image` for event images
     if (fields.image?.trim()) base.image = fields.image.trim()
-    else if (fields.imageUrl?.trim()) base.image = fields.imageUrl.trim()
     
     // url property serves as both event page URL and online attendance link
-    // Priority: explicit url field, then streamUrl (for backwards compatibility), then imageUrl as fallback
+    // Priority: explicit url field, then streamUrl (for backwards compatibility)
     if (fields.url?.trim()) {
       base.url = fields.url.trim()
     } else if (fields.streamUrl?.trim()) {
@@ -668,7 +717,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete base.performerType
     delete base.startTime
     delete base.endTime
-    delete base.imageUrl
+    // (removed legacy `imageUrl` cleanup - `image` is canonical now)
     // Remove flat venue properties (now in location.address)
     delete base.venueName
     delete base.venueStreet
@@ -799,23 +848,23 @@ export function buildSchemaFromState(p: BuildParams): any {
     const supplyArr = suppliesOut && suppliesOut.length ? suppliesOut.map((x) => x.trim()).filter(Boolean) : parseList(fields.supply)
     if (toolsArr.length) howto.tool = toolsArr.map((n) => ({ "@type": "HowToTool", name: n }))
     if (supplyArr.length) howto.supply = supplyArr.map((n) => ({ "@type": "HowToSupply", name: n }))
-    const stepsState = (p as any).howToSteps as Array<{ instruction: string; imageUrl?: string; name?: string; url?: string }>
+    const stepsState = (p as any).howToSteps as Array<{ instruction: string; image?: string; name?: string; url?: string }>
     if (stepsState && stepsState.length && stepsState.some((s) => (s.instruction || "").trim())) {
       const steps = stepsState
-        .map((s) => ({ "@type": "HowToStep", position: 0, text: s.instruction?.trim() || undefined, name: s.name?.trim() || undefined, image: s.imageUrl?.trim() || undefined, url: s.url?.trim() || undefined }))
+        .map((s) => ({ "@type": "HowToStep", position: 0, text: s.instruction?.trim() || undefined, name: s.name?.trim() || undefined, image: s.image?.trim() || undefined, url: s.url?.trim() || undefined }))
         .filter((s) => s.text)
       howto.step = steps.map((s, i) => ({ ...s, position: i + 1 }))
     } else if (fields.steps?.trim()) {
       const steps = fields.steps.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
       howto.step = steps.map((s, i) => ({ "@type": "HowToStep", position: i + 1, text: s }))
     }
-    // Include main image if provided (support p.images or fields.imageUrl)
+    // Include main image if provided (support p.images or fields.image)
     if (p.images && p.images.length) {
       const imgs = p.images.map((s: string) => (s || "").trim()).filter(Boolean)
       if (imgs.length === 1) howto.image = imgs[0]
       else if (imgs.length > 1) howto.image = imgs
-    } else if (fields.imageUrl?.trim()) {
-      howto.image = fields.imageUrl.trim()
+    } else if (fields.image?.trim()) {
+      howto.image = fields.image.trim()
     }
 
     // Include estimatedCost as MonetaryAmount when currency is provided
@@ -1004,7 +1053,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (fields.name?.trim()) biz.name = fields.name.trim()
     if (fields.url?.trim()) biz.url = fields.url.trim()
     if (fields.logo?.trim()) biz.logo = fields.logo.trim()
-    if (fields.imageUrl?.trim()) biz.image = fields.imageUrl.trim()
+    if (fields.image?.trim()) biz.image = fields.image.trim()
     if (fields.description?.trim()) biz.description = fields.description.trim()
     if (fields["@id"]?.trim()) biz["@id"] = fields["@id"].trim()
     if (fields.telephone?.trim()) biz.telephone = fields.telephone.trim()
@@ -1081,7 +1130,7 @@ export function buildSchemaFromState(p: BuildParams): any {
         const deptType = (d.moreSpecificType?.trim()) || (d.localBusinessType?.trim()) || "LocalBusiness"
         const obj: any = { "@type": deptType }
         if (d.name?.trim()) obj.name = d.name.trim()
-        if (d.imageUrl?.trim()) obj.image = d.imageUrl.trim()
+        if (d.image?.trim()) obj.image = d.image.trim()
         if (d.telephone?.trim()) obj.telephone = d.telephone.trim()
         // Structured PostalAddress for department (if any part provided)
         if ((d.street && d.street.trim()) || (d.city && d.city.trim()) || (d.region && d.region.trim()) || (d.postalCode && d.postalCode.trim()) || (d.country && d.country.trim())) {
@@ -1102,7 +1151,7 @@ export function buildSchemaFromState(p: BuildParams): any {
       ? p.socialProfiles.map((s) => s.trim()).filter(Boolean)
       : (fields.sameAs?.trim() ? fields.sameAs.split(",").map((s) => s.trim()).filter(Boolean) : [])
     if (sa.length) biz.sameAs = sa
-    delete biz.imageUrl
+    // legacy `imageUrl` removed; `image` is canonical
     delete biz.street
     delete biz.city
     delete biz.region
@@ -1172,5 +1221,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     out = org
   }
 
+  // Ensure legacy flat `imageUrl` is not emitted in final JSON-LD (we canonicalize to `image`).
+  if (base && base.imageUrl) delete base.imageUrl
   return compact(out || base)
 }

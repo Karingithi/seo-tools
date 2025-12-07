@@ -399,6 +399,11 @@
   cursor: pointer;
 }
 
+/* Parsed URLs list: use a slightly lighter border to reduce visual weight */
+.parsed-urls {
+  border-color: var(--muted-border-light, #ececec) !important;
+}
+
 .help-icon:hover,
 .help-icon:focus {
   background: var(--primary, #ffc50c);

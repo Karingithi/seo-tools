@@ -90,7 +90,7 @@ export default function App() {
         <Route
           path="/sitemap-checker"
           element={
-            <Layout title="Sitemap Checker" subtitle="Validate and inspect XML sitemaps." showBackLink={true}>
+            <Layout title="Free XML Sitemap Checker" subtitle="Instantly validate and analyze your XML sitemaps for SEO performance" showBackLink={true}>
               <SitemapChecker />
             </Layout>
           }
@@ -100,7 +100,7 @@ export default function App() {
         <Route
           path="/hreflang-validator"
           element={
-            <Layout title="Hreflang Validator" subtitle="Validate and generate hreflang link tags." showBackLink={true}>
+            <Layout title="Free Hreflang Validator" subtitle="Validate and generate accurate hreflang tags to ensure correct language and regional targeting." showBackLink={true}>
               <HreflangValidator />
             </Layout>
           }

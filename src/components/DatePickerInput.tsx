@@ -9,9 +9,10 @@ type Props = {
   placeholder?: string
   className?: string
   disabled?: boolean
+  allowFuture?: boolean
 }
 
-export default function DatePickerInput({ value, onChange, placeholder, className, disabled }: Props) {
+export default function DatePickerInput({ value, onChange, placeholder, className, disabled, allowFuture = false }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
   const [monthOpen, setMonthOpen] = useState(false)
@@ -235,7 +236,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
             }}
             inline
             minDate={new Date(1900, 0, 1)}
-            maxDate={new Date()}
+            maxDate={typeof (allowFuture) !== 'undefined' && allowFuture ? undefined : new Date()}
             renderCustomHeader={({ date, changeYear, changeMonth, decreaseMonth, increaseMonth, prevMonthButtonDisabled, nextMonthButtonDisabled }) => (
               <div className="react-datepicker__header react-datepicker__header--custom">
 

@@ -15,14 +15,11 @@ import ISO6391 from "iso-639-1"
 
 import Seo from "../components/Seo"
 
-import copyIconUrl from "../assets/icons/copy.svg?url"
-import downloadIconUrl from "../assets/icons/download.svg?url"
-import resetIconUrl from "../assets/icons/reset.svg?url"
-import googleIconUrl from "../assets/icons/google.svg?url"
-import schemaIconUrl from "../assets/icons/schema-icon.svg?url"
+// Preview icons are now imported by `SchemaPreview` component
 
 // toolsData not required directly here; related tools component is used below
 import RelatedTools from "../components/RelatedTools"
+import SchemaPreview from "../components/SchemaPreview"
 
 import { downloadText, copyToClipboard } from "../utils"
 
@@ -117,14 +114,12 @@ export default function SchemaBuilder(): JSX.Element {
     body: string
     rating: string
     date: string
-    author: string
-    publisher: string
   }>>([])
   // Opening hours repeater for Local Business
   const [openingHoursState, setOpeningHoursState] = useState<Array<{ days: string; opens: string; closes: string }>>([])
 
   // Departments repeater for Local Business (sub-units)
-  const [departments, setDepartments] = useState<Array<{ localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string; street?: string; city?: string; region?: string; postalCode?: string; country?: string; priceRange?: string; sameAsMain?: string }>>([])
+  const [departments, setDepartments] = useState<Array<{ localBusinessType: string; moreSpecificType: string; name: string; image?: string; telephone: string; days: string; opens: string; closes: string; street?: string; city?: string; region?: string; postalCode?: string; country?: string; priceRange?: string; sameAsMain?: string }>>([])
 
   // Per-department dropdown open indices for styled selects
   const [deptLocalBusinessOpenIndex, setDeptLocalBusinessOpenIndex] = useState<number | null>(null)
@@ -171,7 +166,7 @@ export default function SchemaBuilder(): JSX.Element {
   // How-to (HowTo) repeaters: tools, supplies, and detailed steps
   const [howToTools, setHowToTools] = useState<string[]>([])
   const [howToSupplies, setHowToSupplies] = useState<string[]>([])
-  const [howToSteps, setHowToSteps] = useState<Array<{ instruction: string; imageUrl?: string; name?: string; url?: string }>>([
+  const [howToSteps, setHowToSteps] = useState<Array<{ instruction: string; image?: string; name?: string; url?: string }>>([
     { instruction: "" },
   ])
 
@@ -207,7 +202,7 @@ export default function SchemaBuilder(): JSX.Element {
     })
     // Immediate validation for URL/image fields on change so users see errors right away
     if (key === "url") validateField(`howto_step_url_${index}`, value || "", fields)
-    if (key === "imageUrl") validateField(`howto_step_image_${index}`, value || "", fields)
+    if (key === "image") validateField(`howto_step_image_${index}`, value || "", fields)
   }
   const removeHowToStep = (index: number) => {
     const next = howToSteps.filter((_, i) => i !== index)
@@ -222,7 +217,7 @@ export default function SchemaBuilder(): JSX.Element {
     })
     next.forEach((s, i) => {
       validateField(`howto_step_url_${i}`, s.url || "", fields)
-      validateField(`howto_step_image_${i}`, s.imageUrl || "", fields)
+      validateField(`howto_step_image_${i}`, s.image || "", fields)
     })
   }
 
@@ -971,7 +966,7 @@ export default function SchemaBuilder(): JSX.Element {
   const removeOpeningHour = (index: number) => setOpeningHoursState((prev) => prev.filter((_, i) => i !== index))
 
   // Departments handlers
-  const addDepartment = () => setDepartments((prev) => [...prev, { localBusinessType: "LocalBusiness", moreSpecificType: "", name: "", imageUrl: "", telephone: "", days: "", opens: "", closes: "", street: "", city: "", region: "", postalCode: "", country: "", priceRange: "", sameAsMain: "false" }])
+  const addDepartment = () => setDepartments((prev) => [...prev, { localBusinessType: "LocalBusiness", moreSpecificType: "", name: "", image: "", telephone: "", days: "", opens: "", closes: "", street: "", city: "", region: "", postalCode: "", country: "", priceRange: "", sameAsMain: "false" }])
   const updateDepartment = (index: number, key: string, value: string) => {
     try { console.debug("updateDepartment", { index, key, value }) } catch {}
     setDepartments((prev) => {
@@ -1055,7 +1050,7 @@ export default function SchemaBuilder(): JSX.Element {
   const removeEducation = (index: number) => setEducation((prev) => prev.filter((_, i) => i !== index))
 
   // Reviews handlers (structured review objects)
-  const addReview = () => setReviews((prev) => [...prev, { name: "", body: "", rating: "", date: "", author: "", publisher: "" }])
+  const addReview = () => setReviews((prev) => [...prev, { name: "", body: "", rating: "", date: "" }])
 
   const handleReviewFieldChange = (index: number, key: keyof (typeof reviews)[0], value: string) => {
     setReviews((prev) => {
@@ -1089,7 +1084,25 @@ export default function SchemaBuilder(): JSX.Element {
     })
   }
 
-  const handleReviewFieldBlur = (index: number, _key: keyof (typeof reviews)[0]) => {
+  const handleReviewFieldBlur = (index: number, key: keyof (typeof reviews)[0]) => {
+    // Clean review body on blur: strip HTML, collapse whitespace, trim, enforce length limit
+    if (key === 'body') {
+      const raw = String(reviews[index]?.body || "")
+      // Remove HTML tags
+      let cleaned = raw.replace(/<[^>]*>/g, "")
+      // Collapse multiple whitespace/newlines into single space, then trim
+      cleaned = cleaned.replace(/\s+/g, " ").trim()
+      // Limit to 2000 chars to avoid huge payloads
+      if (cleaned.length > 2000) cleaned = cleaned.slice(0, 2000)
+      if (cleaned !== raw) {
+        setReviews((prev) => {
+          const next = [...prev]
+          next[index] = { ...next[index], body: cleaned }
+          return next
+        })
+      }
+    }
+
     // If last and empty, remove
     const isLastEmpty = Object.values(reviews[index] || {}).every((v) => !(String(v || "").trim()))
     if (isLastEmpty && index === reviews.length - 1) {
@@ -1348,21 +1361,21 @@ export default function SchemaBuilder(): JSX.Element {
   useEffect(() => {
     howToSteps.forEach((s, i) => {
       validateField(`howto_step_url_${i}`, s.url || "", fields)
-      validateField(`howto_step_image_${i}`, s.imageUrl || "", fields)
+      validateField(`howto_step_image_${i}`, s.image || "", fields)
     })
   }, [howToSteps, fields])
 
   // Validate top-level HowTo image/url fields when editing How-to
   useEffect(() => {
     if (type !== "How-to") return
-    validateField("imageUrl", fields.imageUrl || "", fields)
+    validateField("image", fields.image || "", fields)
     validateField("url", fields.url || "", fields)
-  }, [type, fields.imageUrl, fields.url, fields])
+  }, [type, fields.image, fields.url, fields])
 
-  // Validate department image URLs and opening hours
+  // Validate department images and opening hours
   useEffect(() => {
     departments.forEach((dept, i) => {
-      if (dept.imageUrl) validateField(`dept_imageUrl_${i}`, dept.imageUrl, fields)
+      if (dept.image) validateField(`dept_image_${i}`, dept.image, fields)
       if (dept.opens) {
         if (!/^\d{1,2}:[0-5]\d$/.test(dept.opens.trim())) {
           setErrors((prev) => ({ ...prev, [`dept_opens_${i}`]: "Time must be in HH:MM format (e.g. 08:00)" }))
@@ -2727,9 +2740,9 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
 
                     <div className="tool-field">
-                      <label className="tool-label">Image URL</label>
-                      <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
-                      {renderError("imageUrl")}
+                      <label className="tool-label">Image</label>
+                      <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+                      {renderError("image")}
                     </div>
                   </div>
 
@@ -2796,8 +2809,8 @@ export default function SchemaBuilder(): JSX.Element {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="tool-field">
-                              <label className="tool-label">Image URL</label>
-                                  <input type="text" className="tool-input" value={step.imageUrl || ""} placeholder="https://example.com/step-image.jpg" onChange={(e) => updateHowToStep(idx, "imageUrl", e.target.value)} />
+                              <label className="tool-label">Image</label>
+                                  <input type="text" className="tool-input" value={step.image || ""} placeholder="https://example.com/step-image.jpg" onChange={(e) => updateHowToStep(idx, "image", e.target.value)} />
                                   {renderError(`howto_step_image_${idx}`)}
                             </div>
 
@@ -2851,9 +2864,9 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
 
                     <div className="tool-field">
-                      <label className="tool-label">Image URL</label>
-                      <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
-                      {renderError("imageUrl")}
+                      <label className="tool-label">Image</label>
+                      <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+                      {renderError("image")}
                     </div>
                   </div>
 
@@ -4069,18 +4082,18 @@ export default function SchemaBuilder(): JSX.Element {
                       for (let i = 0; i < flat.length; i++) {
                         const field = flat[i]
 
-                        // Group Image URL + @id into one row when adjacent
-                        if (field.key === "imageUrl") {
+                        // Group Image + @id into one row when adjacent
+                        if (field.key === "image") {
                           const nextField = i + 1 < flat.length ? flat[i + 1] : null
                           const nextNext = i + 2 < flat.length ? flat[i + 2] : null
-                          // If the sequence is imageUrl -> @id -> url, prefer to group @id + url together;
+                          // If the sequence is image -> @id -> url, prefer to group @id + url together;
                           // render the image by itself here and allow the next iteration to group @id+url.
                           if (nextField && nextField.key === "@id" && nextNext && nextNext.key === "url") {
                             elems.push(
                               <div key={`image-alone-${i}`} className="tool-field">
-                                <label className="tool-label">Business Image URL</label>
-                                <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
-                                {renderError("imageUrl")}
+                                <label className="tool-label">Business Image</label>
+                                <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+                                {renderError("image")}
                               </div>
                             )
                             continue
@@ -4090,9 +4103,9 @@ export default function SchemaBuilder(): JSX.Element {
                             elems.push(
                               <div key="image-and-id-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
-                                  <label className="tool-label">Business Image URL</label>
-                                  <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
-                                  {renderError("imageUrl")}
+                                  <label className="tool-label">Business Image</label>
+                                  <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+                                  {renderError("image")}
                                 </div>
 
                                 <div className="tool-field">
@@ -4224,7 +4237,7 @@ export default function SchemaBuilder(): JSX.Element {
                         // Group Logo + Business Image into one row when adjacent
                         if (field.key === "logo") {
                           const nextField = i + 1 < flat.length ? flat[i + 1] : null
-                          if (nextField && nextField.key === "imageUrl") {
+                          if (nextField && nextField.key === "image") {
                             elems.push(
                               <div key="logo-image-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
@@ -4234,9 +4247,9 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
 
                                 <div className="tool-field">
-                                  <label className="tool-label">Business Image URL</label>
-                                  <input type="text" className="tool-input" value={fields.imageUrl || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("imageUrl", e.target.value)} />
-                                  {renderError("imageUrl")}
+                                  <label className="tool-label">Business Image</label>
+                                  <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/photo.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+                                  {renderError("image")}
                                 </div>
                               </div>
                             )
@@ -4917,9 +4930,9 @@ export default function SchemaBuilder(): JSX.Element {
                               </div>
 
                               <div className="tool-field">
-                                <label className="tool-label">Image URL</label>
-                                <input type="text" className="tool-input" value={d.imageUrl} placeholder="https://example.com/dept-photo.jpg" onChange={(e) => updateDepartment(idx, "imageUrl", e.target.value)} />
-                                {renderError(`dept_imageUrl_${idx}`)}
+                                <label className="tool-label">Image</label>
+                                <input type="text" className="tool-input" value={d.image} placeholder="https://example.com/dept-photo.jpg" onChange={(e) => updateDepartment(idx, "image", e.target.value)} />
+                                {renderError(`dept_image_${idx}`)}
                               </div>
 
                               <div className="tool-field">
@@ -5659,18 +5672,6 @@ export default function SchemaBuilder(): JSX.Element {
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                                     <div className="tool-field">
-                                      <label className="tool-label">Image URL</label>
-                                      <input
-                                        type="text"
-                                        className="tool-input"
-                                        value={fields.imageUrl || ""}
-                                        placeholder={schemaFields.Product.find(f => f.key === 'imageUrl')?.placeholder || ""}
-                                        onChange={(e) => handleChange("imageUrl", e.target.value)}
-                                      />
-                                      {renderError("imageUrl")}
-                                    </div>
-
-                                    <div className="tool-field">
                                       <label className="tool-label">Brand</label>
                                       <input
                                         type="text"
@@ -5680,6 +5681,18 @@ export default function SchemaBuilder(): JSX.Element {
                                         onChange={(e) => handleChange("brand", e.target.value)}
                                       />
                                       {renderError("brand")}
+                                    </div>
+
+                                    <div className="tool-field">
+                                      <label className="tool-label">Image</label>
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={fields.image || ""}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'image')?.placeholder || ""}
+                                        onChange={(e) => handleChange("image", e.target.value)}
+                                      />
+                                      {renderError("image")}
                                     </div>
                                   </div>
 
@@ -5763,7 +5776,7 @@ export default function SchemaBuilder(): JSX.Element {
                                   </div>
 
                                   {/* Currency + Price row (currency before price) */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                                     <div className="tool-field">
                                       <label className="tool-label">Currency</label>
                                       <div className={"custom-select-wrapper product-currency-select-wrapper relative" + (offerDisabled ? " opacity-50 pointer-events-none" : "")} style={{ width: "100%" }}>
@@ -5857,62 +5870,8 @@ export default function SchemaBuilder(): JSX.Element {
                                     </div>
                                   )}
 
-                                  {/* Identification inputs: grouped rows per request */}
-                                  {(() => {
-                                    const firstRow = ["sku", "gtin8", "gtin13"]
-                                    const secondRow = ["gtin14", "mpn"]
-
-                                    const selectedFirst = firstRow.filter((k) => productIdSelected.includes(k))
-                                    const selectedSecond = secondRow.filter((k) => productIdSelected.includes(k))
-
-                                    return (
-                                      <>
-                                        {selectedFirst.length > 0 && (
-                                          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                                            {selectedFirst.map((idKey) => {
-                                              const field = schemaFields[type].find((f) => f.key === idKey)
-                                              if (!field) return null
-                                              return (
-                                                <div key={field.key} className="tool-field">
-                                                  <label className="tool-label">{field.label}</label>
-                                                  <input
-                                                    type="text"
-                                                    className="tool-input"
-                                                    value={fields[field.key] || ""}
-                                                    placeholder={field.placeholder}
-                                                    onChange={(e) => handleChange(field.key, e.target.value)}
-                                                  />
-                                                  {renderError(field.key)}
-                                                </div>
-                                              )
-                                            })}
-                                          </div>
-                                        )}
-
-                                        {selectedSecond.length > 0 && (
-                                          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                                            {selectedSecond.map((idKey) => {
-                                              const field = schemaFields[type].find((f) => f.key === idKey)
-                                              if (!field) return null
-                                              return (
-                                                <div key={field.key} className="tool-field">
-                                                  <label className="tool-label">{field.label}</label>
-                                                  <input
-                                                    type="text"
-                                                    className="tool-input"
-                                                    value={fields[field.key] || ""}
-                                                    placeholder={field.placeholder}
-                                                    onChange={(e) => handleChange(field.key, e.target.value)}
-                                                  />
-                                                  {renderError(field.key)}
-                                                </div>
-                                              )
-                                            })}
-                                          </div>
-                                        )}
-                                      </>
-                                    )
-                                  })()}
+                                  {/* Identification inputs are handled by the <IdentificationInputs /> component above.
+                                      Removed inline duplicate rendering of SKU/MPN/GTIN fields. */}
 
                                   {/* Render remaining non-identification fields */}
                                   {type === "Product" && !offerDisabled && !isAggregateOffer && (
@@ -5924,6 +5883,7 @@ export default function SchemaBuilder(): JSX.Element {
                                           onChange={(iso) => handleChange("priceValidUntil", iso)}
                                           placeholder={(schemaFields.Product.find(f => f.key === 'priceValidUntil') || { placeholder: 'yyyy-mm-dd' }).placeholder}
                                           disabled={offerDisabled}
+                                          allowFuture={true}
                                         />
                                         {renderError("priceValidUntil")}
                                       </div>
@@ -6058,26 +6018,12 @@ export default function SchemaBuilder(): JSX.Element {
 
                                               <div className="tool-field mt-3">
                                                 <label className="tool-label">Review body</label>
-                                                <textarea rows={8} className="tool-input" value={r.body} placeholder="Review text" onChange={(e) => handleReviewFieldChange(idx, 'body', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'body')} />
+                                                <textarea rows={1} className="tool-textarea" value={r.body} placeholder="Review text" onChange={(e) => handleReviewFieldChange(idx, 'body', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'body')} />
                                                 {renderError(`review_${idx}_body`)}
                                               </div>
 
-                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-3">
-                                                <div className="tool-field">
-                                                  <label className="tool-label">Author</label>
-                                                  <input type="text" className="tool-input" value={r.author} placeholder="Author name" onChange={(e) => handleReviewFieldChange(idx, 'author', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'author')} />
-                                                  {renderError(`review_${idx}_author`)}
-                                                </div>
-
-                                                <div className="tool-field">
-                                                  <label className="tool-label">Publisher</label>
-                                                  <input type="text" className="tool-input" value={r.publisher} placeholder="Publisher name" onChange={(e) => handleReviewFieldChange(idx, 'publisher', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'publisher')} />
-                                                  {renderError(`review_${idx}_publisher`)}
-                                                </div>
-
-                                                <div className="flex items-center justify-end">
-                                                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeReview(idx)} title="Remove">×</button>
-                                                </div>
+                                              <div className="flex items-center justify-end mt-3">
+                                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeReview(idx)} title="Remove">×</button>
                                               </div>
                                             </div>
                                           ))
@@ -6092,15 +6038,7 @@ export default function SchemaBuilder(): JSX.Element {
                                     </div>
                                   )}
 
-                                  {schemaFields[type]
-                                    .filter((f) => !["name", "imageUrl", "brand", "description", "sku", "gtin8", "gtin13", "gtin14", "mpn", "url", "currency", "price", "lowPrice", "highPrice", "offerCount", "priceValidUntil", "availability", "itemCondition", "ratingValue", "ratingCount", "bestRating", "worstRating", "reviewCount"].includes(f.key))
-                                    .map((field) => (
-                                      <div key={field.key} className="tool-field">
-                                        <label className="tool-label">{field.label}</label>
-                                        <input type="text" className="tool-input" value={fields[field.key] || ""} placeholder={field.placeholder} onChange={(e) => handleChange(field.key, e.target.value)} />
-                                        {renderError(field.key)}
-                                      </div>
-                                    ))}
+                                  {/* Removed duplicate rendering of Product fields here (previously duplicated identification and other fields). Remaining fields are rendered by the specific blocks above. */}
                                 </>
                               ) : (
                                 schemaFields[type].map((field) => (
@@ -6118,86 +6056,19 @@ export default function SchemaBuilder(): JSX.Element {
           </div>
 
           {/* RIGHT PREVIEW */}
-          <div className="tool-preview">
-            <h3 className="tool-section-title">JSON-LD Preview</h3>
-
-            <div className="toolbar-spacing">
-              <div className="toolbar">
-                {/* Test (Google Rich Results) */}
-                <div className="toolbar-wrap">
-                  <div className={`tooltip ${testMsgVisible ? "visible msg-fade" : ""}`}>
-                    {testMsgVisible ? "Copied — open test" : "Test Schema"}
-                  </div>
-                  <button
-                    onClick={handleTest}
-                    className="toolbar-btn toolbar-btn--google"
-                    title="Test Schema"
-                    aria-label="Test Schema"
-                  >
-                    <img src={googleIconUrl} alt="test schema" className="toolbar-icon" />
-                  </button>
-                </div>
-
-                {/* Validate (Schema.org Validator) */}
-                <div className="toolbar-wrap">
-                  <div className={`tooltip ${validateMsgVisible ? "visible msg-fade" : ""}`}>
-                    {validateMsgVisible ? "Copied — open validator" : "Validate"}
-                  </div>
-                  <button
-                    onClick={handleValidate}
-                    className="toolbar-btn toolbar-btn--schema"
-                    title="Validate Schema"
-                    aria-label="Validate Schema"
-                  >
-                    <img src={schemaIconUrl} alt="validate schema" className="toolbar-icon" />
-                  </button>
-                </div>
-
-                {/* Copy */}
-                <div className="toolbar-wrap">
-                  <div className={`tooltip ${copied ? "visible msg-fade" : ""}`}>
-                    {copied ? "Copied!" : "Copy"}
-                  </div>
-                  <button
-                    onClick={handleCopy}
-                    className="toolbar-btn toolbar-btn--blue"
-                  >
-                    <img src={copyIconUrl} alt="copy" className="toolbar-icon" />
-                  </button>
-                </div>
-
-                {/* Download */}
-                <div className="toolbar-wrap">
-                  <div className={`tooltip ${downloadMsgVisible ? "visible msg-fade" : ""}`}>
-                    {downloadMsgVisible ? "Downloaded" : "Download"}
-                  </div>
-                  <button
-                    onClick={handleDownload}
-                    className="toolbar-btn toolbar-btn--green"
-                  >
-                    <img src={downloadIconUrl} alt="download" className="toolbar-icon" />
-                  </button>
-                </div>
-
-                {/* Reset */}
-                <div className="toolbar-wrap">
-                  <div className={`tooltip ${resetMsgVisible ? "visible msg-fade" : ""}`}>
-                    {resetMsgVisible ? "Reset" : "Reset"}
-                  </div>
-                  <button
-                    onClick={handleReset}
-                    className="toolbar-btn toolbar-btn--red"
-                  >
-                    <img src={resetIconUrl} alt="reset" className="toolbar-icon" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <pre className="tool-code">
-              <code>{schemaScript}</code>
-            </pre>
-          </div>
+          <SchemaPreview
+            schemaScript={schemaScript}
+            onTest={handleTest}
+            onValidate={handleValidate}
+            onCopy={handleCopy}
+            onDownload={handleDownload}
+            onReset={handleReset}
+            copied={copied}
+            downloadMsgVisible={downloadMsgVisible}
+            resetMsgVisible={resetMsgVisible}
+            testMsgVisible={testMsgVisible}
+            validateMsgVisible={validateMsgVisible}
+          />
         </div>
       </section>
       </div>

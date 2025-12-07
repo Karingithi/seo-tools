@@ -6,8 +6,6 @@ type Review = {
   body: string
   rating: string
   date: string
-  author: string
-  publisher: string
 }
 
 type Props = {
@@ -49,26 +47,12 @@ export default function ReviewsEditor({ reviews, addReview, removeReview, handle
 
               <div className="tool-field mt-3">
                 <label className="tool-label">Review body</label>
-                <textarea rows={8} className="tool-input" value={r.body} placeholder="Review text" onChange={(e) => handleReviewFieldChange(idx, 'body', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'body')} />
+                <textarea rows={12} className="tool-textarea" value={r.body} placeholder="Review text" onChange={(e) => handleReviewFieldChange(idx, 'body', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'body')} />
                 {renderError(`review_${idx}_body`)}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-3">
-                <div className="tool-field">
-                  <label className="tool-label">Author</label>
-                  <input type="text" className="tool-input" value={r.author} placeholder="Author name" onChange={(e) => handleReviewFieldChange(idx, 'author', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'author')} />
-                  {renderError(`review_${idx}_author`)}
-                </div>
-
-                <div className="tool-field">
-                  <label className="tool-label">Publisher</label>
-                  <input type="text" className="tool-input" value={r.publisher} placeholder="Publisher name" onChange={(e) => handleReviewFieldChange(idx, 'publisher', e.target.value)} onBlur={() => handleReviewFieldBlur(idx, 'publisher')} />
-                  {renderError(`review_${idx}_publisher`)}
-                </div>
-
-                <div className="flex items-center justify-end">
-                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeReview(idx)} title="Remove">×</button>
-                </div>
+              <div className="flex items-center justify-end mt-3">
+                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeReview(idx)} title="Remove">×</button>
               </div>
             </div>
           ))

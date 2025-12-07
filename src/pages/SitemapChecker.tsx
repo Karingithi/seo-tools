@@ -2,6 +2,21 @@ import { useState, useCallback, useEffect } from "react"
 import Seo from "../components/Seo"
 import RelatedTools from "../components/RelatedTools"
 
+const FAQ_ITEMS = [
+  {
+    q: "Why can't I fetch the sitemap?",
+    a: "Some servers block cross-origin requests (CORS) or require authentication. Try a publicly accessible sitemap, use the Raw XML input, or run a server-side fetch proxy.",
+  },
+  {
+    q: "What is a sitemap index?",
+    a: "A sitemap index lists multiple sitemap files. This tool will detect sitemap index files and list the contained sitemap URLs for you to inspect.",
+  },
+  {
+    q: "Why are some URLs marked as skipped?",
+    a: "Skipped URLs either failed due to network/CORS issues, timed out, or returned opaque responses. Try the server-side checker option for more reliable results.",
+  },
+]
+
 export default function SitemapChecker(): JSX.Element {
   const [sitemapUrl, setSitemapUrl] = useState("")
   const [urlError, setUrlError] = useState("")
@@ -437,9 +452,11 @@ export default function SitemapChecker(): JSX.Element {
         url="https://cralite.com/tools/sitemap-checker"
       />
 
-      <section className="tool-section">
-        <div className="tool-grid">
-          <div className="tool-form">
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <section className="tool-section">
+          <div className="tool-grid">
+                <div className="tool-form">
             <h2 className="tool-h2">XML Sitemap Checker</h2>
             <p className="text-sm text-gray-600 mb-4">Paste an absolute sitemap URL (e.g. https://example.com/sitemap.xml) and fetch & parse the XML. The tool will list URLs found and flag invalid entries.</p>
 
@@ -460,7 +477,7 @@ export default function SitemapChecker(): JSX.Element {
               {urlError && <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">{urlError}</div>}
             </div>
 
-            <div className="button-group mt-3">
+            <div className="button-group">
               <button onClick={handleFetch} className="action-btn" disabled={fetching || !isValidUrl(sitemapUrl)}>{fetching ? "Fetching..." : "Fetch & Parse"}</button>
               <button onClick={() => checkUrlsUnified()} className="action-btn" disabled={checking || parsedUrls.length === 0}>{checking ? "Checking..." : "Check URLs"}</button>
               <button
@@ -499,7 +516,7 @@ export default function SitemapChecker(): JSX.Element {
               <h3 className="tool-section-title">Parsed URLs</h3>
               <div className="text-sm text-gray-700 mb-2">Found <strong>{parsedUrls.length}</strong> entries.</div>
 
-              <div className="overflow-auto max-h-64 border rounded p-2 bg-white">
+              <div className="overflow-auto max-h-64 border rounded p-2 bg-white parsed-urls">
                 {parsedUrls.length === 0 ? (
                   <div className="text-sm text-gray-500">No URLs parsed yet.</div>
                 ) : (
@@ -557,14 +574,69 @@ export default function SitemapChecker(): JSX.Element {
                 </div>
               </div>
             </div>
-
             <h3 className="tool-h2">About</h3>
             <p className="text-sm text-gray-700 leading-relaxed">This checker will attempt to fetch a sitemap URL and parse it as XML. It supports sitemap index files and standard URL sitemaps. If the remote server blocks CORS, the tool will retry via a public proxy.</p>
           </div>
         </div>
+        </section>
+        </div>
       </section>
 
-      <RelatedTools exclude="/sitemap-checker" />
+      <section className="section section--white">
+        <div className="section-inner">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Sitemap Checker</h2>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Paste an absolute sitemap URL and click "Fetch & Parse". Use "Check URLs" to validate each URL's HTTP status. If CORS prevents fetching, paste the raw XML into the editor.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">1</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Fetch a Sitemap</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Enter the sitemap URL and press "Fetch & Parse". The tool will list parsed URLs.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">2</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Check URLs</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Click "Check URLs" to validate status codes. Use the server-side check if you run the provided Express checker to avoid CORS issues.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="step-icon-outer">
+                <div className="step-icon-circle">
+                  <div className="text-2xl">3</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Resolve Problems</h3>
+              <p className="text-lg text-secondary max-w-xs mx-auto">Use the raw XML input to troubleshoot non-fetchable sitemaps, or run checks from a server to avoid proxy limitations.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section section--neutral">
+        <div className="section-inner">
+          <h2 className="md:text-4xl mb-5 text-center">Frequently Asked Questions</h2>
+          {FAQ_ITEMS.map((item, idx) => (
+            <details key={idx} className="border-b border-gray-200 group" open={idx === 0}>
+              <summary className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary">{item.q}</summary>
+              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+            <section className="section">
+              <div className="section-inner">
+                <RelatedTools exclude="/sitemap-checker" />
+              </div>
+            </section>
     </>
   )
 }

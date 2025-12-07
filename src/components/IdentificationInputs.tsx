@@ -87,7 +87,7 @@ export default function IdentificationInputs({ productIdSelected, setProductIdSe
       )}
 
       {selectedSecond.length > 0 && (
-        <div className="grid gap-4 mt-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {selectedSecond.map((idKey) => {
             const field = schemaFields[type].find((f: any) => f.key === idKey)
             if (!field) return null
