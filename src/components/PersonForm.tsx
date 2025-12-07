@@ -1,12 +1,48 @@
+import type { ComponentType, Dispatch, SetStateAction } from 'react'
 import DatePickerInput from "../components/DatePickerInput"
 import { Plus } from "lucide-react"
 
-type Props = {
-  [k: string]: any
+type LanguageItem = { name: string; code: string }
+type EducationItem = { name?: string; url?: string }
+
+export type PersonFormProps = {
+  fields: Record<string, any>
+  handleChange: (key: string, value: any) => void
+  renderError: (key: string) => JSX.Element | null
+  knowsLangOpen: boolean
+  setKnowsLangOpen: Dispatch<SetStateAction<boolean>>
+  knowsLangSelected: string[]
+  setKnowsLangSelected: Dispatch<SetStateAction<string[]>>
+  knowsLangSearch: string
+  setKnowsLangSearch: Dispatch<SetStateAction<string>>
+  LANG_LIST: LanguageItem[]
+  socialProfiles: string[]
+  handleSocialChange: (idx: number, val: string) => void
+  handleSocialBlur: (idx: number) => void
+  addSocialProfile: () => void
+  removeSocialProfile: (idx: number) => void
+  education: EducationItem[]
+  handleEducationFieldChange: (idx: number, key: 'name' | 'url', value: string) => void
+  removeEducation: (idx: number) => void
+  addEducation: () => void
+  selectedCountryCode?: string
+  StateSelectComp?: ComponentType<any> | null
+  regionCustomVisible: boolean
+  setRegionCustomVisible: Dispatch<SetStateAction<boolean>>
+  regionOpen: boolean
+  setRegionOpen: Dispatch<SetStateAction<boolean>>
+  regionSearch: string
+  setRegionSearch: Dispatch<SetStateAction<string>>
+  countryOpen: boolean
+  setCountryOpen: Dispatch<SetStateAction<boolean>>
+  countrySearch: string
+  setCountrySearch: Dispatch<SetStateAction<string>>
+  COUNTRY_LIST: Array<{ code?: string; name: string }>
+  STATES_BY_COUNTRY: Record<string, string[]>
 }
 
-export default function PersonForm(props: Props): JSX.Element {
-  const p: any = props
+export default function PersonForm(props: PersonFormProps): JSX.Element {
+  const p = props
   const {
     fields,
     handleChange,

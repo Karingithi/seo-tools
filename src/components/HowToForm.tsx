@@ -1,9 +1,33 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { Plus } from "lucide-react"
 
-type Props = { [k: string]: any }
+type HowToStep = { instruction: string; image?: string; name?: string; url?: string }
 
-export default function HowToForm(props: Props): JSX.Element {
-  const p: any = props
+export type HowToFormProps = {
+  fields: Record<string, any>
+  handleChange: (key: string, value: any) => void
+  renderError: (key: string) => JSX.Element | null
+  howToCurrencyOpen: boolean
+  setHowToCurrencyOpen: Dispatch<SetStateAction<boolean>>
+  howToCurrencySearch: string
+  setHowToCurrencySearch: Dispatch<SetStateAction<string>>
+  ALL_CURRENCIES: Array<{ code: string; name: string }>
+  howToSupplies: string[]
+  addHowToSupply: () => void
+  addHowToTool: () => void
+  howToTools: string[]
+  updateHowToSupply: (idx: number, value: string) => void
+  removeHowToSupply: (idx: number) => void
+  updateHowToTool: (idx: number, value: string) => void
+  removeHowToTool: (idx: number) => void
+  howToSteps: HowToStep[]
+  updateHowToStep: (idx: number, key: keyof HowToStep, value: string) => void
+  removeHowToStep: (idx: number) => void
+  addHowToStep: () => void
+}
+
+export default function HowToForm(props: HowToFormProps): JSX.Element {
+  const p = props
   const {
     fields,
     handleChange,
