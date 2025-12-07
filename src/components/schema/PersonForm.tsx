@@ -1,5 +1,5 @@
 import type { ComponentType, Dispatch, SetStateAction } from 'react'
-import DatePickerInput from "../components/DatePickerInput"
+import DatePickerInput from "../DatePickerInput"
 import { Plus } from "lucide-react"
 
 type LanguageItem = { name: string; code: string }
