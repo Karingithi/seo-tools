@@ -22,9 +22,7 @@ import SchemaPreview from "../components/SchemaPreview"
 import ProductForm from "../components/ProductForm"
 import EventForm from "../components/EventForm"
 import OrganizationForm from "../components/OrganizationForm"
-import PersonForm, { type PersonFields } from "../components/PersonForm"
-import HowToForm, { type HowToFields } from "../components/HowToForm"
-import VideoForm, { type VideoFields } from "../components/VideoForm"
+import { PersonForm, type PersonFields, HowToForm, type HowToFields, VideoForm, type VideoFields, JobPostingForm, type JobPostingFields } from "../components/schema"
 
 import { downloadText, copyToClipboard } from "../utils"
 
