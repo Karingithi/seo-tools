@@ -124,11 +124,16 @@ export default function SchemaBuilder(): JSX.Element {
   const [openingHoursState, setOpeningHoursState] = useState<Array<{ days: string; opens: string; closes: string }>>([])
 
   // Departments repeater for Local Business (sub-units)
-  const [departments, setDepartments] = useState<Array<{ localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string }>>([])
+  const [departments, setDepartments] = useState<Array<{ localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string; street?: string; city?: string; region?: string; postalCode?: string; country?: string; priceRange?: string; sameAsMain?: string }>>([])
 
   // Per-department dropdown open indices for styled selects
   const [deptLocalBusinessOpenIndex, setDeptLocalBusinessOpenIndex] = useState<number | null>(null)
   const [deptMoreSpecificOpenIndex, setDeptMoreSpecificOpenIndex] = useState<number | null>(null)
+  const [deptCountryOpenIndex, setDeptCountryOpenIndex] = useState<number | null>(null)
+  const [deptCountrySearch, setDeptCountrySearch] = useState<string>("")
+  const [deptRegionOpenIndex, setDeptRegionOpenIndex] = useState<number | null>(null)
+  const [deptRegionSearch, setDeptRegionSearch] = useState<string>("")
+  const [deptRegionCustomVisibleIndex, setDeptRegionCustomVisibleIndex] = useState<number | null>(null)
   // Opening days dropdown open index (per-opening-hour row)
   const [openingDaysOpenIndex, setOpeningDaysOpenIndex] = useState<number | null>(null)
   // Per-department opening days dropdown
@@ -965,7 +970,7 @@ export default function SchemaBuilder(): JSX.Element {
   const removeOpeningHour = (index: number) => setOpeningHoursState((prev) => prev.filter((_, i) => i !== index))
 
   // Departments handlers
-  const addDepartment = () => setDepartments((prev) => [...prev, { localBusinessType: "LocalBusiness", moreSpecificType: "", name: "", imageUrl: "", telephone: "", days: "", opens: "", closes: "" }])
+  const addDepartment = () => setDepartments((prev) => [...prev, { localBusinessType: "LocalBusiness", moreSpecificType: "", name: "", imageUrl: "", telephone: "", days: "", opens: "", closes: "", street: "", city: "", region: "", postalCode: "", country: "", priceRange: "", sameAsMain: "false" }])
   const updateDepartment = (index: number, key: string, value: string) => {
     try { console.debug("updateDepartment", { index, key, value }) } catch {}
     setDepartments((prev) => {
@@ -983,6 +988,24 @@ export default function SchemaBuilder(): JSX.Element {
           }
         } else {
           item.moreSpecificType = "" // no subtypes for this parent
+        }
+      }
+
+      // If toggling sameAsMain, populate or clear the department structured address from main business fields
+      if (key === "sameAsMain") {
+        if (value === "true") {
+          item.street = fields.street?.trim() || ""
+          item.city = fields.city?.trim() || ""
+          item.region = fields.region?.trim() || ""
+          item.postalCode = fields.postalCode?.trim() || ""
+          item.country = fields.country?.trim() || ""
+        } else {
+          // switching off — clear the dept address so user can enter custom parts
+          item.street = ""
+          item.city = ""
+          item.region = ""
+          item.postalCode = ""
+          item.country = ""
         }
       }
 
@@ -1154,6 +1177,16 @@ export default function SchemaBuilder(): JSX.Element {
     }
 
     const lk = key.toLowerCase()
+
+    // Email validation for any field name containing 'email'
+    if (lk.includes("email")) {
+      // Simple but practical email regex
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+      if (!emailOk) nextErrors[key] = "Invalid email address"
+      else delete nextErrors[key]
+      setErrors(nextErrors)
+      return
+    }
 
     // Special validation for searchbox URL templates: must include the placeholder
     if (key === "urlTemplate") {
@@ -2262,6 +2295,20 @@ export default function SchemaBuilder(): JSX.Element {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="tool-field">
+                    <label className="tool-label">Public Email</label>
+                    <input type="text" className="tool-input" value={fields.publicEmail || ""} placeholder="public@example.com" onChange={(e) => handleChange("publicEmail", e.target.value)} />
+                    {renderError("publicEmail")}
+                  </div>
+
+                  <div className="tool-field">
+                    <label className="tool-label">Public Phone</label>
+                    <input type="text" className="tool-input" value={fields.publicPhone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("publicPhone", e.target.value)} />
+                    {renderError("publicPhone")}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="tool-field">
                     <label className="tool-label">Date of Birth</label>
                     <DatePickerInput
                       value={fields.birthDate}
@@ -2305,7 +2352,7 @@ export default function SchemaBuilder(): JSX.Element {
                           ))}
                         </ul>
                         <div className="p-2 border-t flex justify-between">
-                          <button type="button" className="toolbar-btn" onClick={() => { setKnowsLangSelected([]); handleChange('knowsLanguage', '') }}>Clear</button>
+                          <button type="button" className="action-btn clear-btn--red" onClick={() => { setKnowsLangSelected([]); handleChange('knowsLanguage', '') }}>Clear</button>
                           <button type="button" className="action-btn" onClick={() => setKnowsLangOpen(false)}>Done</button>
                         </div>
                       </div>
@@ -2397,19 +2444,7 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div className="tool-field">
-                        <label className="tool-label">Public Email</label>
-                        <input type="text" className="tool-input" value={fields.publicEmail || ""} placeholder="public@example.com" onChange={(e) => handleChange("publicEmail", e.target.value)} />
-                        {renderError("publicEmail")}
-                      </div>
-
-                      <div className="tool-field">
-                        <label className="tool-label">Public Phone Number</label>
-                        <input type="text" className="tool-input" value={fields.publicPhone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("publicPhone", e.target.value)} />
-                        {renderError("publicPhone")}
-                      </div>
-                    </div>
+                    
                     {/* Additional recommended Person fields */}
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -2426,7 +2461,7 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
 
                       <div className="tool-field">
-                        <label className="tool-label">Zip / Postal code</label>
+                        <label className="tool-label">Postal Code</label>
                         <input type="text" className="tool-input" value={fields.postalCode || ""} placeholder="90210" onChange={(e) => handleChange("postalCode", e.target.value)} />
                         {renderError("postalCode")}
                       </div>
@@ -3005,12 +3040,12 @@ export default function SchemaBuilder(): JSX.Element {
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                   <div className="tool-field">
-                                    <label className="tool-label">State / Province / Region</label>
+                                    <label className="tool-label">State/Province/Region</label>
                                     <input
                                       type="text"
                                       className={`tool-input ${fields.attendanceMode === '' || (fields.venueCountry && fields.venueCountry !== 'US') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                       value={fields.venueRegion || ""}
-                                      placeholder={fields.venueCountry && fields.venueCountry !== 'US' ? 'Select region' : 'State / Province / Region'}
+                                      placeholder={fields.venueCountry && fields.venueCountry !== 'US' ? 'Select region' : 'State/Province/Region'}
                                       onChange={(e) => handleChange("venueRegion", e.target.value)}
                                       disabled={fields.attendanceMode === '' || Boolean(fields.venueCountry && fields.venueCountry !== 'US')}
                                     />
@@ -3018,12 +3053,12 @@ export default function SchemaBuilder(): JSX.Element {
                                   </div>
 
                                   <div className="tool-field">
-                                    <label className="tool-label">Zip / Postal code</label>
+                                    <label className="tool-label">Postal Code</label>
                                     <input
                                       type="text"
                                       className={`tool-input ${fields.attendanceMode === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                       value={fields.venuePostalCode || ""}
-                                      placeholder="Zip / Postal code"
+                                      placeholder="90210"
                                       onChange={(e) => handleChange("venuePostalCode", e.target.value)}
                                       disabled={fields.attendanceMode === ''}
                                     />
@@ -3117,11 +3152,11 @@ export default function SchemaBuilder(): JSX.Element {
                                 {renderError("organizerUrl")}
                               </div>
 
-                              <div className="tool-field">
-                                <label className="tool-label">Telephone</label>
-                                <input type="text" className="tool-input" value={fields.organizerTelephone || ""} placeholder="+1-555-555-5555" onChange={(e) => handleChange("organizerTelephone", e.target.value)} />
-                                {renderError("organizerTelephone")}
-                              </div>
+                                <div className="tool-field">
+                                  <label className="tool-label">Phone</label>
+                                  <input type="text" className="tool-input" value={fields.organizerTelephone || ""} placeholder="+1-555-123-4567" onChange={(e) => handleChange("organizerTelephone", e.target.value)} />
+                                  {renderError("organizerTelephone")}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3786,12 +3821,12 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
 
                     <div className="tool-field">
-                      <label className="tool-label">Zip / Postal code</label>
+                      <label className="tool-label">Postal Code</label>
                       <input
                         type="text"
                         className="tool-input"
                         value={fields.postalCode || ""}
-                        placeholder="Zip code"
+                        placeholder="90210"
                         onChange={(e) => handleChange("postalCode", e.target.value)}
                       />
                       {renderError("postalCode")}
@@ -4143,8 +4178,8 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
 
                                 <div className="tool-field">
-                                  <label className="tool-label">Price range</label>
-                                  <input type="text" className="tool-input" value={fields.priceRange || ""} placeholder="$$" onChange={(e) => handleChange("priceRange", e.target.value)} />
+                                  <label className="tool-label">Price Range</label>
+                                  <input type="text" className="tool-input" value={fields.priceRange || ""} placeholder="$ - $$$" onChange={(e) => handleChange("priceRange", e.target.value)} />
                                   {renderError("priceRange")}
                                 </div>
                               </div>
@@ -4174,8 +4209,8 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
 
                                 <div className="tool-field">
-                                  <label className="tool-label">Price range</label>
-                                  <input type="text" className="tool-input" value={fields.priceRange || ""} placeholder="$$" onChange={(e) => handleChange("priceRange", e.target.value)} />
+                                  <label className="tool-label">Price Range</label>
+                                  <input type="text" className="tool-input" value={fields.priceRange || ""} placeholder="$ - $$$" onChange={(e) => handleChange("priceRange", e.target.value)} />
                                   {renderError("priceRange")}
                                 </div>
                               </div>
@@ -4355,6 +4390,69 @@ export default function SchemaBuilder(): JSX.Element {
                             elems.push(
                               <div key="country-region-row" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="tool-field">
+                                  <label className="tool-label">State/Province/Region</label>
+                                  {/* If a StateSelect comp is available, use it; otherwise fall back to local list or text input */}
+                                  {(() => {
+                                    const code = currentCountryCode
+                                    // 1) If a dynamic StateSelect component is available, use it (provides consistent UI)
+                                    if (StateSelectComp && code && !regionCustomVisible) {
+                                      const StateComp = StateSelectComp as any
+                                      return (
+                                        <StateComp
+                                          className="tool-input"
+                                          country={code}
+                                          countryCode={code}
+                                          value={fields.region || ""}
+                                          onChange={(v: any) => {
+                                            const val = typeof v === "string" ? v : (v && (v.target ? v.target.value : v))
+                                            if (val === "__other__") {
+                                              setRegionCustomVisible(true)
+                                              handleChange("region", "")
+                                            } else {
+                                              handleChange("region", val || "")
+                                            }
+                                          }}
+                                        />
+                                      )
+                                    }
+
+                                    // 2) Otherwise if we have a local list for the country, render our custom select
+                                    const localList = code && STATES_BY_COUNTRY[code]
+                                    if (localList && localList.length) {
+                                      return (
+                                        <div className="custom-select-wrapper region-select-wrapper relative" style={{ width: "100%" }}>
+                                          <button type="button" className="custom-select-trigger tool-select" onClick={() => setRegionOpen((o) => !o)} style={{ width: "100%", justifyContent: "space-between" }} aria-expanded={regionOpen}>
+                                            <span className="truncate block">{fields.region || "Select region"}</span>
+                                            <span className="text-xs">⏷</span>
+                                          </button>
+                                          {regionOpen && (
+                                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                              <div className="px-3 py-2">
+                                                <input type="text" className="tool-input" placeholder="Search region" value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
+                                              </div>
+                                              <ul>
+                                                {localList.filter(r => !regionSearch || r.toLowerCase().includes(regionSearch.toLowerCase())).map((r) => (
+                                                  <li key={r} className={(fields.region || "") === r ? "selected" : ""} onClick={() => { handleChange("region", r); setRegionOpen(false); setRegionSearch("") }}>
+                                                    <div className="font-semibold text-[15px]">{r}</div>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )
+                                    }
+
+                                    // 3) Fallback: simple text input — gray out (disabled) when country is Kenya
+                                    if (code === "KE") {
+                                      return <input type="text" className="tool-input opacity-50" value={fields.region || ""} placeholder="State or region" disabled />
+                                    }
+                                    return <input type="text" className="tool-input" value={fields.region || ""} placeholder="State or region" onChange={(e) => handleChange("region", e.target.value)} />
+                                  })()}
+                                  {renderError("region")}
+                                </div>
+
+                                <div className="tool-field">
                                   <label className="tool-label">Country</label>
                                   <div className="custom-select-wrapper country-select-wrapper relative" style={{ width: "100%" }}>
                                     <button
@@ -4388,45 +4486,6 @@ export default function SchemaBuilder(): JSX.Element {
                                     )}
                                   </div>
                                   {renderError("country")}
-                                </div>
-
-                                <div className="tool-field">
-                                  <label className="tool-label">State/Province/Region</label>
-                                  {/* If a known list exists for the selected country, show a select; otherwise fallback to free text */}
-                                  {(() => {
-                                    const code = currentCountryCode
-                                    const localList = code && STATES_BY_COUNTRY[code]
-                                    if (localList && localList.length) {
-                                      return (
-                                        <div className="custom-select-wrapper region-select-wrapper relative" style={{ width: "100%" }}>
-                                          <button type="button" className="custom-select-trigger tool-select" onClick={() => setRegionOpen((o) => !o)} style={{ width: "100%", justifyContent: "space-between" }} aria-expanded={regionOpen}>
-                                            <span className="truncate block">{fields.region || "Select region"}</span>
-                                            <span className="text-xs">⏷</span>
-                                          </button>
-                                          {regionOpen && (
-                                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
-                                              <div className="px-3 py-2">
-                                                <input type="text" className="tool-input" placeholder="Search region" value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
-                                              </div>
-                                              <ul>
-                                                {localList.filter(r => !regionSearch || r.toLowerCase().includes(regionSearch.toLowerCase())).map((r) => (
-                                                  <li key={r} className={(fields.region || "") === r ? "selected" : ""} onClick={() => { handleChange("region", r); setRegionOpen(false); setRegionSearch("") }}>
-                                                    <div className="font-semibold text-[15px]">{r}</div>
-                                                  </li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )
-                                    }
-                                    // fallback: simple text input — gray out (disabled) when country is Kenya
-                                    if (code === "KE") {
-                                      return <input type="text" className="tool-input opacity-50" value={fields.region || ""} placeholder="State or region" disabled />
-                                    }
-                                    return <input type="text" className="tool-input" value={fields.region || ""} placeholder="State or region" onChange={(e) => handleChange("region", e.target.value)} />
-                                  })()}
-                                  {renderError("region")}
                                 </div>
                               </div>
                             )
@@ -4757,7 +4816,7 @@ export default function SchemaBuilder(): JSX.Element {
                               <input type="text" className="tool-input" value={oh.closes} placeholder="21:00" onChange={(e) => updateOpeningHour(idx, "closes", e.target.value)} />
                             </div>
                             <div className="flex items-center md:col-span-1 justify-end">
-                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn self-center" onClick={() => removeOpeningHour(idx)} title="Remove">
+                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn self-center" onClick={() => removeOpeningHour(idx)} title="Remove" style={{ marginBottom: '0.35rem' }}>
                                 ×
                               </button>
                             </div>
@@ -4776,7 +4835,7 @@ export default function SchemaBuilder(): JSX.Element {
 
                         {departments && departments.length > 0 ? (
                         departments.map((d, idx) => (
-                          <div key={idx} className="mb-6 space-y-4" style={{ position: "relative", zIndex: departments.length - idx }}>
+                          <div key={idx} className="mb-3 space-y-4" style={{ position: "relative", zIndex: departments.length - idx }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="tool-field">
                                 <label className="tool-label">LocalBusiness @type</label>
@@ -4850,13 +4909,13 @@ export default function SchemaBuilder(): JSX.Element {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                               <div className="tool-field">
                                 <label className="tool-label">Name</label>
                                 <input type="text" className="tool-input" value={d.name} placeholder="Department name" onChange={(e) => updateDepartment(idx, "name", e.target.value)} />
                               </div>
 
-                              <div className="tool-field md:col-span-2">
+                              <div className="tool-field">
                                 <label className="tool-label">Image URL</label>
                                 <input type="text" className="tool-input" value={d.imageUrl} placeholder="https://example.com/dept-photo.jpg" onChange={(e) => updateDepartment(idx, "imageUrl", e.target.value)} />
                                 {renderError(`dept_imageUrl_${idx}`)}
@@ -4865,6 +4924,171 @@ export default function SchemaBuilder(): JSX.Element {
                               <div className="tool-field">
                                 <label className="tool-label">Phone</label>
                                 <input type="text" className="tool-input" value={d.telephone} placeholder="+1-555-123-4567" onChange={(e) => updateDepartment(idx, "telephone", e.target.value)} />
+                              </div>
+                            </div>
+
+                            <div className="mt-2">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                <input type="checkbox" className="form-checkbox" checked={d.sameAsMain === "true"} onChange={(e) => updateDepartment(idx, "sameAsMain", e.target.checked ? "true" : "false")} />
+                                <span>Same as main address</span>
+                              </label>
+
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-2">
+                                <div className="tool-field">
+                                  <label className="tool-label">Street</label>
+                                  <input type="text" className="tool-input" value={d.street || ""} placeholder="123 Main St" onChange={(e) => updateDepartment(idx, "street", e.target.value)} disabled={d.sameAsMain === "true"} />
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">City</label>
+                                  <input type="text" className="tool-input" value={d.city || ""} placeholder="Anytown" onChange={(e) => updateDepartment(idx, "city", e.target.value)} disabled={d.sameAsMain === "true"} />
+                                </div>
+
+                                <div className="tool-field">
+                                  <label className="tool-label">Postal Code</label>
+                                  <input type="text" className="tool-input" value={d.postalCode || ""} placeholder="90210" onChange={(e) => updateDepartment(idx, "postalCode", e.target.value)} disabled={d.sameAsMain === "true"} />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mt-2">
+                                <div className="tool-field md:col-span-4">
+                                  <label className="tool-label">State/Province/Region</label>
+                                  {(() => {
+                                    const deptSelectedCountryCode = getSelectedCountryCode(d.country)
+                                    const customVisible = deptRegionCustomVisibleIndex === idx
+                                    if (StateSelectComp && deptSelectedCountryCode && !customVisible) {
+                                      return (
+                                        <StateSelectComp
+                                          className="tool-input"
+                                          country={deptSelectedCountryCode}
+                                          countryCode={deptSelectedCountryCode}
+                                          value={d.region || ""}
+                                          onChange={(v: any) => {
+                                            const val = typeof v === "string" ? v : (v && (v.target ? v.target.value : v))
+                                            if (val === "__other__") {
+                                              setDeptRegionCustomVisibleIndex(idx)
+                                              updateDepartment(idx, "region", "")
+                                            } else {
+                                              updateDepartment(idx, "region", val || "")
+                                            }
+                                          }}
+                                          disabled={d.sameAsMain === "true"}
+                                        />
+                                      )
+                                    }
+
+                                    if (deptSelectedCountryCode && STATES_BY_COUNTRY[deptSelectedCountryCode] && !customVisible) {
+                                      return (
+                                        <div className="custom-select-wrapper compact-select region-select-wrapper relative" style={{ width: '100%' }}>
+                                          <button
+                                            type="button"
+                                            className="custom-select-trigger tool-select"
+                                            onClick={() => setDeptRegionOpenIndex((o) => (o === idx ? null : idx))}
+                                            style={{ width: "100%", justifyContent: "space-between" }}
+                                            aria-expanded={deptRegionOpenIndex === idx}
+                                            disabled={d.sameAsMain === "true"}
+                                          >
+                                            <span className="truncate block">{d.region || "Select state / region"}</span>
+                                            <span className="text-xs">⏷</span>
+                                          </button>
+
+                                          {deptRegionOpenIndex === idx && (
+                                            <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 260, overflow: "auto" }}>
+                                              <div className="p-2">
+                                                <input
+                                                  type="text"
+                                                  className="tool-input"
+                                                  placeholder="Search region..."
+                                                  value={deptRegionSearch}
+                                                  onChange={(e) => setDeptRegionSearch(e.target.value)}
+                                                />
+                                              </div>
+                                              <ul>
+                                                {STATES_BY_COUNTRY[deptSelectedCountryCode].filter((s) => s.toLowerCase().includes((deptRegionSearch || "").toLowerCase())).map((s) => (
+                                                  <li key={s} className={(d.region || "") === s ? "selected" : ""} onClick={() => { updateDepartment(idx, "region", s); setDeptRegionOpenIndex(null); setDeptRegionSearch("") }}>
+                                                    {s}
+                                                  </li>
+                                                ))}
+                                                <li key="__other__" onClick={() => { setDeptRegionCustomVisibleIndex(idx); updateDepartment(idx, "region", ""); setDeptRegionOpenIndex(null) }}>
+                                                  Other...
+                                                </li>
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )
+                                    }
+
+                                    if (deptSelectedCountryCode && !customVisible) {
+                                      // Country selected but no known states -> show disabled input for KE or empty disabled input
+                                      return deptSelectedCountryCode === "KE" ? (
+                                        <input
+                                          type="text"
+                                          className="tool-input opacity-50"
+                                          value={d.region || ""}
+                                          placeholder="State or region"
+                                          disabled
+                                        />
+                                      ) : (
+                                        <input
+                                          type="text"
+                                          className="tool-input opacity-50"
+                                          value={""}
+                                          placeholder=""
+                                          disabled
+                                        />
+                                      )
+                                    }
+
+                                    // Fallback: custom free-text input (or when user chose Other)
+                                    return (
+                                      <input
+                                        type="text"
+                                        className="tool-input"
+                                        value={d.region || ""}
+                                        placeholder="State or region"
+                                        onChange={(e) => updateDepartment(idx, "region", e.target.value)}
+                                        disabled={d.sameAsMain === "true"}
+                                      />
+                                    )
+                                  })()}
+                                </div>
+
+                                <div className="tool-field md:col-span-4">
+                                  <label className="tool-label">Country</label>
+                                  <div className={`custom-select-wrapper country-select-wrapper relative`} style={{ width: '100%' }}>
+                                    <button
+                                      type="button"
+                                      className="custom-select-trigger tool-select"
+                                      onClick={(e) => { e.stopPropagation(); setDeptCountryOpenIndex((o) => (o === idx ? null : idx)) }}
+                                      style={{ width: "100%", justifyContent: "space-between" }}
+                                      aria-expanded={deptCountryOpenIndex === idx}
+                                    >
+                                      <span className="truncate block">{(d.country && (COUNTRY_LIST.find(c => c.code === d.country)?.name || d.country)) || (d.country || "Select country")}</span>
+                                      <span className="text-xs">⏷</span>
+                                    </button>
+
+                                    {deptCountryOpenIndex === idx && (
+                                      <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: "100%", maxHeight: 320, overflow: "auto" }}>
+                                        <div className="px-3 py-2">
+                                          <input type="text" className="tool-input" placeholder="Search country..." value={deptCountrySearch} onChange={(e) => setDeptCountrySearch(e.target.value)} />
+                                        </div>
+                                        <ul>
+                                          {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((deptCountrySearch || "").toLowerCase())).map((c) => (
+                                            <li key={c.code || c.name} className={(d.country || "") === (c.code || "") ? "selected" : ""} onClick={() => { updateDepartment(idx, "country", c.code || ""); setDeptCountryOpenIndex(null); setDeptCountrySearch("") }}>
+                                              <div className="font-semibold text-[15px]">{c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}</div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="tool-field md:col-span-4">
+                                  <label className="tool-label">Price Range</label>
+                                  <input type="text" className="tool-input" value={d.priceRange || ""} placeholder="$ - $$$" onChange={(e) => updateDepartment(idx, "priceRange", e.target.value)} />
+                                </div>
                               </div>
                             </div>
 
@@ -4921,7 +5145,7 @@ export default function SchemaBuilder(): JSX.Element {
                               </div>
 
                               <div className="flex items-center md:col-span-1 justify-end">
-                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeDepartment(idx)} title="Remove">
+                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeDepartment(idx)} title="Remove" style={{ marginBottom: '0.35rem' }}>
                                   ×
                                 </button>
                               </div>

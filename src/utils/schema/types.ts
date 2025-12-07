@@ -1,7 +1,7 @@
 export type BreadcrumbItem = { name: string; url: string }
 export type FAQItem = { question: string; answer: string }
 export type OpeningHour = { days: string; opens: string; closes: string }
-export type Department = { localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string }
+export type Department = { localBusinessType: string; moreSpecificType: string; name: string; imageUrl: string; telephone: string; days: string; opens: string; closes: string; street?: string; city?: string; region?: string; postalCode?: string; country?: string; priceRange?: string; sameAsMain?: string }
 export type ContactPoint = { contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }
 export type TicketType = { name: string; price: string; currency?: string; availableFrom?: string; url?: string; availability?: string }
 export type OrgExtra = { key: string; value: string }

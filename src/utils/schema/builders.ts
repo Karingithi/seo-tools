@@ -1002,6 +1002,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (fields.url?.trim()) biz.url = fields.url.trim()
     if (fields.logo?.trim()) biz.logo = fields.logo.trim()
     if (fields.imageUrl?.trim()) biz.image = fields.imageUrl.trim()
+    if (fields.description?.trim()) biz.description = fields.description.trim()
     if (fields["@id"]?.trim()) biz["@id"] = fields["@id"].trim()
     if (fields.telephone?.trim()) biz.telephone = fields.telephone.trim()
     if (fields.email?.trim()) biz.email = fields.email.trim()
@@ -1079,6 +1080,17 @@ export function buildSchemaFromState(p: BuildParams): any {
         if (d.name?.trim()) obj.name = d.name.trim()
         if (d.imageUrl?.trim()) obj.image = d.imageUrl.trim()
         if (d.telephone?.trim()) obj.telephone = d.telephone.trim()
+        // Structured PostalAddress for department (if any part provided)
+        if ((d.street && d.street.trim()) || (d.city && d.city.trim()) || (d.region && d.region.trim()) || (d.postalCode && d.postalCode.trim()) || (d.country && d.country.trim())) {
+          const a: any = { "@type": "PostalAddress" }
+          if (d.street?.trim()) a.streetAddress = d.street.trim()
+          if (d.city?.trim()) a.addressLocality = d.city.trim()
+          if (d.region?.trim()) a.addressRegion = d.region.trim()
+          if (d.postalCode?.trim()) a.postalCode = d.postalCode.trim()
+          if (d.country?.trim()) a.addressCountry = d.country.trim()
+          obj.address = a
+        }
+        if (d.priceRange?.trim()) obj.priceRange = d.priceRange.trim()
         return obj
       })
       if (deps.length) biz.department = deps
