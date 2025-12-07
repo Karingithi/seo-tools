@@ -1539,13 +1539,14 @@ export default function SchemaBuilder(): JSX.Element {
       contacts,
       ticketTypes,
       ticketDefaultCurrency,
+      reviews,
       orgExtras,
       // How-to specific arrays
       howToTools,
       howToSupplies,
       howToSteps,
     } as any)), null, 2),
-    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, education, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency, orgExtras, howToTools, howToSupplies, howToSteps]
+    [fields, type, images, breadcrumbs, faqItemsState, socialProfiles, education, videoThumbnails, videoMinutes, videoSeconds, openingHoursState, departments, contacts, ticketTypes, ticketDefaultCurrency, reviews, orgExtras, howToTools, howToSupplies, howToSteps]
   )
 
   // Wrapped script tag version for preview/copy/download

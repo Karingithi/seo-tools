@@ -478,7 +478,23 @@ export function buildSchemaFromState(p: BuildParams): any {
       }
     }
 
-    // 3) If offers provide the offer URL, avoid duplicating a top-level `url`.
+    // 3) Handle reviews array
+    if (p.reviews && p.reviews.length > 0) {
+      const reviews = p.reviews
+        .filter((r) => r.name && r.body && r.rating && r.date)
+        .map((r) => ({
+          "@type": "Review",
+          name: r.name,
+          reviewBody: r.body,
+          reviewRating: { "@type": "Rating", ratingValue: r.rating },
+          datePublished: r.date,
+        }))
+      if (reviews.length > 0) {
+        base.review = reviews.length === 1 ? reviews[0] : reviews
+      }
+    }
+
+    // 4) If offers provide the offer URL, avoid duplicating a top-level `url`.
     //    Remove top-level `url` when any offer contains a `url` property.
     try {
       const offers = base.offers
@@ -490,10 +506,10 @@ export function buildSchemaFromState(p: BuildParams): any {
       // non-fatal
     }
 
-    // 4) Remove top-level `offerType` if present — offers are represented in `offers`.
+    // 5) Remove top-level `offerType` if present — offers are represented in `offers`.
     if (base.offerType) delete base.offerType
 
-    // 5) Remove any top-level `author` or `publisher` properties for Product
+    // 6) Remove any top-level `author` or `publisher` properties for Product
     //    (these are not standard for Product and can confuse validators)
     if (base.author) delete base.author
     if (base.publisher) delete base.publisher

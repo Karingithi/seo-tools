@@ -23,6 +23,7 @@ export type BuildParams = {
   contacts: ContactPoint[]
   ticketTypes: TicketType[]
   ticketDefaultCurrency: string
+  reviews?: Review[]
   orgExtras?: OrgExtra[]
   // How-to specific repeaters (optional)
   howToTools?: string[]
@@ -31,4 +32,3 @@ export type BuildParams = {
 }
 
 export type Review = { name: string; body: string; rating: string; date: string }
-
