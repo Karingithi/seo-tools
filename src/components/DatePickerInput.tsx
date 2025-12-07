@@ -249,7 +249,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
             inline
             minDate={new Date(1900, 0, 1)}
             maxDate={undefined}
-            filterDate={(date) => {
+            filterDate={(_date) => {
               // Allow all dates to be selected
               return true
             }}
