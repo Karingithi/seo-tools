@@ -1,8 +1,7 @@
 {
   "name": "Free SEO Tools - Codespace",
   "image": "mcr.microsoft.com/vscode/devcontainers/typescript-node:0-20",
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "forwardPorts": [5173],
   "postCreateCommand": "npm ci",
   "postStartCommand": "echo 'Codespace ready'",
