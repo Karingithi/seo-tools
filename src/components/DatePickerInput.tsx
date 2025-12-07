@@ -186,6 +186,18 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
           border: 2px solid transparent;
           background-clip: padding-box;
         }
+        /* Out-of-month days: make them muted and non-interactive */
+        .react-datepicker__day--outside-month,
+        .react-datepicker__day--other-month {
+          color: var(--muted-text, #9ca3af) !important;
+          opacity: 0.6 !important;
+          background: transparent !important;
+          pointer-events: none !important;
+        }
+        /* Optionally hide them entirely by uncommenting:
+        .react-datepicker__day--outside-month,
+        .react-datepicker__day--other-month { display: none !important; }
+        */
       `}</style>
 
       <div className="relative">

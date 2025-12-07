@@ -261,6 +261,7 @@ export default function SchemaBuilder(): JSX.Element {
         setEmploymentTypeOpen(false)
         setOrgTypeOpen(false)
         setOrgMoreSpecificOpen(false)
+        setOrgExtraKeyOpenIndex(null)
         setContactTypeOpenIndex(null)
         setAreaCountryOpenIndex(null)
         setAreaCountrySearch("")
@@ -3451,7 +3452,7 @@ export default function SchemaBuilder(): JSX.Element {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="tool-field">
-                      <label className="tool-label">Content URL</label>
+                      <label className="tool-label">Video URL</label>
                       <input
                         type="text"
                         className="tool-input"
@@ -3475,7 +3476,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="mt-4 tool-field">
+                  <div className="tool-field">
                     <label className="tool-label">SeekToAction Target URL</label>
                     <input
                       type="text"
@@ -4031,7 +4032,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
                   </div>
 
-                  <div className="tool-field mt-4">
+                  <div className="tool-field">
                     <label className="tool-label">Search URL Template</label>
                     <input
                       type="text"
@@ -4044,7 +4045,7 @@ export default function SchemaBuilder(): JSX.Element {
                     {renderError("urlTemplate")}
                   </div>
 
-                  <div className="tool-field mt-4">
+                  <div className="tool-field">
                     <label className="tool-label">Description</label>
                     <textarea
                       className="tool-textarea"
@@ -5589,7 +5590,7 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
 
                                 <div className="flex items-center md:col-span-1 justify-end">
-                                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeContact(idx)} title="Remove">×</button>
+                                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn toolbar-btn--mb-sm" onClick={() => removeContact(idx)} title="Remove">×</button>
                                 </div>
                               </div>
                             </div>
@@ -5705,8 +5706,6 @@ export default function SchemaBuilder(): JSX.Element {
                                     type={type}
                                   />
                                   {/* Offer related derived flags */}
-                                  const offerDisabled = !((fields.offerType || "").trim())
-                                  const isAggregateOffer = ((fields.offerType || "").trim() === "AggregateOffer")
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="tool-field">
                                       <label className="tool-label">Offer Type</label>
@@ -5754,7 +5753,7 @@ export default function SchemaBuilder(): JSX.Element {
                                         type="text"
                                         className="tool-input"
                                         value={fields.url || ""}
-                                        placeholder={schemaFields.Product.find(f => f.key === 'url')?.placeholder || "https://example.com/product"}
+                                        placeholder={schemaFields.Product.find(f => f.key === 'url')?.placeholder || ""}
                                         onChange={(e) => handleChange("url", e.target.value)}
                                         disabled={offerDisabled}
                                         title={offerDisabled ? "Enable by selecting Offer Type" : undefined}
@@ -5891,7 +5890,7 @@ export default function SchemaBuilder(): JSX.Element {
                                         )}
 
                                         {selectedSecond.length > 0 && (
-                                          <div className="grid gap-4 mt-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                                          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                                             {selectedSecond.map((idKey) => {
                                               const field = schemaFields[type].find((f) => f.key === idKey)
                                               if (!field) return null

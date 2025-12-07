@@ -28,7 +28,7 @@ export const schemaExamples: Record<string, string> = {
   "Local Business": "LocalBusiness, Store, Restaurant",
   Product: "Generate Structured Data Builder for Product, Offer, and AggregateOffer Types",
   Video: "VideoObject",
-  "Website Sitelinks Searchbox": "WebSite + SearchAction",
+  "Website Sitelinks Searchbox": "Build structured data for a sitelinks search box on Google",
   Organization: "Generate Accurate Schema Markup for Organizations, Local Businesses, and Corporations",
   Person: "Generate Structured Data Builder for Person, Author, and Speaker Profiles",
   "Job Posting": "Schema Builder for Job Listings, Hiring Info, and Requirements",
@@ -118,29 +118,29 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   ],
   "FAQ Page": [],
   Product: [
-    { label: "Product Name", key: "name", placeholder: "e.g. Ergonomic Office Chair" },
-    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/photo.jpg" },
-    { label: "SKU", key: "sku", placeholder: "SKU12345" },
-    { label: "MPN", key: "mpn", placeholder: "MPN-0001" },
+    { label: "Product Name", key: "name", placeholder: "Ergonomic Office Chair — Model X100" },
+    { label: "Image URL", key: "imageUrl", placeholder: "https://example.com/products/chair.jpg" },
+    { label: "SKU", key: "sku", placeholder: "SKU-12345" },
+    { label: "MPN", key: "mpn", placeholder: "MPN-98765" },
     { label: "GTIN-8", key: "gtin8", placeholder: "01234567" },
     { label: "GTIN-13", key: "gtin13", placeholder: "0123456789012" },
-    { label: "GTIN-14", key: "gtin14", placeholder: "01234567890123" },
-    { label: "Brand", key: "brand", placeholder: "Tembeya Wellness" },
-    { label: "Price", key: "price", placeholder: "25.99" },
-    { label: "Low price", key: "lowPrice", placeholder: "19.99" },
-    { label: "High price", key: "highPrice", placeholder: "29.99" },
+    { label: "GTIN-14", key: "gtin14", placeholder: "00123456789012" },
+    { label: "Brand", key: "brand", placeholder: "Acme Furnishings" },
+    { label: "Price", key: "price", placeholder: "129.99" },
+    { label: "Low price", key: "lowPrice", placeholder: "99.99" },
+    { label: "High price", key: "highPrice", placeholder: "149.99" },
     { label: "Number of offers", key: "offerCount", placeholder: "3" },
     { label: "Currency", key: "currency", placeholder: "USD" },
     { label: "Offer Valid Until", key: "priceValidUntil", placeholder: "2026-12-31" },
     { label: "Availability", key: "availability", placeholder: "InStock" },
     { label: "Item Condition", key: "itemCondition", placeholder: "NewCondition" },
-    { label: "URL", key: "url", placeholder: "https://example.com/product" },
-    { label: "Description", key: "description", placeholder: "Natural detox blend" },
-    { label: "Aggregate Rating Value", key: "ratingValue", placeholder: "4.5" },
-    { label: "Number of ratings", key: "ratingCount", placeholder: "12" },
+    { label: "URL", key: "url", placeholder: "https://example.com/product/ergonomic-chair" },
+    { label: "Description", key: "description", placeholder: "Comfortable ergonomic office chair with lumbar support and adjustable height." },
+    { label: "Aggregate Rating Value", key: "ratingValue", placeholder: "4.6" },
+    { label: "Number of ratings", key: "ratingCount", placeholder: "254" },
     { label: "Highest rating allowed (bestRating)", key: "bestRating", placeholder: "5" },
     { label: "Lowest rating allowed (worstRating)", key: "worstRating", placeholder: "1" },
-    { label: "Review Count", key: "reviewCount", placeholder: "12" },
+    { label: "Review Count", key: "reviewCount", placeholder: "120" },
   ],
   "Local Business": [
     { label: "LocalBusiness @type", key: "localBusinessType", placeholder: "LocalBusiness" },
@@ -719,7 +719,12 @@ export function buildSchemaFromState(p: BuildParams): any {
       : (fields.thumbnailUrl ? fields.thumbnailUrl.split(",").map((s) => s.trim()).filter(Boolean) : [])
     if (thumbs.length === 1) video.thumbnailUrl = thumbs[0]
     else if (thumbs.length > 1) video.thumbnailUrl = thumbs
-    if (fields.uploadDate?.trim()) video.uploadDate = fields.uploadDate.trim()
+    if (fields.uploadDate?.trim()) {
+      const raw = fields.uploadDate.trim()
+      // If date-only (yyyy-mm-dd), convert to full datetime at midnight UTC to satisfy validators.
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) video.uploadDate = `${raw}T00:00:00Z`
+      else video.uploadDate = raw
+    }
     let durationVal = fields.duration?.trim() ? fields.duration.trim() : ""
     if (!durationVal) {
       const m = parseInt(p.videoMinutes || "0", 10) || 0
@@ -732,9 +737,7 @@ export function buildSchemaFromState(p: BuildParams): any {
     if (fields.seekToTarget?.trim()) {
       video.potentialAction = { "@type": "SeekToAction", target: { "@type": "EntryPoint", urlTemplate: fields.seekToTarget.trim() }, "startOffset-input": "required name=seek_to_second_number" }
     }
-    delete video.thumbnailUrl
-    delete video.duration
-    delete video.seekToTarget
+    // keep thumbnailUrl, duration, and potentialAction if provided
     out = video
   }
 
