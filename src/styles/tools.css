@@ -380,6 +380,37 @@
   margin-bottom: 0.35rem;
 }
 
+/* Help icon small circular '?' anchor used next to field labels */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  line-height: 1;
+  background: var(--muted-bg, #f3f4f6);
+  color: var(--secondary, #070026);
+  border-radius: 50%;
+  border: 1px solid var(--muted-border, #d1d5db);
+  text-decoration: none;
+  padding: 0;
+  transition: background-color 0.12s ease, transform 0.12s ease, color 0.12s ease;
+  cursor: pointer;
+}
+
+.help-icon:hover,
+.help-icon:focus {
+  background: var(--primary, #ffc50c);
+  color: #fff;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.help-icon:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-rgba, rgba(255,197,12,0.12));
+}
+
 /* Make inner `.section-inner` behave like a stacked flex container
    so inner `.tool-section` cards have consistent gap and alignment. */
 .section.section--neutral > .section-inner {

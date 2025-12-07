@@ -5258,7 +5258,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
 
                     {/* Organization Name + Alternative Name (single row) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="tool-field">
                         <label className="tool-label">Organization Name</label>
                         <input type="text" className="tool-input" value={fields.name || ""} placeholder="Organization name" onChange={(e) => handleChange("name", e.target.value)} />
@@ -5272,8 +5272,15 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Website URL + Logo URL (single row) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    {/* Organization Description */}
+                                    <div className="tool-field">
+                                      <label className="tool-label">Description</label>
+                                      <textarea className="tool-textarea" rows={4} value={fields.description || ""} placeholder="Short description of the organization" onChange={(e) => handleChange("description", e.target.value)} />
+                                      {renderError("description")}
+                                    </div>
+
+                                    {/* Website URL + Logo URL (single row) */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="tool-field">
                         <label className="tool-label">Website URL</label>
                         <input type="text" className="tool-input" value={fields.url || ""} placeholder="https://example.com" onChange={(e) => handleChange("url", e.target.value)} />
@@ -5288,7 +5295,7 @@ export default function SchemaBuilder(): JSX.Element {
                     </div>
 
                     {/* Organization Contact Email + @id (single row) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="tool-field">
                         <label className="tool-label">Contact Email</label>
                         <input type="text" className="tool-input" value={fields.email || ""} placeholder="info@example.com" onChange={(e) => handleChange("email", e.target.value)} />
@@ -5302,15 +5309,10 @@ export default function SchemaBuilder(): JSX.Element {
                       </div>
                     </div>
 
-                    {/* Organization Description */}
-                    <div className="tool-field">
-                      <label className="tool-label">Description</label>
-                      <textarea className="tool-textarea" rows={4} value={fields.description || ""} placeholder="Short description of the organization" onChange={(e) => handleChange("description", e.target.value)} />
-                      {renderError("description")}
-                    </div>
+                    
 
                     {/* Additional Info */}
-                    <div className="mt-4">
+                    <div>
                       <h4 className="text-sm font-semibold mb-2">Additional Info</h4>
                       <div className="space-y-3">
                         {orgExtras.length > 0 ? (
@@ -5318,7 +5320,6 @@ export default function SchemaBuilder(): JSX.Element {
                             <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                               {/* Dropdown (left) */}
                               <div className="tool-field md:col-span-4">
-                                <label className="tool-label">Field</label>
                                 <div className="custom-select-wrapper compact-select relative" style={{ width: "100%" }}>
                                   <button
                                     type="button"
@@ -5345,15 +5346,12 @@ export default function SchemaBuilder(): JSX.Element {
                                 </div>
                               </div>
 
-                              {/* Value (right) */}
                               <div className="tool-field md:col-span-7">
-                                <label className="tool-label">Value</label>
                                 <input type="text" className="tool-input" value={item.value || ""} placeholder="Enter value" onChange={(e) => setOrgExtras((prev) => { const next = [...prev]; next[idx] = { ...next[idx], value: e.target.value }; return next })} />
                               </div>
 
-                              {/* Remove */}
                               <div className="flex items-center md:col-span-1 justify-end">
-                                <button type="button" className="toolbar-btn toolbar-btn--red" onClick={() => setOrgExtras((prev) => prev.filter((_, i) => i !== idx))}>Remove</button>
+                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn toolbar-btn--mb-sm" onClick={() => setOrgExtras((prev) => prev.filter((_, i) => i !== idx))} aria-label="Remove" title="Remove">×</button>
                               </div>
                             </div>
                           ))
