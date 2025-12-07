@@ -125,7 +125,7 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
     { label: "GTIN-8", key: "gtin8", placeholder: "01234567" },
     { label: "GTIN-13", key: "gtin13", placeholder: "0123456789012" },
     { label: "GTIN-14", key: "gtin14", placeholder: "00123456789012" },
-    { label: "Brand", key: "brand", placeholder: '{ "@type": "Brand", "name": "EcoCharge Gear" }' },
+    { label: "Brand", key: "brand", placeholder: "EcoCharge Gear" },
     { label: "Price", key: "price", placeholder: "129.99" },
     { label: "Low price", key: "lowPrice", placeholder: "99.99" },
     { label: "High price", key: "highPrice", placeholder: "149.99" },
