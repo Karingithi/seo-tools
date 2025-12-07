@@ -2,7 +2,6 @@ import { Plus } from "lucide-react"
 import DatePickerInput from "../components/DatePickerInput"
 import type { Dispatch, SetStateAction } from 'react'
 
-type VideoStep = {}
 
 export type VideoFields = {
   name?: string
@@ -123,3 +122,4 @@ export default function VideoForm(props: VideoFormProps): JSX.Element {
     </>
   )
 }
+
