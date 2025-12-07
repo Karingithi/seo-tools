@@ -40,7 +40,7 @@ export default function PersonForm(props: Props): JSX.Element {
     countrySearch,
     setCountrySearch,
     COUNTRY_LIST,
-    STATES_BY_COUNTRY,
+
   } = p
 
   return (
