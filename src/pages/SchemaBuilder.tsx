@@ -4816,7 +4816,7 @@ export default function SchemaBuilder(): JSX.Element {
                               <input type="text" className="tool-input" value={oh.closes} placeholder="21:00" onChange={(e) => updateOpeningHour(idx, "closes", e.target.value)} />
                             </div>
                             <div className="flex items-center md:col-span-1 justify-end">
-                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn self-center" onClick={() => removeOpeningHour(idx)} title="Remove" style={{ marginBottom: '0.35rem' }}>
+                              <button type="button" className="toolbar-btn toolbar-btn--red square-btn toolbar-btn--mb-sm self-center" onClick={() => removeOpeningHour(idx)} title="Remove">
                                 ×
                               </button>
                             </div>
@@ -5145,7 +5145,7 @@ export default function SchemaBuilder(): JSX.Element {
                               </div>
 
                               <div className="flex items-center md:col-span-1 justify-end">
-                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeDepartment(idx)} title="Remove" style={{ marginBottom: '0.35rem' }}>
+                                <button type="button" className="toolbar-btn toolbar-btn--red square-btn toolbar-btn--mb-sm" onClick={() => removeDepartment(idx)} title="Remove">
                                   ×
                                 </button>
                               </div>
