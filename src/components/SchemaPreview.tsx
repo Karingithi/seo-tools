@@ -1,5 +1,3 @@
-import React from "react"
-
 import copyIconUrl from "../assets/icons/copy.svg?url"
 import downloadIconUrl from "../assets/icons/download.svg?url"
 import resetIconUrl from "../assets/icons/reset.svg?url"

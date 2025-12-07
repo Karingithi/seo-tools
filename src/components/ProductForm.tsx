@@ -1,7 +1,40 @@
 import DatePickerInput from "../components/DatePickerInput"
 import IdentificationInputs from "../components/IdentificationInputs"
 
-type Props = any
+type Props = {
+  value?: any
+  onChange?: (iso: any) => any
+  placeholder?: string
+  disabled?: boolean
+  fields?: any
+  handleChange?: any
+  schemaFields?: any
+  renderError?: any
+  productIdSelected?: any
+  setProductIdSelected?: any
+  productIdOpen?: any
+  setProductIdOpen?: any
+  productOfferOpen?: any
+  setProductOfferOpen?: any
+  offerDisabled?: any
+  productCurrencyOpen?: any
+  setProductCurrencyOpen?: any
+  productCurrencySearch?: any
+  setProductCurrencySearch?: any
+  ALL_CURRENCIES?: any
+  isAggregateOffer?: any
+  productAvailabilityOpen?: any
+  setProductAvailabilityOpen?: any
+  TICKET_AVAILABILITY_OPTIONS?: any
+  productItemConditionOpen?: any
+  setProductItemConditionOpen?: any
+  ITEM_CONDITION_OPTIONS?: any
+  handleReviewFieldChange?: any
+  handleReviewFieldBlur?: any
+  reviews?: any
+  addReview?: any
+  removeReview?: any
+}
 
 export default function ProductForm(props: Props): JSX.Element {
   const p: any = props
@@ -251,7 +284,6 @@ export default function ProductForm(props: Props): JSX.Element {
               onChange={(iso: any) => handleChange("priceValidUntil", iso)}
               placeholder={(schemaFields.Product.find((f: any) => f.key === 'priceValidUntil') || { placeholder: 'yyyy-mm-dd' }).placeholder}
               disabled={offerDisabled}
-              allowFuture={true}
             />
             {renderError("priceValidUntil")}
           </div>
