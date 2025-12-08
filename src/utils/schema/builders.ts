@@ -96,6 +96,13 @@ export const HELP_LINKS: Record<string, { schema: { label: string; url: string }
   },
 }
 
+// Short, human-friendly descriptions for Article subtypes used in the UI dropdowns.
+export const ARTICLE_TYPE_DESCRIPTIONS: Record<string, string> = {
+  Article: "General article",
+  BlogPosting: "Blog content",
+  NewsArticle: "News reporting",
+}
+
 export const schemaFields: Record<string, { label: string; key: string; placeholder?: string }[]> = {
   Article: [
     { label: "Article @type", key: "articleType", placeholder: "BlogPosting" },

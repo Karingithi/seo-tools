@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import DatePickerInput from '../DatePickerInput'
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
@@ -54,36 +54,24 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
     StateSelectComp = null,
     COUNTRY_LIST = buildCountryList(),
     STATES_BY_COUNTRY = {},
+    jobEmploymentTypeOpen,
+    toggleJobEmploymentTypeOpen,
+    jobCountryOpen,
+    toggleJobCountryOpen,
+    jobRegionOpen,
+    toggleJobRegionOpen,
+    jobSalaryCurrencyOpen,
+    toggleJobSalaryCurrencyOpen,
+    jobSalaryUnitOpen,
+    toggleJobSalaryUnitOpen,
   } = props
 
-  const [employmentTypeOpen, setEmploymentTypeOpen] = useState<boolean>(false)
-  const [countryOpen, setCountryOpen] = useState<boolean>(false)
   const [countrySearch, setCountrySearch] = useState<string>('')
-  const [regionOpen, setRegionOpen] = useState<boolean>(false)
   const [regionSearch, setRegionSearch] = useState<string>('')
   const [regionCustomVisible, setRegionCustomVisible] = useState<boolean>(false)
-  const [salaryCurrencyOpen, setSalaryCurrencyOpen] = useState<boolean>(false)
   const [salaryCurrencySearch, setSalaryCurrencySearch] = useState<string>('')
-  const [salaryUnitOpen, setSalaryUnitOpen] = useState<boolean>(false)
 
-  const rootRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (!rootRef.current) return
-      const t = e.target as Node
-      if (!rootRef.current.contains(t)) {
-        setEmploymentTypeOpen(false)
-        setCountryOpen(false)
-        setRegionOpen(false)
-        setSalaryCurrencyOpen(false)
-        setSalaryUnitOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  // JobPosting dropdown open states are controlled by parent (SchemaBuilder) via props
 
   const ALL_CURRENCIES = buildAllCurrencies()
 
@@ -96,7 +84,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
   const selectedCountryCode = getSelectedCountryCode(fields.country)
 
   return (
-    <div ref={rootRef}>
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="tool-field">
           <label className="tool-label">Job title</label>
@@ -263,19 +251,19 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             <button
               type="button"
               className="custom-select-trigger tool-select"
-              onClick={() => setEmploymentTypeOpen((o) => !o)}
+              onClick={toggleJobEmploymentTypeOpen}
               style={{ width: '100%', justifyContent: 'space-between' }}
-              aria-expanded={employmentTypeOpen}
+              aria-expanded={jobEmploymentTypeOpen}
             >
               <span className="truncate block">{(EMPLOYMENT_TYPE_OPTIONS.find((o) => o.value === (fields.employmentType || '')) || { label: 'Select employment type' }).label}</span>
               <span className="text-xs">⏷</span>
             </button>
 
-            {employmentTypeOpen && (
+            {jobEmploymentTypeOpen && (
               <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%' }}>
                 <ul>
                   {EMPLOYMENT_TYPE_OPTIONS.map((opt) => (
-                    <li key={opt.value} className={(fields.employmentType || '') === opt.value ? 'selected' : ''} onClick={() => { handleChange('employmentType', opt.value); setEmploymentTypeOpen(false) }}>{opt.label}</li>
+                    <li key={opt.value} className={(fields.employmentType || '') === opt.value ? 'selected' : ''} onClick={() => { handleChange('employmentType', opt.value); toggleJobEmploymentTypeOpen && toggleJobEmploymentTypeOpen() }}>{opt.label}</li>
                   ))}
                 </ul>
               </div>
@@ -346,15 +334,15 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             <button
               type="button"
               className="custom-select-trigger tool-select"
-              onClick={() => setCountryOpen((o) => !o)}
+              onClick={toggleJobCountryOpen}
               style={{ width: '100%', justifyContent: 'space-between' }}
-              aria-expanded={countryOpen}
+              aria-expanded={jobCountryOpen}
             >
               <span className="truncate block" style={{ marginLeft: selectedCountryCode ? 30 : undefined }}>{(fields.country && COUNTRY_LIST.find((c) => c.code === fields.country)?.name) || (fields.country || 'Select country')}</span>
               <span className="text-xs">⏷</span>
             </button>
 
-            {countryOpen && (
+            {jobCountryOpen && (
               <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
                 <div className="p-2">
                   <input
@@ -367,7 +355,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                 </div>
                 <ul>
                   {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((countrySearch || '').toLowerCase())).map((c) => (
-                    <li key={c.code || c.name} className={(fields.country || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('country', c.code || ''); setCountryOpen(false); setCountrySearch(''); setRegionCustomVisible(false) }}>
+                    <li key={c.code || c.name} className={(fields.country || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('country', c.code || ''); toggleJobCountryOpen && toggleJobCountryOpen(); setCountrySearch(''); setRegionCustomVisible(false) }}>
                       {c.name}
                     </li>
                   ))}
@@ -401,22 +389,22 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
               <button
                 type="button"
                 className="custom-select-trigger tool-select"
-                onClick={() => setRegionOpen((o) => !o)}
+                onClick={toggleJobRegionOpen}
                 style={{ width: '100%', justifyContent: 'space-between' }}
-                aria-expanded={regionOpen}
+                aria-expanded={jobRegionOpen}
               >
                 <span className="truncate block">{fields.region || 'Select state / region'}</span>
                 <span className="text-xs">⏷</span>
               </button>
 
-              {regionOpen && (
+              {jobRegionOpen && (
                 <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
                   <div className="p-2">
                     <input type="text" className="tool-input" placeholder="Search region..." value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
                   </div>
                   <ul>
                     {STATES_BY_COUNTRY[selectedCountryCode].filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
-                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onClick={() => { handleChange('region', s); setRegionOpen(false) }}>{s}</li>
+                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
                     ))}
                   </ul>
                 </div>
@@ -451,16 +439,16 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           <label className="tool-label">Currency / Period</label>
           <div className="flex gap-2">
             <div className="relative" style={{ width: '50%' }}>
-              <button type="button" className="custom-select-trigger tool-select" onClick={() => setSalaryCurrencyOpen((o) => !o)} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={salaryCurrencyOpen}>
+              <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryCurrencyOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryCurrencyOpen}>
                 <span className="truncate block">{(fields.salaryCurrency && fields.salaryCurrency.trim()) ? (fields.salaryCurrency) : 'Select currency'}</span>
                 <span className="text-xs">⏷</span>
               </button>
-              {salaryCurrencyOpen && (
+              {jobSalaryCurrencyOpen && (
                 <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
                   <div className="p-2"><input type="text" className="tool-input" placeholder="Search currency..." value={salaryCurrencySearch} onChange={(e) => setSalaryCurrencySearch(e.target.value)} /></div>
                   <ul>
                     {ALL_CURRENCIES.filter((c) => (c.code || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase()) || (c.name || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase())).map((c) => (
-                      <li key={c.code} className={(fields.salaryCurrency || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('salaryCurrency', c.code || ''); setSalaryCurrencyOpen(false); setSalaryCurrencySearch('') }}>{c.code}</li>
+                      <li key={c.code} className={(fields.salaryCurrency || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('salaryCurrency', c.code || ''); toggleJobSalaryCurrencyOpen && toggleJobSalaryCurrencyOpen(); setSalaryCurrencySearch('') }}>{c.code}</li>
                     ))}
                   </ul>
                 </div>
@@ -468,15 +456,15 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             </div>
 
             <div className="relative" style={{ width: '50%' }}>
-              <button type="button" className="custom-select-trigger tool-select" onClick={() => setSalaryUnitOpen((o) => !o)} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={salaryUnitOpen}>
+              <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryUnitOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryUnitOpen}>
                 <span className="truncate block">{(fields.salaryUnit && fields.salaryUnit.trim()) ? capitalize(fields.salaryUnit) : 'Select period'}</span>
                 <span className="text-xs">⏷</span>
               </button>
-              {salaryUnitOpen && (
+              {jobSalaryUnitOpen && (
                 <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%' }}>
                   <ul>
                     {SALARY_UNITS.map((u) => (
-                      <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); setSalaryUnitOpen(false) }}>{capitalize(u)}</li>
+                      <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); toggleJobSalaryUnitOpen && toggleJobSalaryUnitOpen() }}>{capitalize(u)}</li>
                     ))}
                   </ul>
                 </div>

@@ -73,6 +73,14 @@ export default function SchemaBuilder(): JSX.Element {
   // Organization @type dropdown state
   const [orgTypeOpen, setOrgTypeOpen] = useState<boolean>(false)
   const [orgMoreSpecificOpen, setOrgMoreSpecificOpen] = useState<boolean>(false)
+  // Author @type dropdown (for Article form)
+  const [authorTypeOpen, setAuthorTypeOpen] = useState<boolean>(false)
+  // JobPosting-specific dropdown open states (lifted from JobPostingForm)
+  const [jobEmploymentTypeOpen, setJobEmploymentTypeOpen] = useState<boolean>(false)
+  const [jobCountryOpen, setJobCountryOpen] = useState<boolean>(false)
+  const [jobRegionOpen, setJobRegionOpen] = useState<boolean>(false)
+  const [jobSalaryCurrencyOpen, setJobSalaryCurrencyOpen] = useState<boolean>(false)
+  const [jobSalaryUnitOpen, setJobSalaryUnitOpen] = useState<boolean>(false)
   // Contact type dropdown state (per-contact index)
   const [contactTypeOpenIndex, setContactTypeOpenIndex] = useState<number | null>(null)
   // Area(s) Served country dropdown (per-contact index) and search
@@ -252,6 +260,12 @@ export default function SchemaBuilder(): JSX.Element {
         setRegionSearch("")
         setOrgTypeOpen(false)
         setOrgMoreSpecificOpen(false)
+        setAuthorTypeOpen(false)
+        setJobEmploymentTypeOpen(false)
+        setJobCountryOpen(false)
+        setJobRegionOpen(false)
+        setJobSalaryCurrencyOpen(false)
+        setJobSalaryUnitOpen(false)
         setOrgExtraKeyOpenIndex(null)
         setContactTypeOpenIndex(null)
         setAreaCountryOpenIndex(null)
@@ -284,11 +298,10 @@ export default function SchemaBuilder(): JSX.Element {
       const target = (e as MouseEvent).target as HTMLElement | null
       if (!target) return
 
-      // If the user clicked inside any custom-select-wrapper, ignore this click.
-      // Button clicks inside will still fire their onClick handlers naturally.
-      if (target.closest('.custom-select-wrapper')) return
+      // If the user clicked directly on a select trigger, let that trigger handle opening/closing.
+      if (target.closest('.custom-select-trigger')) return
 
-      // Otherwise close all open dropdowns.
+      // Otherwise close all open dropdowns (clicking anywhere closes them).
       closeAllDropdowns()
     }
 
@@ -1775,7 +1788,9 @@ export default function SchemaBuilder(): JSX.Element {
                 handleChange={handleChange}
                 renderError={renderError}
                 articleTypeOpen={articleTypeOpen}
-                toggleArticleTypeOpen={() => setArticleTypeOpen((o) => !o)}
+                  toggleArticleTypeOpen={() => setArticleTypeOpen((o) => !o)}
+                  authorTypeOpen={authorTypeOpen}
+                  toggleAuthorTypeOpen={() => setAuthorTypeOpen((o) => !o)}
                 images={images}
                 addImage={addImage}
                 removeImage={removeImage}
@@ -1971,6 +1986,16 @@ export default function SchemaBuilder(): JSX.Element {
                   StateSelectComp={StateSelectComp}
                   COUNTRY_LIST={COUNTRY_LIST}
                   STATES_BY_COUNTRY={STATES_BY_COUNTRY}
+                    jobEmploymentTypeOpen={jobEmploymentTypeOpen}
+                    toggleJobEmploymentTypeOpen={() => setJobEmploymentTypeOpen((o) => !o)}
+                    jobCountryOpen={jobCountryOpen}
+                    toggleJobCountryOpen={() => setJobCountryOpen((o) => !o)}
+                    jobRegionOpen={jobRegionOpen}
+                    toggleJobRegionOpen={() => setJobRegionOpen((o) => !o)}
+                    jobSalaryCurrencyOpen={jobSalaryCurrencyOpen}
+                    toggleJobSalaryCurrencyOpen={() => setJobSalaryCurrencyOpen((o) => !o)}
+                    jobSalaryUnitOpen={jobSalaryUnitOpen}
+                    toggleJobSalaryUnitOpen={() => setJobSalaryUnitOpen((o) => !o)}
                 />
               ) :
               // Website Sitelinks Searchbox — custom layout

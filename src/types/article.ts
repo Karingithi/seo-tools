@@ -2,7 +2,13 @@ export type ArticleFields = {
   articleType?: string
   url?: string
   headline?: string
+  strictHeadlineLimit?: string
   description?: string
+  authorType?: string
+  authorName?: string
+  authorUrl?: string
+  publisherName?: string
+  publisherLogo?: string
   datePublished?: string
   dateModified?: string
   articleBody?: string
