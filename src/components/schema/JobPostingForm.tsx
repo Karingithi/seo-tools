@@ -334,6 +334,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
             <button
               type="button"
               className="custom-select-trigger tool-select"
+              onMouseDown={(e) => { e.stopPropagation(); }}
               onClick={toggleJobCountryOpen}
               style={{ width: '100%', justifyContent: 'space-between' }}
               aria-expanded={jobCountryOpen}
@@ -355,7 +356,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                 </div>
                 <ul>
                   {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((countrySearch || '').toLowerCase())).map((c) => (
-                    <li key={c.code || c.name} className={(fields.country || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('country', c.code || ''); toggleJobCountryOpen && toggleJobCountryOpen(); setCountrySearch(''); setRegionCustomVisible(false) }}>
+                    <li key={c.code || c.name} className={(fields.country || '') === (c.code || '') ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('country', c.code || ''); toggleJobCountryOpen && toggleJobCountryOpen(); setCountrySearch(''); setRegionCustomVisible(false) }}>
                       {c.name}
                     </li>
                   ))}
@@ -389,6 +390,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
               <button
                 type="button"
                 className="custom-select-trigger tool-select"
+                onMouseDown={(e) => { e.stopPropagation(); }}
                 onClick={toggleJobRegionOpen}
                 style={{ width: '100%', justifyContent: 'space-between' }}
                 aria-expanded={jobRegionOpen}
@@ -404,7 +406,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                   </div>
                   <ul>
                     {STATES_BY_COUNTRY[selectedCountryCode].filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
-                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
+                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
                     ))}
                   </ul>
                 </div>

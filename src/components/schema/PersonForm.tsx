@@ -340,6 +340,7 @@ export default function PersonForm(props: PersonFormProps): JSX.Element {
               <button
                 type="button"
                 className="custom-select-trigger tool-select"
+                onMouseDown={(e) => { e.stopPropagation(); }}
                 onClick={() => setRegionOpen((o: any) => !o)}
                 style={{ width: "100%", justifyContent: "space-between" }}
                 aria-expanded={regionOpen}
@@ -361,11 +362,11 @@ export default function PersonForm(props: PersonFormProps): JSX.Element {
                   </div>
                   <ul>
                     {STATES_BY_COUNTRY[selectedCountryCode].filter((s: any) => s.toLowerCase().includes((regionSearch || "").toLowerCase())).map((s: any) => (
-                      <li key={s} className={(fields.region || "") === s ? "selected" : ""} onClick={() => { handleChange("region", s); setRegionOpen(false); setRegionSearch("") }}>
+                      <li key={s} className={(fields.region || "") === s ? "selected" : ""} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange("region", s); setRegionOpen(false); setRegionSearch("") }}>
                         {s}
                       </li>
                     ))}
-                    <li key="__other__" onClick={() => { setRegionCustomVisible(true); handleChange("region", ""); setRegionOpen(false) }}>
+                    <li key="__other__" onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { setRegionCustomVisible(true); handleChange("region", ""); setRegionOpen(false) }}>
                       Other...
                     </li>
                   </ul>
@@ -408,6 +409,7 @@ export default function PersonForm(props: PersonFormProps): JSX.Element {
             <button
               type="button"
               className="custom-select-trigger tool-select"
+              onMouseDown={(e) => { e.stopPropagation(); }}
               onClick={() => setCountryOpen((o: any) => !o)}
               style={{ width: "100%", justifyContent: "space-between" }}
               aria-expanded={countryOpen}
@@ -429,7 +431,7 @@ export default function PersonForm(props: PersonFormProps): JSX.Element {
                 </div>
                 <ul>
                   {COUNTRY_LIST.filter((c: any) => c.name.toLowerCase().includes((countrySearch || "").toLowerCase())).map((c: any) => (
-                    <li key={c.code || c.name} className={(fields.country || "") === (c.code || "") ? "selected" : ""} onClick={() => { handleChange("country", c.code || ""); setCountryOpen(false); setCountrySearch(""); setRegionCustomVisible(false) }}>
+                    <li key={c.code || c.name} className={(fields.country || "") === (c.code || "") ? "selected" : ""} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange("country", c.code || ""); setCountryOpen(false); setCountrySearch(""); setRegionCustomVisible(false) }}>
                       {c.name} {c.code ? <span className="text-[13px] text-gray-500">({c.code})</span> : null}
                     </li>
                   ))}

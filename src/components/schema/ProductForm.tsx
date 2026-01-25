@@ -1,5 +1,5 @@
-import DatePickerInput from "../components/DatePickerInput"
-import IdentificationInputs from "../components/IdentificationInputs"
+import DatePickerInput from "../DatePickerInput"
+import IdentificationInputs from "../IdentificationInputs"
 
 type Props = {
   value?: any

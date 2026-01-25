@@ -7,6 +7,7 @@ import { } from "react-router-dom"
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from 'react-country-state-fields'
+import countryRegionData from 'country-region-data'
 // Prefer `currency-codes` (installed). Avoid importing `currency-list` to prevent module-not-found.
 import currencyCodes from "currency-codes"
 import ISO6391 from "iso-639-1"
@@ -18,9 +19,9 @@ import Seo from "../components/Seo"
 // toolsData not required directly here; related tools component is used below
 import RelatedTools from "../components/RelatedTools"
 import SchemaPreview from "../components/SchemaPreview"
-import ProductForm from "../components/ProductForm"
-import EventForm from "../components/EventForm"
-import OrganizationForm from "../components/OrganizationForm"
+import ProductForm from "../components/schema/ProductForm"
+import EventForm from "../components/schema/EventForm"
+import OrganizationForm from "../components/schema/OrganizationForm"
 import { PersonForm, type PersonFields, HowToForm, type HowToFields, VideoForm, type VideoFields, JobPostingForm, type JobPostingFields } from "../components/schema"
 import ArticleForm from "../components/schema/ArticleForm"
 import type { ArticleFields } from "../types/article"
@@ -300,6 +301,8 @@ export default function SchemaBuilder(): JSX.Element {
 
       // If the user clicked directly on a select trigger, let that trigger handle opening/closing.
       if (target.closest('.custom-select-trigger')) return
+      // If the click was inside an open select list (options area), don't close — allow interacting with options.
+      if (target.closest('.custom-select-list')) return
 
       // Otherwise close all open dropdowns (clicking anywhere closes them).
       closeAllDropdowns()
@@ -601,6 +604,11 @@ export default function SchemaBuilder(): JSX.Element {
     { value: "Organization", label: "Organization" },
   ]
 
+  const ORGANIZER_TYPES = [
+    { value: "Organization", label: "Organization" },
+    { value: "Person", label: "Person" },
+  ]
+
   // Timezone dropdown state (for Event timezone selector)
   const [timezoneOpen, setTimezoneOpen] = useState<boolean>(false)
   const [timezoneSearch, setTimezoneSearch] = useState<string>("")
@@ -717,20 +725,48 @@ export default function SchemaBuilder(): JSX.Element {
       return null
     }
   }, [])
-  const STATES_BY_COUNTRY: Record<string, string[]> = {
-    US: [
-      'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'
-    ],
-    CA: [
-      'Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Nova Scotia','Ontario','Prince Edward Island','Quebec','Saskatchewan'
-    ],
-    GB: [
-      'England','Scotland','Wales','Northern Ireland'
-    ],
-    AU: [
-      'New South Wales','Queensland','South Australia','Tasmania','Victoria','Western Australia','Australian Capital Territory','Northern Territory'
-    ]
-  }
+  const STATES_BY_COUNTRY: Record<string, string[]> = (() => {
+    try {
+      const data = (countryRegionData as any).default || countryRegionData
+      const needed = ['US', 'CA', 'GB', 'AU']
+      const map: Record<string, string[]> = {}
+      needed.forEach((code) => {
+        const entry = data.find((c: any) => c.countryShortCode === code || c.countryName === code)
+        if (entry && entry.regions && entry.regions.length) {
+          map[code] = entry.regions.map((r: any) => r.name)
+        }
+      })
+
+      // Ensure US includes DC and territories if not present in the package data
+      const usExtras = ['District of Columbia','Puerto Rico','Guam','American Samoa','Northern Mariana Islands','United States Virgin Islands']
+      if (!map['US'] || map['US'].length === 0) {
+        map['US'] = [
+          'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming',
+          ...usExtras
+        ]
+      } else {
+        usExtras.forEach((e) => { if (!map['US'].includes(e)) map['US'].push(e) })
+      }
+
+      // Fallbacks for other countries if missing
+      if (!map['CA']) map['CA'] = ['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Nova Scotia','Ontario','Prince Edward Island','Quebec','Saskatchewan']
+      if (!map['GB']) map['GB'] = ['England','Scotland','Wales','Northern Ireland']
+      if (!map['AU']) map['AU'] = ['New South Wales','Queensland','South Australia','Tasmania','Victoria','Western Australia','Australian Capital Territory','Northern Territory']
+
+      return map
+    } catch (err) {
+      // If anything fails, return the previous hardcoded map
+      return {
+        US: [
+          'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming',
+          'District of Columbia','Puerto Rico','Guam','American Samoa','Northern Mariana Islands','United States Virgin Islands'
+        ],
+        CA: ['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Nova Scotia','Ontario','Prince Edward Island','Quebec','Saskatchewan'],
+        GB: ['England','Scotland','Wales','Northern Ireland'],
+        AU: ['New South Wales','Queensland','South Australia','Tasmania','Victoria','Western Australia','Australian Capital Territory','Northern Territory']
+      }
+    }
+  })()
 
   // Region select helper state: when user chooses 'Other', show a custom input
   const [regionCustomVisible, setRegionCustomVisible] = useState<boolean>(false)
@@ -1583,6 +1619,7 @@ export default function SchemaBuilder(): JSX.Element {
       contacts,
       ticketTypes,
       ticketDefaultCurrency,
+      // No automatic page URL provided — mainEntityOfPage will only be added when user enters a URL
       reviews,
       orgExtras,
       // How-to specific arrays
@@ -1770,11 +1807,7 @@ export default function SchemaBuilder(): JSX.Element {
               </div>
             )}
 
-            {type === "How-to" && (
-              <div className="text-sm text-gray-500 mt-0">
-                Steps: one per line. Tools/supplies accept comma-separated or newline lists. Total time: plain minutes — preview converts to ISO 8601 duration (e.g. <code>40</code> → <code>PT40M</code>).
-              </div>
-            )}
+            {/* How-to helper text removed per request */}
 
             {type === "Job Posting" && (
               <div className="text-sm text-gray-500 mt-0">
@@ -1940,8 +1973,10 @@ export default function SchemaBuilder(): JSX.Element {
                   venueCountrySearch={venueCountrySearch}
                   setVenueCountrySearch={setVenueCountrySearch}
                   COUNTRY_LIST={COUNTRY_LIST}
+                  STATES_BY_COUNTRY={STATES_BY_COUNTRY}
                   organizerTypeOpen={organizerTypeOpen}
                   setOrganizerTypeOpen={setOrganizerTypeOpen}
+                  ORGANIZER_TYPES={ORGANIZER_TYPES}
                   performerTypeOpen={performerTypeOpen}
                   setPerformerTypeOpen={setPerformerTypeOpen}
                   PERFORMER_TYPES={PERFORMER_TYPES}

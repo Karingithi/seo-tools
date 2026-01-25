@@ -25,14 +25,17 @@ export function applyProductOffersAndRatings(base: any, fields: Record<string, s
 
     const offerType = ((fields.offerType || "Offer") as string).trim()
     if (offerType === "AggregateOffer") {
+      // Represent the price range directly on AggregateOffer; avoid nesting a single Offer inside.
       const agg: any = { "@type": "AggregateOffer" }
+      agg.priceCurrency = (fields.currency && fields.currency.trim()) || offer.priceCurrency || "USD"
       if ((fields.lowPrice || "").trim()) agg.lowPrice = (fields.lowPrice || "").trim()
       if ((fields.highPrice || "").trim()) agg.highPrice = (fields.highPrice || "").trim()
       if ((fields.offerCount || "").trim()) {
         const n = toNumber(fields.offerCount.trim())
         agg.offerCount = n != null ? n : (fields.offerCount || "").trim()
       }
-      agg.offers = offer
+      // If a canonical URL was provided, surface it at the aggregate level.
+      if (offer.url) agg.url = offer.url
       base.offers = agg
     } else if (offerType === "Offer") {
       base.offers = offer
@@ -59,6 +62,9 @@ export function applyProductOffersAndRatings(base: any, fields: Record<string, s
 
   // Clean up helper keys
   delete base.price
+  delete base.lowPrice
+  delete base.highPrice
+  delete base.offerCount
   delete base.currency
   delete base.priceValidUntil
   delete base.availability

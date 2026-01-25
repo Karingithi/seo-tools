@@ -338,6 +338,11 @@ export function buildSchemaFromState(p: BuildParams): any {
 
   if (type === "Article") {
     base["@type"] = (fields.articleType && fields.articleType.trim()) || "Article"
+    // Add mainEntityOfPage early so it appears near the top-level properties in JSON output
+    const articleUrl = (fields.url && String(fields.url).trim()) || (base.url && String(base.url).trim())
+    if (articleUrl) {
+      base.mainEntityOfPage = { "@type": "WebPage", "@id": articleUrl }
+    }
     const authorName = (fields.authorName || fields.author || "").trim()
     if (authorName) {
       base.author = { "@type": fields.authorType || "Person", name: authorName }
@@ -465,6 +470,20 @@ export function buildSchemaFromState(p: BuildParams): any {
   if (type === "Product") {
     applyProductOffersAndRatings(base, fields)
 
+    // Safety: flatten any legacy nested Offer inside AggregateOffer and ensure currency is present.
+    if (base.offers && base.offers["@type"] === "AggregateOffer") {
+      const agg: any = base.offers
+      // If a nested offers object exists (legacy structure), drop it — we represent the range on AggregateOffer only.
+      if (agg.offers) delete agg.offers
+      // Ensure priceCurrency stays on the aggregate
+      if (!agg.priceCurrency && fields.currency?.trim()) agg.priceCurrency = fields.currency.trim()
+    }
+
+    // Ensure no top-level price range fields leak when AggregateOffer is used.
+    if (base.lowPrice) delete base.lowPrice
+    if (base.highPrice) delete base.highPrice
+    if (base.offerCount) delete base.offerCount
+
     // Post-process Product-specific canonicalizations / cleanup
     // 1) Prefer `image` as the property
     if (fields.image?.trim()) base.image = fields.image.trim()
@@ -534,6 +553,13 @@ export function buildSchemaFromState(p: BuildParams): any {
   }
 
   if (type === "Event") {
+    // If a more specific Event @type was selected in the UI (e.g. MusicEvent),
+    // prefer that specific type instead of the generic "Event" and do not
+    // emit the non-standard `eventSubtype` property in the final JSON-LD.
+    if (fields.eventSubtype && typeof fields.eventSubtype === 'string' && fields.eventSubtype.trim()) {
+      base["@type"] = fields.eventSubtype.trim()
+    }
+
     // Build location based on attendance mode
     const mode = (fields.attendanceMode || '').trim()
     const hasVenue = (fields.venueName || fields.venueStreet || fields.venueCity || fields.venuePostalCode || fields.venueCountry)
@@ -645,12 +671,11 @@ export function buildSchemaFromState(p: BuildParams): any {
     // Support `image` for event images
     if (fields.image?.trim()) base.image = fields.image.trim()
     
-    // url property serves as both event page URL and online attendance link
-    // Priority: explicit url field, then streamUrl (for backwards compatibility)
+    // Event `url` should represent the landing/page URL for the event. Do not
+    // populate the top-level `url` with the stream/virtual link. The
+    // `VirtualLocation.url` already holds the streaming link when appropriate.
     if (fields.url?.trim()) {
       base.url = fields.url.trim()
-    } else if (fields.streamUrl?.trim()) {
-      base.url = fields.streamUrl.trim()
     }
     
     if (p.ticketTypes && p.ticketTypes.length) {
@@ -768,6 +793,8 @@ export function buildSchemaFromState(p: BuildParams): any {
     delete base.attendanceMode
     delete base.timezone
     delete base.streamUrl
+    // Remove non-standard helper field used by the UI when present
+    delete base.eventSubtype
     out = base
   }
 
