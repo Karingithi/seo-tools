@@ -6,8 +6,9 @@ import { buildSchemaFromState, schemaFields, schemaDescriptions, schemaExamples,
 import { } from "react-router-dom"
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
-import type { StateProps } from 'react-country-state-fields'
-import countryRegionData from 'country-region-data'
+import type { StateProps } from '../types/state'
+import StateSelectFallback from "../components/StateSelectFallback"
+import * as countryRegionData from 'country-region-data'
 // Prefer `currency-codes` (installed). Avoid importing `currency-list` to prevent module-not-found.
 import currencyCodes from "currency-codes"
 import ISO6391 from "iso-639-1"
@@ -775,19 +776,8 @@ export default function SchemaBuilder(): JSX.Element {
   const [StateSelectComp, setStateSelectComp] = useState<ComponentType<StateProps> | null>(null)
 
   useEffect(() => {
-    let mounted = true
-    import("react-country-state-fields")
-      .then((mod: any) => {
-        if (!mounted) return
-        const State = mod.StateSelect || mod.State || mod.default?.State || mod.default || null
-        if (State) setStateSelectComp(() => State)
-      })
-      .catch(() => {
-        // ignore if module not present or fails to load; fallbacks will be used
-      })
-    return () => {
-      mounted = false
-    }
+    // Use local fallback State select component (avoids dependency on react-country-state-fields)
+    setStateSelectComp(() => StateSelectFallback)
   }, [])
 
   // Helper: derive a 2-letter ISO country code from the stored `fields.country` value.
@@ -1506,6 +1496,8 @@ export default function SchemaBuilder(): JSX.Element {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Keywords are provided as a comma-separated string in `fields.keywords`.
+
   // Generic field handler
   const handleChange = (key: string, value: any) => {
     setFields((prev) => {
@@ -1690,10 +1682,11 @@ export default function SchemaBuilder(): JSX.Element {
   return (
     <>
       <Seo
-        title="Schema Builder"
+        title="Free Schema Markup Generator (JSON-LD)"
         description="Generate clean and structured JSON-LD for multiple content types using this builder."
         keywords="schema generator, json-ld generator, seo tools"
         url="https://cralite.com/tools/schema-builder"
+        disableBreadcrumb={true}
       />
       {/* Inject FAQ JSON-LD so the page provides structured FAQ data */}
       <Helmet>

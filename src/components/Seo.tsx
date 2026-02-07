@@ -8,6 +8,7 @@ interface SeoProps {
   url?: string
   siteName?: string
   locale?: string
+  disableBreadcrumb?: boolean
 }
 
 export default function Seo({
@@ -18,38 +19,41 @@ export default function Seo({
   url = "https://cralite.com",
   siteName = "Cralite Digital",
   locale = "en_US",
+  disableBreadcrumb = false,
 }: SeoProps) {
   const fullTitle = `${title} | Cralite Digital`
   // Build breadcrumb JSON-LD: Home -> (SEO Tools) -> Page
   let breadcrumbJsonLd: Record<string, any> | null = null
-  try {
-    const u = new URL(url)
-    const path = u.pathname || "/"
-    const items: Array<{ "@type": string; position: number; name: string; item: string }> = []
+  if (!disableBreadcrumb) {
+    try {
+      const u = new URL(url)
+      const path = u.pathname || "/"
+      const items: Array<{ "@type": string; position: number; name: string; item: string }> = []
 
-    // Home
-    items.push({ "@type": "ListItem", position: 1, name: "Home", item: `${u.origin}` })
+      // Home
+      items.push({ "@type": "ListItem", position: 1, name: "Home".toLowerCase(), item: `${u.origin}` })
 
-    // If this is under /tools, add the SEO Tools container as the second item
-    if (path.startsWith("/tools") || path.includes("/tools/")) {
-      items.push({ "@type": "ListItem", position: 2, name: "SEO Tools", item: `${u.origin}/tools` })
+      // If this is under /tools, add the SEO Tools container as the second item
+      if (path.startsWith("/tools") || path.includes("/tools/")) {
+        items.push({ "@type": "ListItem", position: 2, name: "SEO Tools".toLowerCase(), item: `${u.origin}/tools` })
 
-      // Page label — prefer provided title, fallback to last path segment
-      const last = title || decodeURIComponent(path.replace(/\/$/, "").split("/").pop() || "")
-      items.push({ "@type": "ListItem", position: 3, name: last, item: url })
-    } else {
-      // Simple 2-part breadcrumb: Home -> Page
-      const pageLabel = title || u.pathname.replace(/\//g, " ").trim() || "Page"
-      items.push({ "@type": "ListItem", position: 2, name: pageLabel, item: url })
+        // Page label — prefer provided title, fallback to last path segment
+        const last = (title || decodeURIComponent(path.replace(/\/$/, "").split("/").pop() || "")).toLowerCase()
+        items.push({ "@type": "ListItem", position: 3, name: last, item: url })
+      } else {
+        // Simple 2-part breadcrumb: Home -> Page
+        const pageLabel = (title || u.pathname.replace(/\//g, " ").trim() || "Page").toLowerCase()
+        items.push({ "@type": "ListItem", position: 2, name: pageLabel, item: url })
+      }
+
+      breadcrumbJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items,
+      }
+    } catch (e) {
+      breadcrumbJsonLd = null
     }
-
-    breadcrumbJsonLd = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: items,
-    }
-  } catch (e) {
-    breadcrumbJsonLd = null
   }
 
   return (

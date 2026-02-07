@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { StateProps } from 'react-country-state-fields'
+import type { StateProps } from './state'
 
 export type JobPostingFields = {
   title?: string

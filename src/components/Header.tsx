@@ -27,24 +27,24 @@ const MENU_DATA: Record<string, MenuData> = {
   services: {
     label: "Services",
     items: [
-      { label: "SEO" },
-      { label: "Web Design" },
-      { label: "Marketing" },
+      { label: "SEO", href: "https://cralite.com/seo-services-kenya/" },
+      { label: "Website Design", href: "https://cralite.com/web-design-services/" },
     ],
   },
   portfolio: {
     label: "Portfolio",
     items: [
-      { label: "Case Studies" },
-      { label: "Featured" },
-      { label: "All Projects" },
+      { label: "Branding", href: "https://cralite.com/branding-projects/" },
+      { label: "Digital Design", href: "https://cralite.com/digital-design-projects/" },
+      { label: "Rich Media Gallery", href: "https://cralite.com/rich-media-gallery/" },
+      { label: "Website Design", href: "https://cralite.com/web-design-projects/" },
     ],
   },
   resources: {
     label: "Resources",
     items: [
       { label: "Blog", href: "https://cralite.com/blog/" },
-      { label: "Free SEO Tools" },
+      { label: "Free SEO Tools", href: "https://cralite.com/tools/" },
     ],
   },
 }
@@ -62,21 +62,12 @@ function HoverLabel({
   hoverColor?: string
 }) {
   return (
-    <span className="group relative inline-block overflow-hidden h-[1.2em] leading-none">
-      {/* Top label */}
-      <span className="block transition-transform duration-300 ease-[cubic-bezier(.25,1,.25,1)] group-hover:-translate-y-full">
-        <span className={`${color} block transition-all duration-300`}>
-          {label}
-        </span>
-        {/* Bottom (ghost) label */}
-        <span
-          className={`
-            block absolute left-0 top-full 
-            ${hoverColor || color}
-          `}
-        >
-          {label}
-        </span>
+    <span className="ui-flip-anim-wrapp">
+      <span className={`ui-menu-item-wrapper ${color}`}>
+        {label}
+      </span>
+      <span className={`ui-menu-item-wrapper ${hoverColor || color}`}>
+        {label}
       </span>
     </span>
   )
@@ -93,14 +84,14 @@ function DropdownItem({
 }: {
   label: string
   href?: string
-  firstRef?: React.RefObject<HTMLAnchorElement>
+  firstRef?: React.RefObject<HTMLAnchorElement | null>
 }) {
   // If no href provided, render as a span (non-clickable)
   if (!href) {
     return (
       <span
         ref={firstRef as any}
-        className="nav-dropdown-item group"
+        className="nav-dropdown-item ui-anim-flip"
       >
         <HoverLabel label={label} color="text-[#070026]" hoverColor="text-[#070026]" />
       </span>
@@ -111,7 +102,7 @@ function DropdownItem({
     <a
       ref={firstRef}
       href={href}
-      className="nav-dropdown-item group"
+      className="nav-dropdown-item ui-anim-flip"
     >
       <HoverLabel label={label} color="text-[#070026]" hoverColor="text-[#070026]" />
     </a>
@@ -220,7 +211,7 @@ export default function Header() {
         onMouseLeave={handleMouseLeave}
       >
         <button
-          className={`nav-dropdown-button ${isOpen ? "text-primary" : ""}`}
+          className={`nav-dropdown-button ui-anim-flip ${isOpen ? "text-primary" : ""}`}
           onClick={() => toggleMenu(menuKey)}
         >
           <HoverLabel
@@ -249,16 +240,28 @@ export default function Header() {
     )
   }
 
-  // Contact nav link
-  const navLink = (path: string, label: string) => (
-    <Link
-      to={path}
-      className={`nav-dropdown-button ${location.pathname === path ? "text-primary!" : ""}`}
-      onClick={() => setMenuOpen(false)}
-    >
-      <HoverLabel label={label} hoverColor="text-primary" />
-    </Link>
-  )
+  // Contact nav link (supports internal routes and external URLs)
+  const navLink = (path: string, label: string) => {
+    const isExternal = path.startsWith("http")
+    const commonProps = {
+      className: `nav-dropdown-button ui-anim-flip ${location.pathname === path ? "text-primary!" : ""}`,
+      onClick: () => setMenuOpen(false),
+    }
+
+    if (isExternal) {
+      return (
+        <a href={path} {...commonProps}>
+          <HoverLabel label={label} hoverColor="text-primary" />
+        </a>
+      )
+    }
+
+    return (
+      <Link to={path} {...commonProps}>
+        <HoverLabel label={label} hoverColor="text-primary" />
+      </Link>
+    )
+  }
   return (
     <header
       ref={headerRef as any}
@@ -288,12 +291,12 @@ export default function Header() {
         </button>
 
         {/* DESKTOP NAV */}
-        <nav className="hidden lg:flex lg:items-center lg:space-x-6">
+        <nav className="hidden lg:flex lg:items-center lg:space-x-0">
           {Object.keys(MENU_DATA).map((menuKey) => (
             <MenuButton key={menuKey} menuKey={menuKey} />
           ))}
 
-          {navLink("/contact", "Contact")}
+          {navLink("https://cralite.com/contact/", "Contact")}
         </nav>
 
         {/* DESKTOP CTA (hidden on mobile/hamburger) */}

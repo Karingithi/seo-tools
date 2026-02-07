@@ -3,8 +3,6 @@
 // Extracted for better code organization
 // ==============================
 
-import { Link } from "react-router-dom"
-
 // -------------------------------------------------
 // HoverLabel (duplicated for now, could be shared)
 // -------------------------------------------------
@@ -36,10 +34,23 @@ interface MobileMenuProps {
   onSubmenuChange: (submenu: string | null) => void
 }
 
-const MOBILE_MENU_DATA = {
-  services: ["SEO", "Web Design", "Marketing"],
-  portfolio: ["Case Studies", "Featured", "All Projects"],
-  resources: ["Blog", "Guides", "Contact"],
+type MobileMenuItem = { label: string; href?: string }
+
+const MOBILE_MENU_DATA: Record<string, MobileMenuItem[]> = {
+  services: [
+    { label: "SEO", href: "https://cralite.com/seo-services-kenya/" },
+    { label: "Website Design", href: "https://cralite.com/web-design-services/" },
+  ],
+  portfolio: [
+    { label: "Branding", href: "https://cralite.com/branding-projects/" },
+    { label: "Digital Design", href: "https://cralite.com/digital-design-projects/" },
+    { label: "Rich Media Gallery", href: "https://cralite.com/rich-media-gallery/" },
+    { label: "Website Design", href: "https://cralite.com/web-design-projects/" },
+  ],
+  resources: [
+    { label: "Blog", href: "https://cralite.com/blog/" },
+    { label: "Free SEO Tools", href: "https://cralite.com/tools/" },
+  ],
 }
 
 export default function MobileMenu({
@@ -76,7 +87,7 @@ export default function MobileMenu({
 
         {/* Main Menu */}
         {!mobileSubmenu ? (
-          <div className="flex-1 flex flex-col container pt-6">
+          <div className="flex-1 flex flex-col container pt-6 space-y-0">
             {Object.entries(MOBILE_MENU_DATA).map(([key, _items]) => (
               <div
                 key={key}
@@ -101,9 +112,9 @@ export default function MobileMenu({
             ))}
 
             <div className="mobile-menu-item text-white text-[17px]">
-              <Link to="/contact" onClick={onClose}>
+              <a href="https://cralite.com/contact/" onClick={onClose}>
                 <HoverLabel label="Contact" />
-              </Link>
+              </a>
             </div>
 
             {/* CTA below menu */}
@@ -119,7 +130,7 @@ export default function MobileMenu({
           </div>
         ) : (
           // Submenu
-          <div className="flex-1 flex flex-col container pt-6">
+          <div className="flex-1 flex flex-col container pt-6 space-y-0">
             {/* Back Button */}
             <div
               className="mobile-menu-item text-white uppercase text-[12px] cursor-pointer opacity-80"
@@ -130,8 +141,13 @@ export default function MobileMenu({
 
             {/* Submenu Items */}
             {MOBILE_MENU_DATA[mobileSubmenu as keyof typeof MOBILE_MENU_DATA]?.map((item) => (
-              <a key={item} className="mobile-menu-item text-white text-[17px]" href="#">
-                <HoverLabel label={item} />
+              <a
+                key={item.label}
+                className="mobile-menu-item text-white text-[17px]"
+                href={item.href ?? "#"}
+                onClick={onClose}
+              >
+                <HoverLabel label={item.label} />
               </a>
             ))}
 

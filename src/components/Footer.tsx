@@ -26,55 +26,64 @@ export default function Footer() {
                 alt="Cralite"
                 className="w-[140px] h-auto"
               />
-              <p className="text-white text-lg leading-relaxed w-[86%] mb-0">
+              <p className="text-white text-[17px] leading-relaxed w-full lg:w-[86%] mb-0">
                 We create digital experiences that engage and convert.
               </p>
             </div>
 
         {/* Company */}
         <div className="flex flex-col justify-start">
-          <h3 className="text-white font-bold mb-2.5 text-2xl">Company</h3>
-          <ul className="space-y-2 text-lg">
-            <li><a href="#" className="text-white hover:text-primary">About us</a></li>
-            <li><a href="#" className="text-white hover:text-primary">Privacy Policy</a></li>
-            <li><a href="#" className="text-white hover:text-primary">Contact</a></li>
+          <h3 className="text-white font-bold mb-5 text-xl">Company</h3>
+            <ul className="space-y-2.5 text-[17px]">
+            <li><a href="https://cralite.com/about/" className="text-white hover:text-primary">About us</a></li>
+            <li><a href="https://cralite.com/privacy-policy/" className="text-white hover:text-primary">Privacy Policy</a></li>
+            <li><a href="https://cralite.com/contact/" className="text-white hover:text-primary">Contact</a></li>
           </ul>
         </div>
 
         {/* Rich Media */}
         <div className="flex flex-col justify-start">
-          <h3 className="text-white font-bold mb-4 text-2xl">Rich Media</h3>
-          <ul className="space-y-2 text-lg text-white hover:text-primary">
-            <li><a href="#" className="text-white hover:text-primary">Layouts</a></li>
-            <li><a href="#" className="text-white hover:text-primary">Ad Gallery</a></li>
-            <li><a href="#" className="text-white hover:text-primary">Features</a></li>
+          <h3 className="text-white font-bold mb-5 text-xl">Our Projects</h3>
+            <ul className="space-y-2.5 text-[17px]">
+            <li>
+              <a href="https://cralite.com/branding-projects/" className="text-white hover:text-primary">Branding</a>
+            </li>
+            <li>
+              <a href="https://cralite.com/digital-design-projects/" className="text-white hover:text-primary">Digital Design</a>
+            </li>
+            <li>
+              <a href="https://cralite.com/rich-media-gallery/" className="text-white hover:text-primary">Rich Media Gallery</a>
+            </li>
+            <li>
+              <a href="https://cralite.com/web-design-projects/" className="text-white hover:text-primary">Website Design</a>
+            </li>
           </ul>
         </div>
 
         {/* Contact */}
         <div className="flex flex-col justify-start">
-          <h3 className="text-white font-bold mb-4 text-2xl">Contact Us</h3>
-            <a href="mailto:hello@cralite.com" className="text-lg text-white hover:underline">
+          <h3 className="text-white font-bold mb-5 text-xl">Contact Us</h3>
+            <a href="mailto:hello@cralite.com" className="text-[17px] text-white">
             hello@cralite.com
           </a>
             <div className="mt-4 social-list">
               {/* Social icons (use centralized classes) */}
-              <a href="#" aria-label="Facebook" className="social-link">
+              <a href="https://www.facebook.com/cralite.digital" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="social-link">
                 <FontAwesomeIcon icon={faFacebookF} className="social-icon" />
               </a>
-              <a href="#" aria-label="Instagram" className="social-link">
+              <a href="https://www.instagram.com/cralite.digital/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="social-link">
                 <FontAwesomeIcon icon={faInstagram} className="social-icon" />
               </a>
-              <a href="#" aria-label="X" className="social-link">
+              <a href="https://twitter.com/Cralite_Digital" target="_blank" rel="noopener noreferrer" aria-label="X" className="social-link">
                 <FontAwesomeIcon icon={faXTwitter} className="social-icon" />
               </a>
-              <a href="#" aria-label="LinkedIn" className="social-link">
+              <a href="https://linkedin.com/compa" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="social-link">
                 <FontAwesomeIcon icon={faLinkedin} className="social-icon" />
               </a>
-              <a href="#" aria-label="YouTube" className="social-link">
+              <a href="http://www.youtube.com/@Cralite_Digitalny/cralite-digital" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="social-link">
                 <FontAwesomeIcon icon={faYoutube} className="social-icon" />
               </a>
-              <a href="#" aria-label="WhatsApp" className="social-link">
+              <a href="https://wa.me/254721379487?text=Hello%2C%20I%20have%20a%20question%20about%20your%20service.%20Can%20you%20please%20help%20me%3F" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="social-link">
                 <FontAwesomeIcon icon={faWhatsapp} className="social-icon" />
               </a>
             </div>

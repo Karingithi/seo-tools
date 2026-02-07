@@ -12,7 +12,55 @@ import ResetIcon from "../assets/icons/reset.svg?react"
 // default placeholder favicon for preview
 import DefaultFavicon from "../assets/icons/favicon.svg?url"
 
-// Structured data (FAQ JSON-LD)
+// FAQ source of truth for UI and JSON-LD
+const FAQ_ITEMS = [
+  {
+    q: "What does the Meta Tag Generator do?",
+    a:
+      "The Meta Tag Generator helps you create SEO-friendly meta titles, meta descriptions, canonical tags, robots directives, Open Graph tags, and Twitter Card tags. It includes a live Google-style preview and generates clean HTML output.",
+  },
+  {
+    q: "What should I put in the page title?",
+    a:
+      "Use a clear, descriptive title that reflects the page’s main topic and places the most important keyword near the beginning. For best results, keep the title under 60 characters to avoid truncation in search results.",
+  },
+  {
+    q: "How long should a meta description be?",
+    a:
+      "Meta descriptions should typically be under 160 characters. The generator shows character limits and a live preview so you can optimize for readability and click-through without getting cut off in search results.",
+  },
+  {
+    q: "Do meta keywords still matter for SEO?",
+    a:
+      "Meta keywords are no longer used by major search engines for rankings. However, they can still be useful for internal organization or legacy systems. The tool includes them as an optional field without prioritizing them for SEO.",
+  },
+  {
+    q: "When should I set a canonical URL?",
+    a:
+      "You should set a canonical URL when multiple URLs display similar or duplicate content. This tells search engines which version of the page should be indexed and helps prevent duplicate content issues.",
+  },
+  {
+    q: "What do the robots meta options control?",
+    a:
+      "Robots meta directives allow you to tell search engines whether a page should be indexed and whether links on the page should be followed. This is useful for managing crawl behavior without editing server files.",
+  },
+  {
+    q: "Do Open Graph and Twitter tags need different content?",
+    a:
+      "Not always. Open Graph and Twitter tags can reuse your page title and description. You can customize them to improve how your pages appear when shared on platforms such as Facebook, LinkedIn, and X.",
+  },
+  {
+    q: "Does this tool generate valid HTML meta tags?",
+    a:
+      "Yes. The generator outputs clean, valid HTML meta tags that you can copy and paste directly into the head section of your webpage or CMS.",
+  },
+  {
+    q: "Will these meta tags help with AI-powered search results?",
+    a:
+      "Well-structured meta tags, canonical URLs, and social metadata help search engines and AI-powered systems better understand page context. This can improve how content is interpreted and displayed in search experiences.",
+  },
+]
+
 const structuredData = [
   {
     "@context": "https://schema.org",
@@ -32,40 +80,14 @@ const structuredData = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What should I put in the page title?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Write a concise, descriptive title that reflects the page content and includes important keywords near the front.",
-        },
+    mainEntity: FAQ_ITEMS.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
       },
-      {
-        "@type": "Question",
-        name: "How long should the meta description be?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Aim for under ~160 characters and keep an eye on pixel width — the preview helps you keep it focused.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "When should I set a canonical URL?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Add a canonical URL when the same content is reachable via multiple URLs to indicate the preferred version.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Do Open Graph and Twitter tags need different content?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "You can reuse titles and descriptions, but tailor Open Graph images and twitter:card types for better social previews.",
-        },
-      },
-    ],
+    })),
   },
 ]
 
@@ -530,7 +552,7 @@ export default function MetaTagGenerator(): JSX.Element {
     <>
       <Seo
         title="Free Meta Tag Generator"
-        description="Generate optimized meta tags including title, description, canonical URL, robots, Open Graph, and Twitter Card — with a live preview."
+        description="Generate free, optimized meta tags including titles, descriptions, canonical URLs, robots directives, Open Graph, and Twitter Cards with a live preview."
         keywords="meta tag generator, seo tools, canonical, open graph, twitter card"
         url="https://cralite.com/tools/meta-tag-generator"
       />
@@ -931,7 +953,7 @@ export default function MetaTagGenerator(): JSX.Element {
                 desc: "Add canonical and Open Graph URLs and correct any validation warnings.",
               },
               {
-                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/download.svg", import.meta.url).href,
                 title: "3. Copy or Download",
                 desc: "Copy the generated meta tags or download them as a text file for your CMS.",
               },

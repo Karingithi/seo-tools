@@ -71,6 +71,8 @@ export default function ArticleForm(props: ArticleFormProps) {
         </div>
       </div>
 
+      {/** @id is auto-generated from the Article URL when missing; UI field removed */}
+
       {/* Remaining Article fields (headline, description, images, author/publisher, body, dates) */}
       <div className="tool-field">
         <label className="tool-label">Headline</label>
@@ -89,6 +91,13 @@ export default function ArticleForm(props: ArticleFormProps) {
         <label className="tool-label">Short description</label>
         <textarea className="tool-textarea" value={fields.description ?? ''} placeholder="Short summary" onChange={(e) => handleChange('description', e.target.value)} />
         {renderError('description')}
+      </div>
+
+      <div className="tool-field">
+        <label className="tool-label">Keywords</label>
+        <input type="text" className="tool-input" value={fields.keywords ?? ''} placeholder="keyword1, keyword2, keyword3" onChange={(e) => handleChange('keywords', e.target.value)} />
+        <div className="text-sm text-gray-600 mt-1">Useful for topical reinforcement (not ranking manipulation). Separate keywords with commas.</div>
+        {renderError('keywords')}
       </div>
 
       <div className="tool-field">

@@ -37,16 +37,16 @@ export const toolsData: Tool[] = [
     description: "Validate robots.txt files and detect syntax or access issues.",
   },
   {
-    name: "Free Keyword Generator",
-    icon: KeywordIconUrl,
-    link: "/keyword-generator",
-    description: "Generate keyword ideas and variations for content planning.",
-  },
-  {
     name: "JSON-LD Schema Generator",
     icon: SchemaIconUrl,
     link: "/schema-builder",
     description: "Create JSON-LD structured data (schema) for rich results.",
+  },
+  {
+    name: "Free Keyword Generator",
+    icon: KeywordIconUrl,
+    link: "/keyword-generator",
+    description: "Generate keyword ideas and variations for content planning.",
   },
   {
     name: "XML Sitemap Checker",

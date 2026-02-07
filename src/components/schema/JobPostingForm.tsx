@@ -77,14 +77,27 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
   const getSelectedCountryCode = (countryVal?: string) => {
     if (!countryVal) return undefined
-    const found = COUNTRY_LIST.find((c) => (c.code || '').toLowerCase() === (countryVal || '').toLowerCase() || c.name.toLowerCase() === (countryVal || '').toLowerCase())
-    return found?.code
+    // If already a 2-letter code (any case), normalize to upper-case
+    if (/^[A-Za-z]{2}$/.test(countryVal)) return countryVal.toUpperCase()
+
+    // Try to find in prebuilt country list first (matches code or name)
+    const found = COUNTRY_LIST.find((c) => (c.code || '').toLowerCase() === (countryVal || '').toLowerCase() || (c.name || '').toLowerCase() === (countryVal || '').toLowerCase())
+    if (found) return found.code
+
+    // Otherwise try the i18n helper as a last resort
+    try {
+      const code = countries.getAlpha2Code(countryVal, 'en')
+      return code || undefined
+    } catch {
+      return undefined
+    }
   }
 
   const selectedCountryCode = getSelectedCountryCode(fields.country)
+  const hasRegions = !!(selectedCountryCode && STATES_BY_COUNTRY && STATES_BY_COUNTRY[selectedCountryCode] && STATES_BY_COUNTRY[selectedCountryCode].length)
 
   return (
-    <div>
+    <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="tool-field">
           <label className="tool-label">Job title</label>
@@ -124,7 +137,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         {renderError('jobDescription')}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="tool-field">
           <label className="tool-label">Company</label>
           <input
@@ -318,6 +331,25 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           </div>
         </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="tool-field">
+          <label className="tool-label">Street</label>
+          <input type="text" className="tool-input" value={fields.street || ''} placeholder="Street address" onChange={(e) => handleChange('street', e.target.value)} />
+          {renderError('street')}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label">City</label>
+          <input type="text" className="tool-input" value={fields.city || ''} placeholder="City" onChange={(e) => handleChange('city', e.target.value)} />
+          {renderError('city')}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label">Zip/Postal Code</label>
+          <input type="text" className="tool-input" value={fields.postalCode || ''} placeholder="Zip/Postal code" onChange={(e) => handleChange('postalCode', e.target.value)} />
+          {renderError('postalCode')}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
         <div className="tool-field">
@@ -335,11 +367,16 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
               type="button"
               className="custom-select-trigger tool-select"
               onMouseDown={(e) => { e.stopPropagation(); }}
-              onClick={toggleJobCountryOpen}
+              onClick={() => toggleJobCountryOpen && toggleJobCountryOpen()}
               style={{ width: '100%', justifyContent: 'space-between' }}
               aria-expanded={jobCountryOpen}
             >
-              <span className="truncate block" style={{ marginLeft: selectedCountryCode ? 30 : undefined }}>{(fields.country && COUNTRY_LIST.find((c) => c.code === fields.country)?.name) || (fields.country || 'Select country')}</span>
+              <span className="truncate block" style={{ marginLeft: selectedCountryCode ? 30 : undefined }}>
+                {(() => {
+                  const found = fields.country && COUNTRY_LIST.find((c) => c.code === fields.country)
+                  return found ? `${found.name} (${found.code})` : (fields.country || 'Select country')
+                })()}
+              </span>
               <span className="text-xs">⏷</span>
             </button>
 
@@ -355,9 +392,12 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                   />
                 </div>
                 <ul>
-                  {COUNTRY_LIST.filter((c) => c.name.toLowerCase().includes((countrySearch || '').toLowerCase())).map((c) => (
+                  {COUNTRY_LIST.filter((c) => (
+                    (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()) ||
+                    (c.code || '').toLowerCase().includes((countrySearch || '').toLowerCase())
+                  )).map((c) => (
                     <li key={c.code || c.name} className={(fields.country || '') === (c.code || '') ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('country', c.code || ''); toggleJobCountryOpen && toggleJobCountryOpen(); setCountrySearch(''); setRegionCustomVisible(false) }}>
-                      {c.name}
+                      {c.name || ''} ({c.code || ''})
                     </li>
                   ))}
                 </ul>
@@ -369,23 +409,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
         <div className="tool-field">
           <label className="tool-label">State/Province/Region</label>
-          {StateSelectComp && selectedCountryCode && !regionCustomVisible ? (
-            <StateSelectComp
-              className="tool-input"
-              country={selectedCountryCode}
-              countryCode={selectedCountryCode}
-              value={fields.region || ''}
-              onChange={(v: any) => {
-                const val = typeof v === 'string' ? v : (v && (v.target ? v.target.value : v))
-                if (val === '__other__') {
-                  setRegionCustomVisible(true)
-                  handleChange('region', '')
-                } else {
-                  handleChange('region', val || '')
-                }
-              }}
-            />
-          ) : selectedCountryCode && STATES_BY_COUNTRY[selectedCountryCode] && !regionCustomVisible ? (
+          {hasRegions && !regionCustomVisible ? (
             <div className="custom-select-wrapper compact-select region-select-wrapper relative" style={{ width: '100%' }}>
               <button
                 type="button"
@@ -405,23 +429,36 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                     <input type="text" className="tool-input" placeholder="Search region..." value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
                   </div>
                   <ul>
-                    {STATES_BY_COUNTRY[selectedCountryCode].filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
+                    {(STATES_BY_COUNTRY[selectedCountryCode] || []).filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
                       <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
                     ))}
                   </ul>
                 </div>
               )}
             </div>
+          ) : StateSelectComp && selectedCountryCode && !regionCustomVisible ? (
+            <StateSelectComp
+              className="tool-input"
+              country={selectedCountryCode}
+              countryCode={selectedCountryCode}
+              value={fields.region || ''}
+              onChange={(v: any) => {
+                const val = typeof v === 'string' ? v : (v && (v.target ? v.target.value : v))
+                if (val === '__other__') {
+                  setRegionCustomVisible(true)
+                  handleChange('region', '')
+                } else {
+                  handleChange('region', val || '')
+                }
+              }}
+            />
           ) : (
             <input type="text" className="tool-input" value={fields.region || ''} placeholder="State / Region" onChange={(e) => handleChange('region', e.target.value)} />
           )}
           {renderError('region')}
         </div>
 
-        <div className="tool-field">
-          <label className="tool-label">Postal code (optional)</label>
-          <input type="text" className="tool-input" value={fields.postalCode || ''} placeholder="Postal code" onChange={(e) => handleChange('postalCode', e.target.value)} />
-        </div>
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">

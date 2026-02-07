@@ -56,6 +56,30 @@ export default function EventForm(props: Props): JSX.Element {
   const [venueRegionOpen, setVenueRegionOpen] = useState(false)
   const [venueRegionSearch, setVenueRegionSearch] = useState("")
 
+  const normalizeUrl = (raw?: string) => {
+    const v = (raw || "").trim()
+    if (!v) return ""
+    try {
+      const u = new URL(v)
+      if (u.protocol === 'http:' || u.protocol === 'https:') return u.toString()
+    } catch {
+      // try adding https:// as a convenience
+      try {
+        const u2 = new URL(`https://${v}`)
+        if (u2.protocol === 'http:' || u2.protocol === 'https:') return u2.toString()
+      } catch {
+        return v
+      }
+    }
+    return v
+  }
+
+  const handleBlurUrl = (key: string, raw: string) => {
+    const norm = normalizeUrl(raw)
+    // Only update if normalization changed the value
+    if (norm !== (raw || "").trim()) handleChange(key, norm)
+  }
+
   countries.registerLocale(enLocale)
   const COUNTRY_LIST = Object.entries((countries.getNames('en', { select: 'official' }) || {}) as Record<string, string>).map(([code, name]) => ({ code, name }))
 
@@ -220,8 +244,9 @@ export default function EventForm(props: Props): JSX.Element {
 
         <div className="tool-field">
           <label className="tool-label">Image</label>
-          <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/image.jpg" onChange={(e) => handleChange("image", e.target.value)} />
+          <input type="text" className="tool-input" value={fields.image || ""} placeholder="https://example.com/image.jpg, https://example.com/image2.jpg" onChange={(e) => handleChange("image", e.target.value)} onBlur={(e) => handleBlurUrl('image', e.target.value)} />
           {renderError("image")}
+          <div className="text-xs text-gray-500 mt-1">Separate multiple image URLs with commas.</div>
         </div>
       </div>
 
@@ -562,7 +587,7 @@ export default function EventForm(props: Props): JSX.Element {
           <div className="flex flex-col gap-3">
             {ticketTypes.map((t: any, idx: number) => (
               <div key={`ticket-${idx}`} className="rounded-md">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                   <div className="tool-field">
                     <label className="tool-label">Name</label>
                     <input type="text" className="tool-input" value={t.name || ""} placeholder="Ticket name (e.g. General admission)" onChange={(e) => updateTicketType && updateTicketType(idx, "name", e.target.value)} />
@@ -577,12 +602,17 @@ export default function EventForm(props: Props): JSX.Element {
                     <label className="tool-label">Available from</label>
                     <DatePickerInput value={t.availableFrom} onChange={(iso: any) => updateTicketType && updateTicketType(idx, "availableFrom", iso)} placeholder="Available from" />
                   </div>
+
+                  <div className="tool-field">
+                    <label className="tool-label">Available until</label>
+                    <DatePickerInput value={t.availableUntil} onChange={(iso: any) => updateTicketType && updateTicketType(idx, "availableUntil", iso)} placeholder="Available until" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end mt-3">
                   <div className="tool-field md:col-span-2">
                     <label className="tool-label">URL</label>
-                    <input type="text" className="tool-input" value={t.url || ""} placeholder="https://example.com/ticket" onChange={(e) => updateTicketType && updateTicketType(idx, "url", e.target.value)} />
+                    <input type="text" className="tool-input" value={t.url || ""} placeholder="https://example.com/ticket" onChange={(e) => updateTicketType && updateTicketType(idx, "url", e.target.value)} onBlur={(e) => { const norm = normalizeUrl(e.target.value); if (norm !== (e.target.value || "").trim()) updateTicketType && updateTicketType(idx, "url", norm); }} />
                   </div>
 
                   <div className="tool-field md:col-span-1">

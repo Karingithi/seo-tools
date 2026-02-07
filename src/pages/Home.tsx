@@ -6,6 +6,66 @@ import Seo from "../components/Seo"
 import ToolTitle from "../components/ToolTitle"
 import { toolsData, type Tool } from "../data/toolsData"
 
+const FAQ_ITEMS = [
+  {
+    q: "What are the best free SEO tools for beginners?",
+    a:
+      "Beginner-friendly SEO tools include meta tag generators, robots.txt and sitemap validators, and simple keyword suggestion tools. Cralite bundles these tools with clean interfaces to help you get started quickly.",
+    node: (
+      <>
+        Beginner-friendly SEO tools include <Link to="/meta-tag-generator" className="text-primary font-normal">meta tag generators</Link>,
+        {" "}
+        <Link to="/robots-txt-validator" className="text-primary font-normal">robots.txt validators</Link>,
+        {" "}and <Link to="/sitemap-checker" className="text-primary font-normal">sitemap validators</Link>,
+        {" "}plus simple keyword suggestion tools. Cralite bundles these tools with clean interfaces to help you get started quickly.
+      </>
+    ),
+  },
+  {
+    q: "How can I generate meta tags for my website for free?",
+    a:
+      "You can use Cralite’s free Meta Tag Generator to create optimized title tags and meta descriptions with live previews, helping improve click-through rates from search results.",
+    node: (
+      <>
+        You can use Cralite’s free <Link to="/meta-tag-generator" className="text-primary font-normal">Meta Tag Generator</Link> to
+        {" "}create optimized title tags and meta descriptions with live previews, helping improve click-through rates from search results.
+      </>
+    ),
+  },
+  {
+    q: "Which free tools can I use to check or validate my XML sitemap?",
+    a:
+      "Cralite’s XML Sitemap Checker allows you to inspect sitemap structure, detect errors, and confirm indexing readiness for search engines.",
+    node: (
+      <>
+        Cralite’s <Link to="/sitemap-checker" className="text-primary font-normal">XML Sitemap Checker</Link> allows you to
+        {" "}inspect sitemap structure, detect errors, and confirm indexing readiness for search engines.
+      </>
+    ),
+  },
+  {
+    q: "Are Cralite SEO tools completely free to use?",
+    a:
+      "Yes. Cralite offers free SEO tools with no sign-up required, making it easy to analyze, optimize, and validate key SEO elements instantly.",
+    node: (
+      <>
+        Yes. Cralite offers free SEO tools with no sign-up required, making it easy to analyze, optimize, and validate key SEO elements instantly.
+      </>
+    ),
+  },
+  {
+    q: "How do Cralite SEO tools support visibility in AI-powered search results?",
+    a:
+      "Cralite’s tools help you create clean metadata, structured data, and crawl-friendly configurations that AI-powered search engines rely on to understand and surface content accurately.",
+    node: (
+      <>
+        Cralite’s tools help you create clean metadata, structured data, and crawl-friendly configurations that AI-powered search engines rely on to understand and surface content accurately.
+        {" "}Try the <Link to="/schema-builder" className="text-primary font-normal">Schema Builder</Link> for structured data.
+      </>
+    ),
+  },
+]
+
 // Structured data
 const structuredData = [
   {
@@ -26,80 +86,14 @@ const structuredData = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What are the best free SEO tools for beginners?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Beginner-friendly tools include meta tag generators, robots.txt and sitemap validators, and simple keyword suggestion tools — Cralite bundles these with clear interfaces to get you started quickly.",
-        },
+    mainEntity: FAQ_ITEMS.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
       },
-      {
-        "@type": "Question",
-        name: "How can I generate meta tags for my website for free?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Use the Meta Tag Generator on Cralite: enter your title, description, and open graph fields, then copy the generated tags directly into your site for free.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is the most reliable free robots.txt generator?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "A reliable generator creates a clear, minimal robots.txt and validates directives; Cralite's robots tool focuses on correctness and compatibility with major search engines.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Which free tools can I use to check or validate my XML sitemap?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Use an XML sitemap checker to validate URLs, formats, and discoverability; Cralite's Sitemap Checker verifies structure and common issues for free.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Are Cralite SEO tools completely free to use?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Yes — Cralite tools are free and require no signup, letting you run checks and generate assets instantly without paywalls.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Do your tools help improve visibility in AI search results?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Yes — tools focused on semantic markup, structured data, and complete metadata can improve how AI-driven systems understand and surface your content.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "How does Cralite help with semantic coverage?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Cralite helps you add structured data and comprehensive metadata so AI and search engines better understand the topics and entities on your pages, improving semantic coverage.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can these tools help with long-tail keyword optimization?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Yes — use the keyword and content tools to discover long-tail phrases and optimize metadata and schema for those queries to capture more specific search intent.",
-        },
-      },
-    ],
+    })),
   },
 ]
 
@@ -236,28 +230,28 @@ export default function Home() {
           </h2>
 
           <div className="grid grid-cols-1 gap-y-6">
-            {structuredData[2]?.mainEntity?.map((faq, idx) => (
+            {FAQ_ITEMS.map((faq, idx) => (
               <details
                 key={idx}
                 className="border-b border-gray-200 group"
                 open={openFaq === idx}
               >
                 <summary
-                  className="flex items-center justify-between py-6 cursor-pointer text-left text-2xl font-semibold text-secondary"
+                  className="flex items-center justify-between py-6 cursor-pointer text-left text-xl font-semibold text-secondary"
                   onClick={(e) => {
                     e.preventDefault()
                     setOpenFaq(openFaq === idx ? null : idx)
                   }}
                   aria-expanded={openFaq === idx}
                 >
-                  <span>{faq.name}</span>
+                  <span>{faq.q}</span>
                   {openFaq === idx ? (
                     <Minus className="w-6 h-6 text-secondary transition-transform duration-200" />
                   ) : (
                     <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
                   )}
                 </summary>
-                <div className="pb-6 text-lg text-secondary">{faq.acceptedAnswer.text}</div>
+                <div className="pb-6 text-lg text-secondary">{faq.node}</div>
               </details>
             ))}
           </div>

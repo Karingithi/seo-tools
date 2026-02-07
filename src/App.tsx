@@ -10,10 +10,11 @@ import SitemapChecker from "./pages/SitemapChecker"
 import HreflangValidator from "./pages/HreflangValidator"
 import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
 import HeaderTagViewer from "./pages/HeaderTagViewer"
+import NotFound from "./pages/NotFound"
 
 export default function App() {
   return (
-    <Router>
+    <Router basename="/tools">
       <Routes>
         {/* === Home Page === */}
         <Route
@@ -22,7 +23,7 @@ export default function App() {
             <Layout
               title="Free SEO Tools to Boost Visibility, Rankings, and Business Growth"
               subtitle="Analyze your website, optimize metadata, generate clean schema, validate technical SEO files, find high value keywords, and strengthen your visibility in AI search with our powerful free tools. No sign up required."
-              >
+            >
               <Home />
             </Layout>
           }
@@ -60,7 +61,11 @@ export default function App() {
         <Route
           path="/keyword-generator"
           element={
-            <Layout title="Free Keyword Generator" subtitle="Generate keyword suggestions and variations." showBackLink={true}>
+            <Layout
+              title="Free Keyword Generator"
+              subtitle="Generate keyword suggestions and variations."
+              showBackLink={true}
+            >
               <KeywordGenerator />
             </Layout>
           }
@@ -70,7 +75,11 @@ export default function App() {
         <Route
           path="/robots-txt-generator"
           element={
-            <Layout title="Free Robots.txt Generator" subtitle="Create a clean, optimized robots.txt file that guides search engines, improves crawling efficiency, and protects sensitive pages. Simple, fast, and ready to copy." showBackLink={true}>
+            <Layout
+              title="Free Robots.txt Generator"
+              subtitle="Create a clean, optimized robots.txt file that guides search engines, improves crawling efficiency, and protects sensitive pages. Simple, fast, and ready to copy."
+              showBackLink={true}
+            >
               <RobotsTxtGenerator />
             </Layout>
           }
@@ -80,7 +89,11 @@ export default function App() {
         <Route
           path="/robots-txt-validator"
           element={
-            <Layout title="Free Robots.txt Validator" subtitle="Scan your robots.txt file, detect errors, and ensure search engines can crawl your site correctly and safely." showBackLink={true}>
+            <Layout
+              title="Free Robots.txt Validator"
+              subtitle="Scan your robots.txt file, detect errors, and ensure search engines can crawl your site correctly and safely."
+              showBackLink={true}
+            >
               <RobotsTxtValidator />
             </Layout>
           }
@@ -90,7 +103,11 @@ export default function App() {
         <Route
           path="/sitemap-checker"
           element={
-            <Layout title="Free XML Sitemap Checker" subtitle="Instantly validate and analyze your XML sitemaps for SEO performance" showBackLink={true}>
+            <Layout
+              title="Free XML Sitemap Checker"
+              subtitle="Instantly validate and analyze your XML sitemaps for SEO performance"
+              showBackLink={true}
+            >
               <SitemapChecker />
             </Layout>
           }
@@ -100,7 +117,11 @@ export default function App() {
         <Route
           path="/hreflang-validator"
           element={
-            <Layout title="Free Hreflang Validator" subtitle="Validate and generate accurate hreflang tags to ensure correct language and regional targeting." showBackLink={true}>
+            <Layout
+              title="Free Hreflang Validator"
+              subtitle="Validate and generate accurate hreflang tags to ensure correct language and regional targeting."
+              showBackLink={true}
+            >
               <HreflangValidator />
             </Layout>
           }
@@ -120,29 +141,24 @@ export default function App() {
           }
         />
 
-        {/* === 404 Fallback === */}
         {/* === Header Tag Structure Viewer === */}
         <Route
           path="/header-tag-structure-viewer"
           element={
-            <Layout title="Header Tag Structure Viewer" subtitle="Inspect the H1–H6 heading hierarchy for HTML or a URL." showBackLink={true}>
+            <Layout
+              title="Header Tag Structure Viewer"
+              subtitle="Inspect the H1–H6 heading hierarchy for HTML or a URL."
+              showBackLink={true}
+            >
               <HeaderTagViewer />
             </Layout>
           }
         />
+
+        {/* === 404 Fallback === */}
         <Route
           path="*"
-          element={
-            <Layout
-              title="Page Not Found"
-              subtitle="Oops! The page you’re looking for doesn’t exist."
-            >
-              <div className="text-center py-24">
-                <h1 className="text-4xl font-bold mb-4 text-gray-800">404</h1>
-                <p className="text-gray-500">We couldn’t find that page.</p>
-              </div>
-            </Layout>
-          }
+          element={<NotFound />}
         />
       </Routes>
     </Router>

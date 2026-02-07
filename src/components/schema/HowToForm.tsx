@@ -83,6 +83,7 @@ export default function HowToForm(props: HowToFormProps): JSX.Element {
             rows={2}
             value={fields.description || ""}
             placeholder="Short summary"
+            onChange={(e) => handleChange('description', e.target.value)}
           />
           {renderError("description")}
         </div>
@@ -147,32 +148,10 @@ export default function HowToForm(props: HowToFormProps): JSX.Element {
         <div className="mb-3">
           <div className="text-sm text-gray-600 mb-2">Add supplies and tools used in this HowTo.</div>
 
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-            <div className="md:col-span-1">
-              <button type="button" className="action-btn w-full" onClick={addHowToSupply}><Plus className="inline w-4 h-4 mr-2" /> Add Supply</button>
-            </div>
-
-            <div className="md:col-span-1">
-              <button type="button" className="action-btn w-full" onClick={addHowToTool}><Plus className="inline w-4 h-4 mr-2" /> Add Tool</button>
-            </div>
-          </div>
+          {/* Buttons moved below each list to match requested ordering */}
         </div>
 
         <div className="flex flex-col gap-4">
-          <div>
-            <div className="text-sm font-semibold mb-2">Supplies</div>
-            {howToSupplies.length ? (
-              howToSupplies.map((s: any, idx: number) => (
-                <div key={idx} className="flex items-center gap-2 mb-2">
-                  <input type="text" className="tool-input flex-1" value={s} placeholder={`Supply #${idx + 1}`} onChange={(e) => updateHowToSupply(idx, e.target.value)} />
-                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToSupply(idx)} aria-label="Remove supply" title="Remove">×</button>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">No supplies added yet.</div>
-            )}
-          </div>
-
           <div>
             <div className="text-sm font-semibold mb-2">Tools</div>
             {howToTools.length ? (
@@ -185,6 +164,26 @@ export default function HowToForm(props: HowToFormProps): JSX.Element {
             ) : (
               <div className="text-sm text-gray-500">No tools added yet.</div>
             )}
+            <div className="mt-2">
+              <button type="button" className="action-btn" onClick={addHowToTool}><Plus className="inline w-4 h-4 mr-2" /> Add Tool</button>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold mb-2">Supplies</div>
+            {howToSupplies.length ? (
+              howToSupplies.map((s: any, idx: number) => (
+                <div key={idx} className="flex items-center gap-2 mb-2">
+                  <input type="text" className="tool-input flex-1" value={s} placeholder={`Supply #${idx + 1}`} onChange={(e) => updateHowToSupply(idx, e.target.value)} />
+                  <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeHowToSupply(idx)} aria-label="Remove supply" title="Remove">×</button>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">No supplies added yet.</div>
+            )}
+            <div className="mt-2">
+              <button type="button" className="action-btn" onClick={addHowToSupply}><Plus className="inline w-4 h-4 mr-2" /> Add Supply</button>
+            </div>
           </div>
         </div>
       </div>

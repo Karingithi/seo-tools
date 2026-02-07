@@ -237,7 +237,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
         <div className="absolute z-50 mt-2 bg-white shadow-lg date-picker-popup">
           <ReactDatePicker
             selected={selected}
-            onChange={(d) => {
+            onChange={(d: Date | null) => {
               setSelected(d)
               if (d instanceof Date && !isNaN(d.getTime())) {
                 onChange(d.toISOString().slice(0, 10))

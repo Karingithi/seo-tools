@@ -31,20 +31,40 @@ const SEARCH_ROBOTS = [
 // Single source of truth for FAQs — used for both UI and JSON-LD
 const FAQ_ITEMS = [
   {
+    q: "What does a robots.txt file do?",
+    a: "A robots.txt file tells search engine crawlers which parts of your website they are allowed or not allowed to crawl. It helps manage crawl behavior and protects sensitive or unnecessary pages from being accessed by bots.",
+  },
+  {
     q: "Where do I upload my robots.txt file?",
-    a: "Place the robots.txt file at the root of your domain, e.g., https://example.com/robots.txt so crawlers can find it.",
+    a: "Your robots.txt file must be uploaded to the root directory of your domain. It should be accessible at yourdomain.com/robots.txt so search engines can find it automatically.",
   },
   {
     q: "Will robots.txt prevent a page from being indexed?",
-    a: "No — robots.txt prevents crawling but does not guarantee non-indexing. To prevent indexing, use a noindex meta tag or x-robots-tag header.",
+    a: "Not always. Robots.txt controls crawling, not indexing. If a page is blocked but already known to search engines through links, it may still appear in search results without content. To prevent indexing, use meta noindex tags instead.",
   },
   {
     q: "How do I allow some bots but block others?",
-    a: "Use per-user-agent groups: add a User-agent line and specific Allow/Disallow directives for that crawler.",
+    a: "You can set different rules for specific user-agents. The generator lets you define global rules and then override them for individual bots such as Googlebot or Bingbot.",
   },
   {
-    q: "Can I include multiple sitemap URLs?",
-    a: "Yes — separate multiple Sitemap lines with one URL per line. This tool accepts comma-separated sitemaps and will output multiple Sitemap entries.",
+    q: "What is crawl-delay and should I use it?",
+    a: "Crawl-delay tells bots to wait a set amount of time between requests. It can be useful for servers with limited resources, but it is ignored by Google. Use it only if you experience crawl-related performance issues.",
+  },
+  {
+    q: "Can I block folders or specific paths?",
+    a: "Yes. You can disallow folders or specific URL paths by adding them to the Disallow section. All paths must start with a forward slash and match the structure of your URLs.",
+  },
+  {
+    q: "Can I include multiple sitemap URLs in robots.txt?",
+    a: "Yes. You can include multiple sitemap URLs. The tool accepts comma-separated sitemap links and outputs them correctly as separate Sitemap entries.",
+  },
+  {
+    q: "Is it safe to block all bots?",
+    a: "Blocking all bots will prevent search engines from crawling your site, which can stop new pages from being discovered and harm visibility. This option should only be used for staging or private environments.",
+  },
+  {
+    q: "Does this Robots.txt Generator create a valid file?",
+    a: "Yes. The tool generates a clean, standards-compliant robots.txt file that you can copy or download and upload directly to your site without manual editing.",
   },
 ]
 
@@ -216,7 +236,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
             {options.find((o) => o.value === value)?.label ?? value}
           </span>
-          <span className="text-xs">⏷</span>
+          <span className="text-xs">▾</span>
         </button>
 
         {isOpen && (
@@ -283,7 +303,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
     <>
       <Seo
         title="Free Robots.txt Generator"
-        description="Generate a robots.txt to control crawling and indexing — per-robot overrides, crawl-delay, sitemaps and disallow lists with live preview."
+        description="Generate a robots.txt file to control crawling and indexing with per-robot rules, crawl-delay settings, sitemap support, and disallow lists using a live preview."
         keywords="robots.txt generator, seo tools, robots generator"
         url="https://cralite.com/tools/robots-txt-generator"
       />
@@ -502,7 +522,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
 
               {/* Preview area */}
               <div className="tool-serp robots-preview">
-                <pre className="tool-code mt-4" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", minHeight: 160 }}>
+                <pre className="tool-code mt-4" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", minHeight: 160, marginTop: 12 }}>
                   <code>{robotsTxt || "# robots.txt will appear here"}</code>
                 </pre>
                 <div className="text-sm text-gray-500 mt-3">
@@ -527,17 +547,17 @@ export default function RobotsTxtGenerator(): JSX.Element {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
             {[
               {
-                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/choose.svg", import.meta.url).href,
                 title: "1. Choose Defaults",
                 desc: "Set the global Allow/Disallow and optional crawl-delay that applies to most user-agents.",
               },
               {
-                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/add-overrides.svg", import.meta.url).href,
                 title: "2. Add Overrides",
                 desc: "Add per-robot overrides if you need different rules for specific crawlers.",
               },
               {
-                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/download.svg", import.meta.url).href,
                 title: "3. Copy or Download",
                 desc: "Copy the generated robots.txt or download it and upload to your site root (/robots.txt).",
               },

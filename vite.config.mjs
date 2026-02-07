@@ -3,23 +3,23 @@ import react from "@vitejs/plugin-react"
 import svgr from "vite-plugin-svgr"
 
 export default defineConfig({
+  // ✅ REQUIRED for sub-path deployment
+  base: "/tools/",
+
   plugins: [
     react(),
-    svgr(), // This enables ?react SVG imports
+    svgr(),
   ],
 
-  // Prevent Vite from pre-bundling the optional package that requires core-js.
-  // This avoids esbuild failing to resolve `core-js/modules/...` during optimize.
   optimizeDeps: {
     exclude: ["react-country-state-fields"],
   },
 
-  // 🔥 ADD THIS:
+  // ⚠️ DEV ONLY — safe to keep, ignored in build
   server: {
     proxy: {
-      // Forward all /api/* requests to your Node/Express backend
       "/api": {
-        target: "http://localhost:5173", // Your backend server
+        target: "http://localhost:5173",
         changeOrigin: true,
         secure: false,
       },

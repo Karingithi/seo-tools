@@ -14,6 +14,8 @@ export type ArticleFields = {
   articleBody?: string
   // images may be kept separately in the parent, but include here for completeness
   images?: string[]
+  '@id'?: string
+  keywords?: string
 }
 
 export default ArticleFields

@@ -107,9 +107,11 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   Article: [
     { label: "Article @type", key: "articleType", placeholder: "BlogPosting" },
     { label: "Article URL", key: "url", placeholder: "https://example.com/my-article" },
+    { label: "@id", key: "@id", placeholder: "https://example.com/my-article/#article" },
     { label: "Headline", key: "headline", placeholder: "e.g. 10 Proven SEO Tips to Boost Traffic" },
     { label: "Strict 110-character SEO limit", key: "strictHeadlineLimit", placeholder: "false" },
     { label: "Description", key: "description", placeholder: "Short summary — appears in Google search results" },
+    { label: "Keywords", key: "keywords", placeholder: "voice search SEO, AI search optimization" },
     { label: "Image(s)", key: "images", placeholder: "https://example.com/image.jpg, https://example.com/image2.jpg" },
     { label: "Author @type", key: "authorType", placeholder: "Person" },
     { label: "Author Name", key: "authorName", placeholder: "e.g. Jane Doe" },
@@ -338,10 +340,32 @@ export function buildSchemaFromState(p: BuildParams): any {
 
   if (type === "Article") {
     base["@type"] = (fields.articleType && fields.articleType.trim()) || "Article"
+    // Add @id if provided
+    if (fields['@id'] && fields['@id'].trim()) {
+      base['@id'] = fields['@id'].trim()
+    }
     // Add mainEntityOfPage early so it appears near the top-level properties in JSON output
     const articleUrl = (fields.url && String(fields.url).trim()) || (base.url && String(base.url).trim())
     if (articleUrl) {
       base.mainEntityOfPage = { "@type": "WebPage", "@id": articleUrl }
+      // If user did not provide an explicit @id, auto-generate one from the article URL
+      // by appending a stable fragment. This keeps the top-level @id present in previews
+      // without requiring the user to manually fill the field.
+      if (!base['@id'] || String(base['@id']).trim() === '') {
+        // strip existing fragment/hash and append #article
+        try {
+          const u = String(articleUrl).trim()
+          const baseNoHash = u.split('#')[0]
+          base['@id'] = `${baseNoHash}#article`
+        } catch (e) {
+          base['@id'] = `${String(articleUrl).trim()}#article`
+        }
+      }
+    }
+    // Add keywords if provided
+    if (fields.keywords && fields.keywords.trim()) {
+      const kwds = fields.keywords.split(',').map((s) => s.trim()).filter(Boolean)
+      if (kwds.length) base.keywords = kwds
     }
     const authorName = (fields.authorName || fields.author || "").trim()
     if (authorName) {
@@ -388,8 +412,25 @@ export function buildSchemaFromState(p: BuildParams): any {
 
   if (type === "Breadcrumb") {
     const items = p.breadcrumbs && p.breadcrumbs.length
-      ? p.breadcrumbs.map((b, i) => ({ "@type": "ListItem", position: i + 1, name: b.name || `Page ${i + 1}`, item: b.url || "" }))
-      : (fields.itemList ? fields.itemList.split("\n").map((line: string, i: number) => ({ "@type": "ListItem", position: i + 1, name: line.split("|")[0] || `Page ${i + 1}`, item: (line.split("|")[1] || "").trim() })) : [])
+      ? p.breadcrumbs.map((b, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: b.name ? String(b.name).trim().toLowerCase() : `page ${i + 1}`,
+          item: b.url || "",
+        }))
+      : (fields.itemList
+        ? fields.itemList.split("\n").map((line: string, i: number) => {
+            const parts = line.split("|")
+            const rawName = (parts[0] || "").trim()
+            return {
+              "@type": "ListItem",
+              position: i + 1,
+              name: rawName ? rawName.toLowerCase() : `page ${i + 1}`,
+              item: (parts[1] || "").trim(),
+            }
+          })
+        : [])
+
     out = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.filter((it: any) => it.item && it.item.length) }
   }
 
@@ -943,6 +984,13 @@ export function buildSchemaFromState(p: BuildParams): any {
 
   if (type === "Job Posting") {
     const job: any = { "@context": "https://schema.org", "@type": "JobPosting" }
+    // Prefer explicit @id when provided; otherwise auto-generate from the page URL (fields.url)
+    if (fields["@id"]?.trim()) {
+      job["@id"] = fields["@id"].trim()
+    } else if (fields.url?.trim()) {
+      const raw = fields.url.trim().replace(/\/$/, "")
+      job["@id"] = `${raw}#job`
+    }
     if (fields.title?.trim()) job.title = fields.title.trim()
     if (fields.jobDescription?.trim()) job.description = fields.jobDescription.trim()
     if (fields.datePosted?.trim()) job.datePosted = fields.datePosted.trim()
@@ -1005,7 +1053,9 @@ export function buildSchemaFromState(p: BuildParams): any {
     }
     const minRaw = fields.minSalary?.trim() ? Number(fields.minSalary.trim()) : NaN
     const maxRaw = fields.maxSalary?.trim() ? Number(fields.maxSalary.trim()) : NaN
-    const currency = fields.currency?.trim() || "USD"
+    // Prefer the salary-specific currency field from the JobPosting form (`salaryCurrency`),
+    // fall back to a generic `currency` field when present, otherwise default to USD.
+    const currency = (fields.salaryCurrency?.trim() || fields.currency?.trim()) || "USD"
     const unitText = fields.salaryUnit?.trim() || undefined
     if (Number.isFinite(minRaw) || Number.isFinite(maxRaw)) {
       const value: any = { "@type": "QuantitativeValue" }

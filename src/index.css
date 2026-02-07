@@ -21,7 +21,8 @@
   --google-yellow: #f3b605;
 
   /* Spacing */
-  --menu-padding: 25px;
+  /* reduced desktop menu padding (was 25px) — using 1rem for 'lg' size */
+  --menu-padding: 1rem;
   --site-gutter: 1.5rem;
 
   /* Animations */
@@ -226,10 +227,13 @@
 
   footer a {
     color: #ffffff;
+    transition: color 150ms ease;
   }
 
-  footer a:hover {
-    color: var(--primary);
+  /* Stronger selector to override utility classes — use explicit hex and !important */
+  footer a:hover,
+  footer a:focus {
+    color: #ffc50c !important;
   }
 
   a {
@@ -324,6 +328,7 @@
     width: 22px;
     height: 22px;
     display: block;
+    font-size: 22px;
   }
 
   .social-icon svg {
@@ -373,6 +378,12 @@
     padding-right: 1rem;
     }
 }
+
+  /* Force a consistent gap where utilities may be overridden
+     Useful for form grids that need explicit spacing (with !important) */
+  .crl-force-gap {
+    gap: 1rem !important;
+  }
 
   /* How-it-works step icon styles (layered circles) */
   .step-icon-outer {
@@ -576,6 +587,32 @@
     position: relative;
   }
 
+  /* When hovering or focusing any top-level nav item, dim the other top-level
+     items for emphasis. Only dim the visible top-level button or link element
+     (so dropdown panels remain fully opaque). */
+  @media (min-width: 1024px) {
+    .container nav:hover > .nav-dropdown-wrapper .nav-dropdown-button:not(:hover),
+    .container nav:hover > a:not(:hover) {
+      opacity: 0.7;
+      transition: opacity 160ms ease;
+    }
+
+    /* keyboard / focus support: when a top-level item has focus within, dim
+       the other top-level items (but not their panels). */
+    .container nav:focus-within > .nav-dropdown-wrapper:not(:focus-within) .nav-dropdown-button,
+    .container nav:focus-within > a:not(:focus-within) {
+      opacity: 0.7;
+      transition: opacity 160ms ease;
+    }
+
+    /* ensure the hovered/focused top-level button or link stays fully opaque */
+    .container nav > .nav-dropdown-wrapper .nav-dropdown-button,
+    .container nav > a {
+      opacity: 1;
+      transition: opacity 160ms ease;
+    }
+  }
+
   .nav-dropdown-wrapper::after {
     content: "";
     position: absolute;
@@ -594,6 +631,13 @@
     padding: 6px calc(var(--menu-padding) * 0.6);
     font-size: 17px;
     font-weight: 400;
+  }
+
+  @media (max-width: 1300px) {
+    .nav-dropdown-button {
+      padding-left: calc(var(--menu-padding) * 0.75);
+      padding-right: calc(var(--menu-padding) * 0.75);
+    }
   }
 
   @media (min-width: 1200px) {
@@ -634,36 +678,31 @@
     position: absolute;
     top: 100%;
     left: 0;
+    /* keep dropdown below the main menu items */
     margin-top: 8px;
     min-width: 210px;
-    border-radius: 0.5rem;
+    border-radius: 10px;
     background-color: #ffffff;
-    box-shadow:
-      0 10px 15px -3px rgb(0 0 0 / 0.1),
-      0 4px 6px -4px rgb(0 0 0 / 0.1);
-    padding: 8px 0;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.02), 0 2px 35px 0 rgb(0 0 0 / 0.04);
+    padding: 22px 0;
     z-index: 60;
     transform-origin: top;
     opacity: 0;
-    transform: translateY(8px);
-    animation: dropdown-fade-in 200ms ease-out forwards;
-  }
-
-  @keyframes dropdown-fade-in {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    pointer-events: none;
+    will-change: opacity, transform;
+    transform: translate3d(0, 18px, 0);
+    transition: opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+      transform 0.4s cubic-bezier(0.1, 0.76, 0.37, 1.19);
   }
 
   .nav-dropdown-item {
     display: block;
-    padding: 8px 15px;
+    padding: 8px 25px;
     border-radius: 0.25rem;
     color: var(--secondary);
     font-size: 17px;
     font-weight: 400;
-    line-height: 1;
+    line-height: 1.3;
     transition: transform var(--timing-fast) ease,
       color var(--timing-fast) ease;
   }
@@ -690,28 +729,196 @@
     outline: none;
   }
 
-  .nav-dropdown-panel.animate .nav-dropdown-item {
+  .nav-dropdown-panel a {
+    color: inherit;
+  }
+
+  .nav-dropdown-wrapper:hover .nav-dropdown-panel,
+  .nav-dropdown-wrapper:focus-within .nav-dropdown-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Flip animation for nav labels (matches provided reference) */
+  .ui-flip-anim-wrapp {
+    display: inline-block;
+    position: relative;
+    line-height: 1;
+  }
+
+  .ui-anim-flip > .ui-flip-anim-wrapp,
+  .ui-anim-flip > .ui-flip-anim-wrapp .ui-menu-item-wrapper {
+    transition: opacity 0.35s, transform 0.65s;
+    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform, opacity;
+  }
+
+  .ui-flip-anim-wrapp .ui-menu-item-wrapper {
+    display: inline-block;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .ui-flip-anim-wrapp .ui-menu-item-wrapper:nth-child(2) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 90%);
     opacity: 0;
-    transform: translateY(8px);
-    animation: item-fade-up var(--timing-fast) var(--easing-ease-out) forwards;
   }
 
-  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(1) {
-    animation-delay: 40ms;
+  .ui-anim-flip:hover .ui-menu-item-wrapper:nth-child(1),
+  .ui-anim-flip:focus-within .ui-menu-item-wrapper:nth-child(1) {
+    transform: translateY(-90%);
+    opacity: 0;
   }
 
-  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(2) {
-    animation-delay: 80ms;
+  .ui-anim-flip:hover .ui-menu-item-wrapper:nth-child(2),
+  .ui-anim-flip:focus-within .ui-menu-item-wrapper:nth-child(2) {
+    transform: translate(-50%, -50%);
+    opacity: 1;
   }
 
-  .nav-dropdown-panel.animate .nav-dropdown-item:nth-child(3) {
-    animation-delay: 120ms;
+  /*
+    Dropdown items should only flip on hover.
+    Keep general hover+focus behavior for top-level nav buttons,
+    but prevent submenu items from flipping on focus-within when the
+    dropdown panel becomes visible.
+  */
+  .nav-dropdown-item.ui-anim-flip:hover .ui-menu-item-wrapper:nth-child(1) {
+    transform: translateY(-90%);
+    opacity: 0;
   }
 
-  @keyframes item-fade-up {
+  .nav-dropdown-item.ui-anim-flip:hover .ui-menu-item-wrapper:nth-child(2) {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+
+  /* Ensure focus-within (when panel opens) does not trigger the flip for submenu items.
+     Keep the first child visible and the second hidden unless hovered. */
+  .nav-dropdown-item.ui-anim-flip:focus-within .ui-menu-item-wrapper:nth-child(1) {
+    transform: none;
+    opacity: 1;
+  }
+
+  .nav-dropdown-item.ui-anim-flip:focus-within .ui-menu-item-wrapper:nth-child(2) {
+    transform: translate(-50%, 90%);
+    opacity: 0;
+  }
+
+  /* Ensure the default state for submenu flip wrappers */
+  .nav-dropdown-item.ui-anim-flip .ui-flip-anim-wrapp,
+  .nav-dropdown-item.ui-anim-flip .ui-menu-item-wrapper {
+    position: relative;
+  }
+
+  .nav-dropdown-item.ui-anim-flip .ui-menu-item-wrapper:nth-child(1) {
+    transform: none;
+    opacity: 1;
+  }
+
+  .nav-dropdown-item.ui-anim-flip .ui-menu-item-wrapper:nth-child(2) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 90%);
+    opacity: 0;
+  }
+
+  /* More specific: flip only when the submenu item's inner wrapper is hovered */
+  .nav-dropdown-panel .nav-dropdown-item.ui-anim-flip .ui-flip-anim-wrapp:hover .ui-menu-item-wrapper:nth-child(1) {
+    transform: translateY(-90%);
+    opacity: 0;
+  }
+
+  .nav-dropdown-panel .nav-dropdown-item.ui-anim-flip .ui-flip-anim-wrapp:hover .ui-menu-item-wrapper:nth-child(2) {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+
+  /* Prevent submenu labels from wrapping into multiple lines when flipped */
+  .nav-dropdown-panel .ui-menu-item-wrapper {
+    white-space: nowrap;
+    max-width: none;
+  }
+
+  /* Disable open animation for submenu items — they should appear instantly
+     and only perform the flip when hovered. */
+  .nav-dropdown-panel .nav-dropdown-item {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  /* Dim sibling dropdown items only after a submenu item is hovered or
+     focused. Uses the relational `:has()` selector so the panel remains
+     untouched until a specific item receives hover/focus. This keeps the
+     initial state fully opaque and only dims non-active items. */
+  @media (min-width: 1024px) {
+    .nav-dropdown-panel .nav-dropdown-item {
+      opacity: 1;
+      transition: opacity 160ms ease;
+    }
+
+    /* If any dropdown item is hovered, dim the other items. Do NOT react to
+       focus (autofocus) so opening the panel doesn't immediately dim items. */
+    .nav-dropdown-panel:has(.nav-dropdown-item:hover) .nav-dropdown-item {
+      opacity: 0.7;
+    }
+
+    /* Keep the hovered item fully opaque. */
+    .nav-dropdown-panel:has(.nav-dropdown-item:hover) .nav-dropdown-item:hover {
+      opacity: 1;
+    }
+
+    /* Also apply to inner flip wrapper for consistent appearance. */
+    .nav-dropdown-panel:has(.nav-dropdown-item:hover) .nav-dropdown-item .ui-flip-anim-wrapp {
+      opacity: 0.7;
+    }
+
+    .nav-dropdown-panel:has(.nav-dropdown-item:hover) .nav-dropdown-item:hover .ui-flip-anim-wrapp {
+      opacity: 1;
+    }
+  }
+
+  @keyframes item-fade-down {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Cursor ring */
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 38px;
+    height: 38px;
+    border: 2px solid #facc15; /* yellow ring */
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: 9999;
+    --cursor-x: -9999px;
+    --cursor-y: -9999px;
+    --cursor-scale: 1;
+    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) translate(-50%, -50%)
+      scale(var(--cursor-scale));
+    transform-origin: center;
+    opacity: 0;
+    transition: opacity 160ms ease;
+    mix-blend-mode: normal;
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .cursor-ring {
+      display: none;
     }
   }
 

@@ -64,7 +64,7 @@ export default function Hero({
 
         {/* Title + Subtitle wrapper */}
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="mt-4! mb-4! text-4xl md:text-5xl font-extrabold">
+          <h1 className="mt-4! mb-4! text-4xl md:text-5xl font-extrabold leading-[1.3]">
           {(() => {
             const highlightPhrases = [
               "Boost Visibility, Rankings, and Business Growth",

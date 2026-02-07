@@ -80,20 +80,48 @@ const USER_AGENTS: Record<string, { display: string; value: string }[]> = {
 // Shared FAQ items used for UI and JSON-LD
 const FAQ_ITEMS = [
   {
+    q: "What does the Robots.txt Validator do?",
+    a: "The Robots.txt Validator checks your robots.txt rules and simulates how different search engine crawlers interpret them. It helps you identify errors, conflicts, and unintended blocks before they affect crawling.",
+  },
+  {
     q: "How do I fetch robots.txt for a domain?",
-    a: "Enter the domain or full robots.txt URL in the Fetch field, then blur the field to auto-fetch. The tool will try server-side, HTTPS/HTTP fallbacks, and a public proxy.",
+    a: "Enter a domain or full robots.txt URL in the fetch field. The validator will automatically retrieve the file using server-side requests and test it against selected user agents.",
   },
   {
-    q: "What if my site blocks public proxies?",
-    a: "Use a server-side fetch endpoint (see the commented snippet in the tool) to avoid CORS and proxy restrictions.",
+    q: "Can I paste a robots.txt file instead of fetching it?",
+    a: "Yes. You can paste robots.txt content directly into the editor to validate rules before uploading the file to your site.",
   },
   {
-    q: "Does this check indexing or crawling?",
-    a: "This validator checks crawling rules from robots.txt (Allow/Disallow). To control indexing, use meta robots tags or x-robots-tag headers.",
+    q: "Does this tool test crawling or indexing?",
+    a: "This tool tests crawling rules only. Robots.txt controls whether bots can access URLs. It does not control indexing. To prevent indexing, use meta noindex tags or HTTP headers.",
   },
   {
-    q: "Can I test custom bots?",
-    a: "Yes — choose from many common User-Agents or paste a custom one in the field to simulate different crawlers.",
+    q: "Which crawlers can I test against?",
+    a: "You can simulate common crawlers such as Googlebot, Bingbot, GPTBot, and a generic user agent. This helps ensure different bots interpret your rules correctly.",
+  },
+  {
+    q: "Can I test a specific URL path?",
+    a: "Yes. Enter a URL path to check whether the selected user agent is allowed or blocked from crawling that specific page based on your robots.txt rules.",
+  },
+  {
+    q: "What happens if my site blocks public proxies?",
+    a: "If your site blocks public proxies, fetching robots.txt may fail. In that case, paste the robots.txt content manually into the validator to continue testing.",
+  },
+  {
+    q: "Does the validator support wildcards and rule precedence?",
+    a: "Yes. The validator supports wildcard patterns, anchors, and allow or disallow precedence so results reflect real crawler behavior.",
+  },
+  {
+    q: "Can I test custom or unknown bots?",
+    a: "You can simulate custom bots by using the generic user agent option, which applies default crawling rules when a specific bot is not listed.",
+  },
+  {
+    q: "Is this Robots.txt Validator free to use?",
+    a: "Yes. The validator is completely free and does not require sign-up.",
+  },
+  {
+    q: "Will validating robots.txt help with AI-powered crawlers?",
+    a: "Yes. Validating robots.txt ensures AI-related crawlers follow the correct access rules, helping you control which parts of your site can be crawled by AI systems.",
   },
 ]
 
@@ -380,8 +408,8 @@ export default function RobotsTxtValidator(): JSX.Element {
   return (
     <>
       <Seo
-        title="Robots.txt Validator"
-        description="Fetch and validate live robots.txt files for any site — test URL access for all major crawlers including Googlebot, Bingbot, GPTBot, and more."
+        title="Free Robots.txt Tester and Validator"
+        description="Use this Free Robots.txt Validator and Robots.txt tester to check crawling rules, detect errors, and test how search engines and bots access your URLs."
         keywords="robots.txt validator, seo tools, robots rules, disallow allow"
         url="https://cralite.com/tools/robots-txt-validator"
       />
@@ -559,17 +587,17 @@ export default function RobotsTxtValidator(): JSX.Element {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
             {[
               {
-                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/link.svg", import.meta.url).href,
                 title: "1. Provide Source",
                 desc: "Enter a robots.txt URL or paste the file contents into the textarea.",
               },
               {
-                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/choose.svg", import.meta.url).href,
                 title: "2. Choose User-Agent",
                 desc: "Select the crawler you want to simulate (Googlebot, Bingbot, GPTBot, etc.).",
               },
               {
-                icon: new URL("../assets/icons/generate.svg", import.meta.url).href,
+                icon: new URL("../assets/icons/check.svg", import.meta.url).href,
                 title: "3. Run Validation",
                 desc: "Click 'Run Validation' to see whether the chosen User-Agent can access the URL path.",
               },
