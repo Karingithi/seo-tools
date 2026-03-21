@@ -254,7 +254,6 @@ export const schemaFields: Record<string, { label: string; key: string; placehol
   "Website Sitelinks Searchbox": [
     { label: "Site Name", key: "name", placeholder: "Example Site" },
     { label: "Site URL", key: "url", placeholder: "https://example.com" },
-    { label: "@id (URL)", key: "@id", placeholder: "https://example.com/#website" },
     { label: "Search URL Template", key: "urlTemplate", placeholder: "https://example.com/search?q={search_term_string}" },
     { label: "Description", key: "description", placeholder: "Short description of your site" },
   ],
@@ -842,15 +841,12 @@ export function buildSchemaFromState(p: BuildParams): any {
   if (type === "Website Sitelinks Searchbox") {
     const site: any = { "@context": "https://schema.org", "@type": "WebSite" }
     if (fields.name?.trim()) site.name = fields.name.trim()
-    // Prefer an explicit @id if provided; otherwise derive @id from the site URL with a #website fragment
-    if (fields["@id"]?.trim()) {
-      site["@id"] = fields["@id"].trim()
-    }
+    // Auto-derive @id from the entered Site URL for consistency.
     if (fields.url?.trim()) {
       const raw = fields.url.trim()
       const url = raw.replace(/\/$/, "") // remove trailing slash for consistent @id
       site.url = raw
-      if (!site["@id"]) site["@id"] = `${url}#website`
+      site["@id"] = `${url}#website`
     }
     if (fields.description?.trim()) site.description = fields.description.trim()
     if (fields.urlTemplate?.trim()) {
