@@ -504,7 +504,7 @@ export default function OrganizationForm(props: OrganizationFormProps): JSX.Elem
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                   <div className="tool-field md:col-span-5" style={{ marginBottom: 0 }}>
                     <label className="tool-label">Language(s)</label>
                     <div className="custom-select-wrapper compact-select relative" style={{ width: "100%" }}>
@@ -611,8 +611,8 @@ export default function OrganizationForm(props: OrganizationFormProps): JSX.Elem
                     </div>
                   </div>
 
-                  <div className="md:col-span-1 flex items-center justify-end" style={{ marginBottom: 0 }}>
-                    <button type="button" className="toolbar-btn toolbar-btn--red square-btn" onClick={() => removeContact(idx)} aria-label="Remove contact point" title="Remove">&times;</button>
+                  <div className="md:col-span-1 flex items-end justify-end" style={{ marginBottom: 0 }}>
+                    <button type="button" className="toolbar-btn toolbar-btn--red square-btn" style={{ marginBottom: "6px" }} onClick={() => removeContact(idx)} aria-label="Remove contact point" title="Remove">&times;</button>
                   </div>
                 </div>
               </div>

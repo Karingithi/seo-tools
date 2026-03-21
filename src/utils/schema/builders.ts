@@ -1352,6 +1352,12 @@ export function buildSchemaFromState(p: BuildParams): any {
     }
     const openingHoursSpecs = buildOpeningHoursSpecs()
     if (openingHoursSpecs.length) org.openingHoursSpecification = openingHoursSpecs
+    // Normalize founder to a structured Person object (instead of plain string)
+    if (fields.founder?.trim()) {
+      org.founder = { "@type": "Person", name: fields.founder.trim() }
+    } else if (typeof org.founder === "string" && org.founder.trim()) {
+      org.founder = { "@type": "Person", name: org.founder.trim() }
+    }
     if (p.contacts && p.contacts.length) {
       const cps = p.contacts
         .map((c) => {
