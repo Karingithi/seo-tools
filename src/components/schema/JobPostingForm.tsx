@@ -95,6 +95,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
   const selectedCountryCode = getSelectedCountryCode(fields.country)
   const hasRegions = !!(selectedCountryCode && STATES_BY_COUNTRY && STATES_BY_COUNTRY[selectedCountryCode] && STATES_BY_COUNTRY[selectedCountryCode].length)
+  const stateDisabled = selectedCountryCode !== 'US'
 
   return (
     <div className="space-y-4">
@@ -112,7 +113,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         </div>
 
         <div className="tool-field">
-          <label className="tool-label">Identifier</label>
+          <label className="tool-label">Job identifier (internal ID)</label>
           <input
             type="text"
             className="tool-input"
@@ -123,9 +124,11 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           {renderError('identifier')}
         </div>
       </div>
+      
+        
 
       <div className="tool-field">
-        <label className="tool-label">Job's description (in HTML)</label>
+        <label className="tool-label">Job description (HTML allowed)</label>
         <textarea
           className="tool-textarea"
           rows={6}
@@ -139,7 +142,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="tool-field">
-          <label className="tool-label">Company</label>
+          <label className="tool-label">Company name</label>
           <input
             type="text"
             className="tool-input"
@@ -151,7 +154,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         </div>
 
         <div className="tool-field">
-          <label className="tool-label">Company URL</label>
+          <label className="tool-label">Company website URL</label>
           <input
             type="text"
             className="tool-input"
@@ -165,7 +168,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
       <div className="grid grid-cols-1 gap-4 mt-2">
         <div className="tool-field">
-          <label className="tool-label">Company profiles (LinkedIn, Facebook, etc.)</label>
+          <label className="tool-label">Company social profiles (LinkedIn, Facebook, etc.)</label>
           {(() => {
             const raw = fields.hiringOrganizationSameAs
             const list: string[] = Array.isArray(raw)
@@ -220,7 +223,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                     const next = list.slice()
                     next.push('')
                     handleChange('hiringOrganizationSameAs', next)
-                  }}>Add profile</button>
+                  }}>Add social profile</button>
                 </div>
 
                 <div className="text-sm text-gray-500 mt-1">Add one profile URL per row. These will be mapped to <code>hiringOrganization.sameAs</code>.</div>
@@ -233,7 +236,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="tool-field">
-          <label className="tool-label">Company logo</label>
+          <label className="tool-label">Company logo URL</label>
           <input
             type="text"
             className="tool-input"
@@ -245,7 +248,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         </div>
 
         <div className="tool-field">
-          <label className="tool-label">Industry</label>
+          <label className="tool-label">Industry / sector</label>
           <input
             type="text"
             className="tool-input"
@@ -310,7 +313,7 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
         </div>
 
         <div className="tool-field">
-          <label className="tool-label">Expire date</label>
+          <label className="tool-label">Application deadline</label>
           <DatePickerInput
             value={fields.validThrough}
             onChange={(iso) => handleChange('validThrough', iso)}
@@ -331,9 +334,9 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="tool-field">
-          <label className="tool-label">Street</label>
+          <label className="tool-label">Street address (optional)</label>
           <input type="text" className="tool-input" value={fields.street || ''} placeholder="Street address" onChange={(e) => handleChange('street', e.target.value)} />
           {renderError('street')}
         </div>
@@ -343,15 +346,67 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           <input type="text" className="tool-input" value={fields.city || ''} placeholder="City" onChange={(e) => handleChange('city', e.target.value)} />
           {renderError('city')}
         </div>
-
-        <div className="tool-field">
-          <label className="tool-label">Zip/Postal Code</label>
-          <input type="text" className="tool-input" value={fields.postalCode || ''} placeholder="Zip/Postal code" onChange={(e) => handleChange('postalCode', e.target.value)} />
-          {renderError('postalCode')}
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="tool-field">
+          <label className="tool-label">State / Province / Region</label>
+          {hasRegions && !regionCustomVisible ? (
+            <div className={`custom-select-wrapper compact-select region-select-wrapper relative ${stateDisabled ? 'opacity-50 pointer-events-none' : ''}`} style={{ width: '100%' }}>
+              <button
+                type="button"
+                className={`custom-select-trigger tool-select ${stateDisabled ? 'opacity-50' : ''}`}
+                onMouseDown={(e) => { e.stopPropagation(); }}
+                onClick={() => { if (!stateDisabled) { toggleJobRegionOpen && toggleJobRegionOpen() } }}
+                style={{ width: '100%', justifyContent: 'space-between' }}
+                aria-expanded={jobRegionOpen}
+                disabled={stateDisabled}
+              >
+                <span className="truncate block">{fields.region || 'Select state / region'}</span>
+                <span className="text-xs">⏷</span>
+              </button>
+
+              {jobRegionOpen && (
+                <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
+                  <div className="p-2">
+                    <input type="text" className="tool-input" placeholder="Search region..." value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
+                  </div>
+                  <ul>
+                    {(STATES_BY_COUNTRY[selectedCountryCode] || []).filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
+                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (!stateDisabled && StateSelectComp && selectedCountryCode && !regionCustomVisible) ? (
+            <StateSelectComp
+              className="tool-input"
+              country={selectedCountryCode}
+              countryCode={selectedCountryCode}
+              value={fields.region || ''}
+              onChange={(v: any) => {
+                const val = typeof v === 'string' ? v : (v && (v.target ? v.target.value : v))
+                if (val === '__other__') {
+                  setRegionCustomVisible(true)
+                  handleChange('region', '')
+                } else {
+                  handleChange('region', val || '')
+                }
+              }}
+            />
+          ) : (
+            <input type="text" className={`tool-input ${stateDisabled ? 'opacity-50' : ''}`} value={fields.region || ''} placeholder="State / Region" onChange={(e) => handleChange('region', e.target.value)} disabled={stateDisabled} />
+          )}
+          {renderError('region')}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label">Postal code</label>
+          <input type="text" className="tool-input" value={fields.postalCode || ''} placeholder="Postal code" onChange={(e) => handleChange('postalCode', e.target.value)} />
+          {renderError('postalCode')}
+        </div>
+
         <div className="tool-field">
           <label className="tool-label">Country</label>
           <div className="custom-select-wrapper compact-select relative country-select-wrapper" style={{ width: '100%' }}>
@@ -406,110 +461,106 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
           </div>
           {renderError('country')}
         </div>
-
-        <div className="tool-field">
-          <label className="tool-label">State/Province/Region</label>
-          {hasRegions && !regionCustomVisible ? (
-            <div className="custom-select-wrapper compact-select region-select-wrapper relative" style={{ width: '100%' }}>
-              <button
-                type="button"
-                className="custom-select-trigger tool-select"
-                onMouseDown={(e) => { e.stopPropagation(); }}
-                onClick={toggleJobRegionOpen}
-                style={{ width: '100%', justifyContent: 'space-between' }}
-                aria-expanded={jobRegionOpen}
-              >
-                <span className="truncate block">{fields.region || 'Select state / region'}</span>
-                <span className="text-xs">⏷</span>
-              </button>
-
-              {jobRegionOpen && (
-                <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
-                  <div className="p-2">
-                    <input type="text" className="tool-input" placeholder="Search region..." value={regionSearch} onChange={(e) => setRegionSearch(e.target.value)} />
-                  </div>
-                  <ul>
-                    {(STATES_BY_COUNTRY[selectedCountryCode] || []).filter((s) => s.toLowerCase().includes((regionSearch || '').toLowerCase())).map((s) => (
-                      <li key={s} className={(fields.region || '') === s ? 'selected' : ''} onMouseDown={(e) => { e.stopPropagation(); }} onClick={() => { handleChange('region', s); toggleJobRegionOpen && toggleJobRegionOpen() }}>{s}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ) : StateSelectComp && selectedCountryCode && !regionCustomVisible ? (
-            <StateSelectComp
-              className="tool-input"
-              country={selectedCountryCode}
-              countryCode={selectedCountryCode}
-              value={fields.region || ''}
-              onChange={(v: any) => {
-                const val = typeof v === 'string' ? v : (v && (v.target ? v.target.value : v))
-                if (val === '__other__') {
-                  setRegionCustomVisible(true)
-                  handleChange('region', '')
-                } else {
-                  handleChange('region', val || '')
-                }
-              }}
-            />
-          ) : (
-            <input type="text" className="tool-input" value={fields.region || ''} placeholder="State / Region" onChange={(e) => handleChange('region', e.target.value)} />
-          )}
-          {renderError('region')}
-        </div>
-
-        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
         <div className="tool-field">
-          <label className="tool-label">Min salary</label>
+          <label className="tool-label">Minimum salary</label>
           <input type="text" className="tool-input" value={fields.minSalary || ''} placeholder="Min salary" onChange={(e) => handleChange('minSalary', e.target.value)} />
           {renderError('minSalary')}
         </div>
 
         <div className="tool-field">
-          <label className="tool-label">Max salary</label>
+          <label className="tool-label">Maximum salary</label>
           <input type="text" className="tool-input" value={fields.maxSalary || ''} placeholder="Max salary" onChange={(e) => handleChange('maxSalary', e.target.value)} />
           {renderError('maxSalary')}
         </div>
 
-        <div className="tool-field col-span-full">
-          <label className="tool-label">Currency / Period</label>
-          <div className="flex gap-2">
-            <div className="relative" style={{ width: '50%' }}>
-              <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryCurrencyOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryCurrencyOpen}>
-                <span className="truncate block">{(fields.salaryCurrency && fields.salaryCurrency.trim()) ? (fields.salaryCurrency) : 'Select currency'}</span>
-                <span className="text-xs">⏷</span>
-              </button>
-              {jobSalaryCurrencyOpen && (
-                <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
-                  <div className="p-2"><input type="text" className="tool-input" placeholder="Search currency..." value={salaryCurrencySearch} onChange={(e) => setSalaryCurrencySearch(e.target.value)} /></div>
-                  <ul>
-                    {ALL_CURRENCIES.filter((c) => (c.code || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase()) || (c.name || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase())).map((c) => (
-                      <li key={c.code} className={(fields.salaryCurrency || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('salaryCurrency', c.code || ''); toggleJobSalaryCurrencyOpen && toggleJobSalaryCurrencyOpen(); setSalaryCurrencySearch('') }}>{c.code}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+        <div className="col-span-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="tool-field">
+              <label className="tool-label">Salary currency</label>
+              <div className="relative" style={{ width: '100%' }}>
+                <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryCurrencyOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryCurrencyOpen}>
+                  <span className="truncate block">{(fields.salaryCurrency && fields.salaryCurrency.trim()) ? (fields.salaryCurrency) : 'Select currency'}</span>
+                  <span className="text-xs">⏷</span>
+                </button>
+                {jobSalaryCurrencyOpen && (
+                  <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%', maxHeight: 260, overflow: 'auto' }}>
+                    <div className="p-2"><input type="text" className="tool-input" placeholder="Search currency..." value={salaryCurrencySearch} onChange={(e) => setSalaryCurrencySearch(e.target.value)} /></div>
+                    <ul>
+                      {ALL_CURRENCIES.filter((c) => (c.code || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase()) || (c.name || '').toLowerCase().includes((salaryCurrencySearch || '').toLowerCase())).map((c) => (
+                        <li key={c.code} className={(fields.salaryCurrency || '') === (c.code || '') ? 'selected' : ''} onClick={() => { handleChange('salaryCurrency', c.code || ''); toggleJobSalaryCurrencyOpen && toggleJobSalaryCurrencyOpen(); setSalaryCurrencySearch('') }}>{c.code}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="relative" style={{ width: '50%' }}>
-              <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryUnitOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryUnitOpen}>
-                <span className="truncate block">{(fields.salaryUnit && fields.salaryUnit.trim()) ? capitalize(fields.salaryUnit) : 'Select period'}</span>
-                <span className="text-xs">⏷</span>
-              </button>
-              {jobSalaryUnitOpen && (
-                <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%' }}>
-                  <ul>
-                    {SALARY_UNITS.map((u) => (
-                      <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); toggleJobSalaryUnitOpen && toggleJobSalaryUnitOpen() }}>{capitalize(u)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <div className="tool-field">
+              <label className="tool-label">Salary period</label>
+              <div className="relative" style={{ width: '100%' }}>
+                <button type="button" className="custom-select-trigger tool-select" onClick={toggleJobSalaryUnitOpen} style={{ width: '100%', justifyContent: 'space-between' }} aria-expanded={jobSalaryUnitOpen}>
+                  <span className="truncate block">{(fields.salaryUnit && fields.salaryUnit.trim()) ? capitalize(fields.salaryUnit) : 'Select period'}</span>
+                  <span className="text-xs">⏷</span>
+                </button>
+                {jobSalaryUnitOpen && (
+                  <div className="custom-select-list absolute left-0 mt-1 z-50" style={{ width: '100%' }}>
+                    <ul>
+                      {SALARY_UNITS.map((u) => (
+                        <li key={u} className={(fields.salaryUnit || '') === u ? 'selected' : ''} onClick={() => { handleChange('salaryUnit', u); toggleJobSalaryUnitOpen && toggleJobSalaryUnitOpen() }}>{capitalize(u)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 mt-2">
+        <div className="tool-field">
+          <label className="tool-label">Required skills</label>
+          <textarea className="tool-textarea" rows={3} value={fields.skills || ''} placeholder="One skill per line or comma-separated" onChange={(e) => handleChange('skills', e.target.value)} />
+          {renderError('skills')}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label">Education requirements</label>
+          <textarea className="tool-textarea" rows={3} value={fields.educationRequirements || ''} placeholder="e.g. Bachelor's degree in Computer Science" onChange={(e) => handleChange('educationRequirements', e.target.value)} />
+          {renderError('educationRequirements')}
+        </div>
+        
+        <div className="tool-field">
+          <label className="tool-label">Experience requirements</label>
+          <textarea className="tool-textarea" rows={3} value={fields.experienceRequirements || ''} placeholder="e.g. 3-5 years relevant experience" onChange={(e) => handleChange('experienceRequirements', e.target.value)} />
+          {renderError('experienceRequirements')}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label">Application URL</label>
+          {(() => {
+            const val = fields.applicationUrl || ''
+            const isUrlValid = (() => {
+              if (!val) return false
+              try { const u = new URL(String(val)); return u.protocol === 'http:' || u.protocol === 'https:' } catch { return false }
+            })()
+
+            return (
+              <div>
+                <input type="text" className="tool-input" value={val} placeholder="https://example.com/apply" onChange={(e) => handleChange('applicationUrl', normalizeInputUrl(e.target.value))} />
+                {!val ? (
+                  <div className="text-sm text-gray-500 mt-1">Optional: a link applicants can use to apply.</div>
+                ) : isUrlValid ? (
+                  <div className="text-sm text-green-600 mt-1">Valid URL</div>
+                ) : (
+                  <div className="validation-message">Invalid URL format</div>
+                )}
+                {renderError('applicationUrl')}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>

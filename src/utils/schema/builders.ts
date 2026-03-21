@@ -1305,18 +1305,63 @@ export function buildSchemaFromState(p: BuildParams): any {
   }
 
   if (type === "Organization") {
-    const org: any = { ...base, "@type": "Organization" }
+    const orgType = (fields.moreSpecificType?.trim()) || (fields.organizationType?.trim()) || "Organization"
+    const org: any = { ...base, "@type": orgType }
     const sa = (p.socialProfiles && p.socialProfiles.length)
       ? p.socialProfiles.map((s) => s.trim()).filter(Boolean)
       : (fields.sameAs?.trim() ? fields.sameAs.split(",").map((s) => s.trim()).filter(Boolean) : [])
     if (sa.length) org.sameAs = sa
+    if (fields.areaServed?.trim()) {
+      const areas = fields.areaServed.split(",").map((s) => s.trim()).filter(Boolean)
+      org.areaServed = areas.length === 1 ? areas[0] : areas
+    }
+    if ((fields.latitude?.trim()) || (fields.longitude?.trim())) {
+      const lat = parseFloat((fields.latitude || "").trim())
+      const lon = parseFloat((fields.longitude || "").trim())
+      if (!isNaN(lat) && !isNaN(lon)) org.geo = { "@type": "GeoCoordinates", latitude: lat, longitude: lon }
+    }
+    if (fields.priceRange?.trim()) org.priceRange = fields.priceRange.trim()
+    const hasAddress = fields.street || fields.city || fields.region || fields.postalCode || fields.country
+    if (hasAddress) {
+      const addr: any = { "@type": "PostalAddress" }
+      if (fields.street?.trim()) addr.streetAddress = fields.street.trim()
+      if (fields.city?.trim()) addr.addressLocality = fields.city.trim()
+      if (fields.region?.trim()) addr.addressRegion = fields.region.trim()
+      if (fields.postalCode?.trim()) addr.postalCode = fields.postalCode.trim()
+      if (fields.country?.trim()) addr.addressCountry = fields.country.trim()
+      org.address = addr
+    }
+    const CODE_TO_DAY: Record<string, string> = { Mo: "Monday", Tu: "Tuesday", We: "Wednesday", Th: "Thursday", Fr: "Friday", Sa: "Saturday", Su: "Sunday" }
+    const buildOpeningHoursSpecs = (): any[] => {
+      if (fields.open24_7 === "true") {
+        return [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "00:00", closes: "23:59" }]
+      }
+      if (p.openingHoursState && p.openingHoursState.length) {
+        const specs: any[] = []
+        p.openingHoursState.forEach((oh) => {
+          const codes = normalizeDaysToCodes(oh.days || "")
+          if (!codes.length) return
+          const daysOrdered = DAY_ORDER.filter((c: string) => codes.includes(c)).map((c: string) => CODE_TO_DAY[c])
+          const opens = (oh.opens || "").trim()
+          const closes = (oh.closes || "").trim()
+          if (daysOrdered.length && opens && closes) specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: daysOrdered, opens, closes })
+        })
+        if (specs.length) return specs
+      }
+      return []
+    }
+    const openingHoursSpecs = buildOpeningHoursSpecs()
+    if (openingHoursSpecs.length) org.openingHoursSpecification = openingHoursSpecs
     if (p.contacts && p.contacts.length) {
       const cps = p.contacts
         .map((c) => {
           const cp: any = { "@type": "ContactPoint" }
           if (c.contactType?.trim()) cp.contactType = c.contactType.trim()
           if (c.phone?.trim()) cp.telephone = c.phone.trim()
-          if (c.areaServed?.trim()) cp.areaServed = c.areaServed.trim()
+          if (c.areaServed?.trim()) {
+            const areaVals = c.areaServed.split(",").map((s: string) => s.trim()).filter(Boolean)
+            cp.areaServed = areaVals.length === 1 ? areaVals[0] : areaVals
+          }
           if (c.availableLanguage?.trim()) {
             const langs = c.availableLanguage.includes(",") ? c.availableLanguage.split(",").map((s) => s.trim()).filter(Boolean) : [c.availableLanguage.trim()]
             cp.availableLanguage = langs.length === 1 ? langs[0] : langs
@@ -1355,6 +1400,16 @@ export function buildSchemaFromState(p: BuildParams): any {
         }
       })
     }
+    delete org.organizationType
+    delete org.moreSpecificType
+    delete org.street
+    delete org.city
+    delete org.region
+    delete org.postalCode
+    delete org.country
+    delete org.latitude
+    delete org.longitude
+    delete org.open24_7
     out = org
   }
 

@@ -31,6 +31,9 @@ import FaqForm from "../components/schema/FaqForm"
 import { downloadText, copyToClipboard } from "../utils"
 
 export default function SchemaBuilder(): JSX.Element {
+  const getInitialOrgExtras = (schemaType: string): Array<{ key: string; value: string }> =>
+    schemaType === "Organization" ? [{ key: "legalName", value: "" }] : []
+
   const [type, setType] = useState<string>("Article")
   const [fields, setFields] = useState<Record<string, string>>({ articleType: "Article" })
 
@@ -146,9 +149,10 @@ export default function SchemaBuilder(): JSX.Element {
   const [deptOpeningDaysOpenIndex, setDeptOpeningDaysOpenIndex] = useState<number | null>(null)
 
   // Contacts repeater for Organization schema
-  const [contacts, setContacts] = useState<Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>>([])
+  const EMPTY_CONTACT = { contactType: "Customer Service", phone: "", areaServed: "", availableLanguage: "", options: "" }
+  const [contacts, setContacts] = useState<Array<{ contactType: string; phone: string; areaServed: string; availableLanguage: string; options: string }>>([EMPTY_CONTACT])
   // Organization Additional Info repeater
-  const [orgExtras, setOrgExtras] = useState<Array<{ key: string; value: string }>>([])
+  const [orgExtras, setOrgExtras] = useState<Array<{ key: string; value: string }>>(getInitialOrgExtras("Article"))
   const [orgExtraKeyOpenIndex, setOrgExtraKeyOpenIndex] = useState<number | null>(null)
 
   // Product identification dropdown state (sku, gtin8, gtin13, gtin14, mpn)
@@ -801,20 +805,28 @@ export default function SchemaBuilder(): JSX.Element {
   // Shared FAQ items for Schema Builder
   const FAQ_ITEMS = [
     {
-      q: "What schema type should I choose?",
-      a: "Pick the schema type that best matches the page content — e.g. use Article for blog posts, Product for product pages, and FAQPage for Q&A sections.",
+      q: "What is JSON-LD schema markup?",
+      a: "JSON-LD schema markup is structured data added to your website’s code to help search engines understand your content. It enables enhanced search results like rich snippets, business details, and FAQs.",
     },
     {
-      q: "How do I test the generated JSON-LD?",
-      a: "Use the Google Rich Results Test or the Schema Markup Validator — there's a Test button in the preview toolbar that copies your JSON-LD and opens Google's tester.",
+      q: "Does schema markup improve SEO rankings?",
+      a: "Schema markup does not directly boost rankings, but it improves how your content is interpreted. This can increase visibility in search results and improve click-through rates.",
     },
     {
-      q: "Do I need to include every field?",
-      a: "No — include the most important, factual fields (title, URL, date, author, price). Optional fields can be omitted, but richer data increases chances for enhanced results.",
+      q: "Which schema type should I choose?",
+      a: "Choose based on your page:\n\nOrganization / LocalBusiness → company websites\nArticle / BlogPosting → blog content\nFAQPage → FAQs\nProduct → eCommerce\n\nUsing the right type improves your chances of rich results.",
     },
     {
-      q: "Can I use multiple images?",
-      a: "Yes — add multiple image URLs and the builder will include them as an array on the `image` property or a single string when only one is provided.",
+      q: "Where should I add the JSON-LD code?",
+      a: "Add the generated JSON-LD to your website’s <head> section or before the closing <body> tag. Most CMS platforms support this via plugins or custom code blocks.",
+    },
+    {
+      q: "How do I test my schema markup?",
+      a: "Use tools like Google’s Rich Results Test or the Schema Markup Validator to check for errors and confirm eligibility for rich results.",
+    },
+    {
+      q: "Do I need to fill in every field?",
+      a: "No. Only include fields that are accurate and relevant. High-quality, correct data is more important than completing every field.",
     },
   ]
 
@@ -1037,7 +1049,7 @@ export default function SchemaBuilder(): JSX.Element {
   const removeDepartment = (index: number) => setDepartments((prev) => prev.filter((_, i) => i !== index))
 
   // Contacts handlers (Organization)
-  const addContact = () => setContacts((prev) => [...prev, { contactType: "Customer service", phone: "", areaServed: "", availableLanguage: "", options: "" }])
+  const addContact = () => setContacts((prev) => [...prev, { ...EMPTY_CONTACT }])
   const updateContact = (index: number, key: string, value: string) => {
     setContacts((prev) => {
       const next = [...prev]
@@ -1045,7 +1057,11 @@ export default function SchemaBuilder(): JSX.Element {
       return next
     })
   }
-  const removeContact = (index: number) => setContacts((prev) => prev.filter((_, i) => i !== index))
+  const removeContact = (index: number) =>
+    setContacts((prev) => {
+      const next = prev.filter((_, i) => i !== index)
+      return next.length ? next : [{ ...EMPTY_CONTACT }]
+    })
 
   const addSocialProfile = () => setSocialProfiles((prev) => [...prev, ""])
 
@@ -1666,6 +1682,7 @@ export default function SchemaBuilder(): JSX.Element {
   const handleReset = () => {
     setFields(type === "Article" ? { articleType: "Article" } : {})
     setImages(type === "Article" ? [""] : [])
+    setOrgExtras(getInitialOrgExtras(type))
     setErrors({})
     setResetMsgVisible(true)
     setTimeout(() => setResetMsgVisible(false), 1400)
@@ -1732,6 +1749,7 @@ export default function SchemaBuilder(): JSX.Element {
                               setType(schemaType)
                               setFields(schemaType === "Article" ? { articleType: "Article" } : {})
                               setImages(schemaType === "Article" ? [""] : [])
+                              setOrgExtras(getInitialOrgExtras(schemaType))
                               setDropdownOpen(false)
                               setErrors({})
                             }}
@@ -3259,6 +3277,10 @@ export default function SchemaBuilder(): JSX.Element {
                     optionsOpenIndex={optionsOpenIndex}
                     setOptionsOpenIndex={setOptionsOpenIndex}
                     CONTACT_OPTIONS={CONTACT_OPTIONS}
+                    openingHoursState={openingHoursState}
+                    addOpeningHour={addOpeningHour}
+                    updateOpeningHour={updateOpeningHour}
+                    removeOpeningHour={removeOpeningHour}
                   />
                 ) : (
                               type === "Product" ? (
@@ -3390,7 +3412,22 @@ export default function SchemaBuilder(): JSX.Element {
                   <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
                 )}
               </summary>
-              <div className="pb-6 text-lg text-secondary">{item.a}</div>
+              <div className="pb-6 text-lg text-secondary">
+                {item.q === "Which schema type should I choose?" ? (
+                  <div className="space-y-3">
+                    <p>Choose based on your page:</p>
+                    <ul className="list-disc ml-6 space-y-1">
+                      <li><strong>Organization / LocalBusiness</strong> → company websites</li>
+                      <li><strong>Article / BlogPosting</strong> → blog content</li>
+                      <li><strong>FAQPage</strong> → FAQs</li>
+                      <li><strong>Product</strong> → eCommerce</li>
+                    </ul>
+                    <p>Using the right type improves your chances of rich results.</p>
+                  </div>
+                ) : (
+                  item.a
+                )}
+              </div>
             </details>
           ))}
 
