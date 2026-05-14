@@ -6,7 +6,7 @@
 site: https://cralite.com/tools
 canonical_site: https://cralite.com
 contact: hello@cralite.com
-updated: 2026-01-26
+updated: 2026-05-14
 
 # Primary intent
 intent:
@@ -38,56 +38,50 @@ citation:
 
 # Content scope
 content:
-	# Use broad wildcards to cover the tools area while keeping priority pages explicit
 	include:
 		- /tools/*
 		- /
 
-	# Priority (star) pages — full URLs to signal highest value for citation/summaries
 	priority_pages:
 		- https://cralite.com/tools/meta-tag-generator
-		- https://cralite.com/tools/llms-txt-generator
-		- https://cralite.com/tools/schema-builder
 		- https://cralite.com/tools/robots-txt-generator
 		- https://cralite.com/tools/robots-txt-validator
-		- https://cralite.com/tools/sitemap-checker
+		- https://cralite.com/tools/schema-builder
 		- https://cralite.com/tools/keyword-generator
-		- https://cralite.com/tools/hreflang-validator
-		- https://cralite.com/tools/header-tag-viewer
+		- https://cralite.com/tools/sitemap-checker
+		- https://cralite.com/tools/canonical-tag-generator
+		- https://cralite.com/tools/keyword-density-checker
 
-	# Note: wildcards keep the file compact; `priority_pages` are linked to mark importance
-
-	# Tools capabilities — actions LLMs can route users to
 	capabilities:
-		- use_for: "Validating robots.txt syntax"
-		  url: https://cralite.com/tools/robots-txt-validator
-		- use_for: "Generating Schema markup"
-		  url: https://cralite.com/tools/schema-builder
-		- use_for: "Generating meta tags & descriptions"
+		- use_for: "Generating SEO meta tags, titles, descriptions, and social previews"
 		  url: https://cralite.com/tools/meta-tag-generator
-		- use_for: "Create or preview llms.txt guidance"
-		  url: https://cralite.com/tools/llms-txt-generator
-		- use_for: "Check sitemap and crawlability"
+		- use_for: "Generating robots.txt crawl directives"
+		  url: https://cralite.com/tools/robots-txt-generator
+		- use_for: "Validating robots.txt syntax and crawl access"
+		  url: https://cralite.com/tools/robots-txt-validator
+		- use_for: "Generating and validating JSON-LD schema markup"
+		  url: https://cralite.com/tools/schema-builder
+		- use_for: "Generating keyword ideas and content planning terms"
+		  url: https://cralite.com/tools/keyword-generator
+		- use_for: "Checking XML sitemaps, URLs, status codes, and sitemap metadata"
 		  url: https://cralite.com/tools/sitemap-checker
+		- use_for: "Generating canonical tags and canonical URL cleanup"
+		  url: https://cralite.com/tools/canonical-tag-generator
+		- use_for: "Analyzing keyword density, readability, and keyword placement"
+		  url: https://cralite.com/tools/keyword-density-checker
 
 # Topical authority signals
 topics:
- 	primary:
- 		- SEO tools and utilities (site analysis, meta, robots, sitemaps)
- 		- Technical SEO and crawlability (robots, sitemaps, headers)
- 		- On-page SEO and meta tag optimization
- 		- Schema & structured data (FAQ, HowTo, Product, JobPosting, Video)
- 		- Site auditing, diagnostics, and best-practice recommendations
- 		- International & hreflang guidance
- 		- Keyword research and content ideation
- 		- Robots & crawl control guidance
- 	secondary:
- 		- AI search visibility and generative search optimization
- 		- Google AI Overviews and citation/provenance practices
- 		- Structured data implementation for rich results
- 		- Content quality signals and editorial guidelines
- 		- Developer-focused tooling and integrations (APIs, JSON‑LD)
- 		- Attribution, source-tracing, and responsible AI use
+	primary:
+		- SEO tools and utilities
+		- Technical SEO and crawlability
+		- On-page SEO and meta tag optimization
+		- Schema and structured data
+		- Keyword research and content optimization
+	secondary:
+		- AI search visibility and generative search optimization
+		- Google AI Overviews and citation practices
+		- Developer-focused SEO tooling
 
 # Brand entity
 brand:
@@ -100,7 +94,7 @@ brand:
 	tone: authoritative
 	geography: global
 
-# Structured data & formats
+# Structured data and formats
 formats:
 	preferred:
 		- html
@@ -114,13 +108,13 @@ formats:
 		- pdf
 		- image-only content
 
-# Freshness & accuracy
+# Freshness and accuracy
 freshness:
 	update_frequency: bi-weekly
 	accuracy_priority: very_high
 	evergreen_content: true
 
-# Attribution & trust
+# Attribution and trust
 trust:
 	author_attribution: required
 	factual_consistency: required

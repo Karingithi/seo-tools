@@ -14,6 +14,7 @@ type MetaOptions = {
   twitterCard?: string
   twitterSite?: string
   twitterCreator?: string
+  includeWrapper?: boolean
 }
 
 /**
@@ -49,16 +50,20 @@ export function buildMetaTags({
   twitterCard,
   twitterSite,
   twitterCreator,
+  includeWrapper = true,
 }: MetaOptions): string {
   const lines: string[] = []
   lines.push("<!-- === Generated Meta Tags === -->")
-  // Only include the lang attribute when a non-empty language is provided.
-  if (language && language.trim()) {
-    lines.push(`<html lang="${escapeHtml(language.trim())}">`)
-  } else {
-    lines.push(`<html>`) // no lang attribute
+
+  if (includeWrapper) {
+    // Only include the lang attribute when a non-empty language is provided.
+    if (language && language.trim()) {
+      lines.push(`<html lang="${escapeHtml(language.trim())}">`)
+    } else {
+      lines.push(`<html>`) // no lang attribute
+    }
+    lines.push("<head>")
   }
-  lines.push("<head>")
 
   if (title?.trim()) {
     lines.push(`<title>${escapeHtml(title!.trim())}</title>`)
@@ -117,8 +122,10 @@ export function buildMetaTags({
     }
   }
 
-  lines.push("")
-  lines.push("</head>")
-  lines.push("</html>")
+  if (includeWrapper) {
+    lines.push("")
+    lines.push("</head>")
+    lines.push("</html>")
+  }
   return lines.join("\n").trim()
 }

@@ -3,6 +3,7 @@ import downloadIconUrl from "../assets/icons/download.svg?url"
 import resetIconUrl from "../assets/icons/reset.svg?url"
 import googleIconUrl from "../assets/icons/google.svg?url"
 import schemaIconUrl from "../assets/icons/schema-icon.svg?url"
+import type { ReactNode } from "react"
 
 type Props = {
   schemaScript: string
@@ -16,6 +17,7 @@ type Props = {
   resetMsgVisible: boolean
   testMsgVisible: boolean
   validateMsgVisible: boolean
+  richResultPreview?: ReactNode
 }
 
 export default function SchemaPreview({
@@ -30,9 +32,11 @@ export default function SchemaPreview({
   resetMsgVisible,
   testMsgVisible,
   validateMsgVisible,
+  richResultPreview,
 }: Props): JSX.Element {
   return (
     <div className="tool-preview">
+      {richResultPreview}
       <h3 className="tool-section-title">JSON-LD Preview</h3>
 
       <div className="toolbar-spacing">

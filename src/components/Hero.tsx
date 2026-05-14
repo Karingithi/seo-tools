@@ -77,6 +77,8 @@ export default function Hero({
               "Hreflang Validator",
               "XML Sitemap Checker",
               "LLMs.txt Generator",
+              "Canonical Tag Generator",
+              "Keyword Density Checker",
             ]
             const match = highlightPhrases.find((phrase) =>
               title.toLowerCase().includes(phrase.toLowerCase())

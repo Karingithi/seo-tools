@@ -98,10 +98,14 @@ type DropdownKey =
   | "twitterCard"
   | null
 
+type PreviewTab = "google" | "facebook" | "twitter"
+type VariationTemplate = "informational" | "service" | "local" | "ecommerce"
+
 export default function MetaTagGenerator(): JSX.Element {
   // === Meta Information State ===
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [primaryKeyword, setPrimaryKeyword] = useState("")
   const [keywords, setKeywords] = useState("")
   const [canonical, setCanonical] = useState("")
   const [language, setLanguage] = useState("en-US")
@@ -128,6 +132,8 @@ export default function MetaTagGenerator(): JSX.Element {
   const [copied, setCopied] = useState(false)
   const [downloadMsgVisible, setDownloadMsgVisible] = useState(false)
   const [resetMsgVisible, setResetMsgVisible] = useState(false)
+  const [outputWrapper, setOutputWrapper] = useState(false)
+  const [previewTab, setPreviewTab] = useState<PreviewTab>("google")
 
   // === Dropdown Management ===
   const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null)
@@ -302,6 +308,7 @@ export default function MetaTagGenerator(): JSX.Element {
   const hasUserInput =
     !!title.trim() ||
     !!description.trim() ||
+    !!primaryKeyword.trim() ||
     !!keywords.trim() ||
     !!canonical.trim() ||
     !!ogTitle.trim() ||
@@ -322,6 +329,7 @@ export default function MetaTagGenerator(): JSX.Element {
         language,
         robots: robotsDirective,
         twitterCard,
+        includeWrapper: outputWrapper,
       })
     }
 
@@ -341,10 +349,12 @@ export default function MetaTagGenerator(): JSX.Element {
       twitterCard,
       twitterSite: twitterSite.trim() || undefined,
       twitterCreator: twitterCreator.trim() || undefined,
+      includeWrapper: outputWrapper,
     })
   }, [
     title,
     description,
+    primaryKeyword,
     keywords,
     canonical,
     language,
@@ -359,7 +369,107 @@ export default function MetaTagGenerator(): JSX.Element {
     twitterSite,
     twitterCreator,
     hasUserInput,
+    outputWrapper,
   ])
+
+  const metaScore = useMemo(() => {
+    const normalizedKeyword = primaryKeyword.trim().toLowerCase()
+    const normalizedTitle = title.trim().toLowerCase()
+    const normalizedDescription = description.trim().toLowerCase()
+    const titleLength = title.trim().length
+    const descriptionLength = description.trim().length
+
+    const checks = [
+      {
+        label: "Title length",
+        status: titleLength >= 45 && titleLength <= 60 ? "good" : titleLength > 0 ? "warn" : "missing",
+        detail:
+          titleLength === 0
+            ? "Add a title."
+            : titleLength < 45
+              ? "Short titles may miss context."
+              : titleLength > 60
+                ? "Long titles may truncate."
+                : "Looks search-friendly.",
+      },
+      {
+        label: "Description length",
+        status: descriptionLength >= 135 && descriptionLength <= 160 ? "good" : descriptionLength > 0 ? "warn" : "missing",
+        detail:
+          descriptionLength === 0
+            ? "Add a meta description."
+            : descriptionLength < 135
+              ? "A little short for SERP context."
+              : descriptionLength > 160
+                ? "Likely to truncate."
+                : "Looks search-friendly.",
+      },
+      {
+        label: "Keyword placement",
+        status:
+          !normalizedKeyword
+            ? "missing"
+            : normalizedTitle.includes(normalizedKeyword) && normalizedDescription.includes(normalizedKeyword)
+              ? "good"
+              : "warn",
+        detail:
+          !normalizedKeyword
+            ? "Add a primary keyword to score placement."
+            : normalizedTitle.includes(normalizedKeyword) && normalizedDescription.includes(normalizedKeyword)
+              ? "Keyword appears in title and description."
+              : "Use the primary keyword naturally in both fields.",
+      },
+      {
+        label: "Duplicate copy",
+        status:
+          title.trim() && description.trim() && normalizedTitle === normalizedDescription
+            ? "warn"
+            : title.trim() && description.trim()
+              ? "good"
+              : "missing",
+        detail:
+          title.trim() && description.trim() && normalizedTitle === normalizedDescription
+            ? "Title and description should not be identical."
+            : title.trim() && description.trim()
+              ? "Title and description are distinct."
+              : "Add both fields to check duplication.",
+      },
+    ]
+
+    const passed = checks.filter((item) => item.status === "good").length
+    return { checks, score: Math.round((passed / checks.length) * 100) }
+  }, [description, primaryKeyword, title])
+
+  const applyVariation = (template: VariationTemplate) => {
+    const topic = title.trim() || primaryKeyword.trim() || "Your Page Topic"
+    const keyword = primaryKeyword.trim() || keywords.split(",")[0]?.trim() || topic
+    const brand = authorName.trim() || siteName || "Your Brand"
+    const cleanTopic = topic.replace(/\s+\|.+$/u, "")
+
+    const variations: Record<VariationTemplate, { title: string; description: string }> = {
+      informational: {
+        title: `${cleanTopic}: Complete Guide to ${keyword}`.slice(0, 60),
+        description: `Learn ${keyword} with clear examples, practical tips, and simple next steps to make better decisions fast.`,
+      },
+      service: {
+        title: `${keyword} Services | ${brand}`.slice(0, 60),
+        description: `Get professional ${keyword} support from ${brand}. Clear strategy, practical execution, and results-focused guidance.`,
+      },
+      local: {
+        title: `${keyword} Near You | Local ${brand}`.slice(0, 60),
+        description: `Find trusted ${keyword} help near you. Compare options, understand next steps, and choose ${brand} with confidence.`,
+      },
+      ecommerce: {
+        title: `Buy ${keyword} Online | ${brand}`.slice(0, 60),
+        description: `Shop ${keyword} from ${brand}. Compare features, check value, and find the right option for your needs.`,
+      },
+    }
+
+    const next = variations[template]
+    setTitle(next.title)
+    setDescription(next.description.slice(0, 160))
+    if (!primaryKeyword.trim()) setPrimaryKeyword(keyword)
+  }
 
   const handleCopy = () => {
     if (!metaPreview) return
@@ -386,6 +496,7 @@ export default function MetaTagGenerator(): JSX.Element {
   const handleReset = () => {
     setTitle("")
     setDescription("")
+    setPrimaryKeyword("")
     setKeywords("")
     setCanonical("")
     setLanguage("en-US")
@@ -612,6 +723,18 @@ export default function MetaTagGenerator(): JSX.Element {
               <div className="text-xs text-gray-500 mt-1">{descCounter}</div>
             </div>
 
+            <div className="tool-field" style={{ minWidth: 0 }}>
+              <label className="tool-label">Primary Keyword</label>
+              <input
+                type="text"
+                value={primaryKeyword}
+                onChange={(e) => setPrimaryKeyword(e.target.value)}
+                className="tool-input"
+                placeholder="Main keyword to check in title and description"
+                style={inputStyle}
+              />
+            </div>
+
             {/* Keywords */}
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Site Keywords</label>
@@ -623,6 +746,51 @@ export default function MetaTagGenerator(): JSX.Element {
                 placeholder="keyword1, keyword2, keyword3"
                 style={inputStyle}
               />
+            </div>
+
+            <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="tool-section-title m-0">SEO Score</h3>
+                <span className="text-sm font-semibold text-secondary">{metaScore.score}%</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {metaScore.checks.map((item) => (
+                  <div
+                    key={item.label}
+                    className={
+                      item.status === "good"
+                        ? "border border-green-200 bg-green-50 rounded-md p-3"
+                        : item.status === "warn"
+                          ? "border border-orange-200 bg-orange-50 rounded-md p-3"
+                          : "border border-gray-200 bg-white rounded-md p-3"
+                    }
+                  >
+                    <div className="text-sm font-semibold text-secondary">{item.label}</div>
+                    <div className="text-xs text-gray-600 mt-1">{item.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tool-field" style={{ minWidth: 0 }}>
+              <label className="tool-label">Generate Variations</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ["informational", "Informational"],
+                  ["service", "Service"],
+                  ["local", "Local"],
+                  ["ecommerce", "Ecommerce"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="clear-btn"
+                    onClick={() => applyVariation(key as VariationTemplate)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Canonical URL + Language on same row */}
@@ -813,10 +981,30 @@ export default function MetaTagGenerator(): JSX.Element {
           <div className="tool-preview" style={{ minWidth: 0 }}>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-500">Live SERP Preview</div>
+                <div className="text-sm text-gray-500">Live Preview</div>
               </div>
 
-              <div className="tool-serp p-3 rounded-[10px] bg-white shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                {[
+                  ["google", "Google"],
+                  ["facebook", "Facebook"],
+                  ["twitter", "X/Twitter"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={previewTab === key ? "action-btn" : "clear-btn"}
+                    onClick={() => setPreviewTab(key as PreviewTab)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="tool-serp p-3 rounded-[10px] bg-white shadow-sm"
+                style={{ display: previewTab === "google" ? "block" : "none" }}
+              >
                 <div className="flex items-center gap-3">
                   <img
                     src={faviconUrl}
@@ -859,6 +1047,25 @@ export default function MetaTagGenerator(): JSX.Element {
                   </div>
                 </div>
               </div>
+
+              {previewTab !== "google" && (
+                <div className="tool-serp p-3 rounded-[10px] bg-white shadow-sm">
+                  <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
+                    <div className="aspect-[1.91/1] bg-gray-100 flex items-center justify-center text-sm text-gray-500">
+                      {ogImage ? "Social image preview" : "Add an OG image URL for richer shares"}
+                    </div>
+                    <div className="p-3">
+                      <div className="text-xs uppercase text-gray-500">{siteName}</div>
+                      <div className="text-base font-semibold text-secondary mt-1">
+                        {ogTitle || title || "Social title preview"}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {ogDescription || description || "Social description preview."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* === Toolbar === */}
@@ -908,6 +1115,14 @@ export default function MetaTagGenerator(): JSX.Element {
             </div>
 
             {/* === Code Preview === */}
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={outputWrapper}
+                onChange={(e) => setOutputWrapper(e.target.checked)}
+              />
+              Include full HTML wrapper
+            </label>
             <pre
               className="tool-code mt-4"
               style={{

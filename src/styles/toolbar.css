@@ -1,0 +1,116 @@
+.toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.toolbar-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+  color: #374151;
+}
+
+.toolbar-btn--blue,
+.toolbar-btn--green,
+.toolbar-btn--red,
+.toolbar-btn--google,
+.toolbar-btn--schema {
+  color: #ffffff;
+}
+
+.toolbar-btn--blue {
+  background: #0b2447;
+}
+
+.toolbar-btn--blue:hover:not(:disabled) {
+  background: #123260;
+  color: #ffffff;
+}
+
+.toolbar-btn--green {
+  background: #10b981;
+}
+
+.toolbar-btn--green:hover:not(:disabled) {
+  background: #059669;
+  color: #ffffff;
+}
+
+.toolbar-btn--red {
+  background: #ef4444;
+}
+
+.toolbar-btn--red:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.toolbar-btn--google {
+  background: #f3b605;
+  color: #070026;
+}
+
+.toolbar-btn--google:hover:not(:disabled) {
+  background: #e2a904;
+  color: #070026;
+}
+
+.toolbar-btn--schema {
+  background: #980000;
+}
+
+.toolbar-btn--schema:hover:not(:disabled) {
+  background: #7f0000;
+  color: #ffffff;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toolbar-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(-50%) translateY(0.25rem);
+  pointer-events: none;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.4rem 0.5rem;
+  opacity: 0;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.toolbar-wrap:hover .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -1003,6 +1003,7 @@ code {
 
 .action-btn:hover {
   background-color: var(--primary-dark, #e6b30b);
+  color: var(--body, #0c0c0c);
 }
 
 .ai-action-btn {
@@ -1012,6 +1013,7 @@ code {
 
 .ai-action-btn:hover {
   filter: brightness(0.95);
+  color: var(--card-text-on-primary, #ffffff);
 }
 
 .clear-btn {
@@ -1021,6 +1023,7 @@ code {
 
 .clear-btn:hover {
   background-color: var(--muted-bg, #e5e7eb);
+  color: var(--muted-text-2, #1f2933);
 }
 
 /* Red variant that uses the action button sizing but with a red color */
@@ -1031,6 +1034,7 @@ code {
 
 .clear-btn--red:hover {
   background-color: #dc2626; /* red-600 */
+  color: #ffffff;
 }
 
 /* Disabled */

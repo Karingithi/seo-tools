@@ -1,0 +1,30 @@
+<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+  <circle cx="400" cy="400" r="400" fill="#d8ecfe"/>
+  <!-- Browser chrome -->
+  <rect x="130" y="170" width="540" height="420" rx="22" fill="#5b5e8b"/>
+  <rect x="130" y="230" width="540" height="360" rx="0" fill="#fff" ry="0"/>
+  <rect x="130" y="230" width="540" height="360" fill="#eef4ff"/>
+  <!-- Browser dots -->
+  <circle cx="180" cy="200" r="14" fill="#ef5350"/>
+  <circle cx="225" cy="200" r="14" fill="#ffc107"/>
+  <circle cx="270" cy="200" r="14" fill="#46cc6b"/>
+  <!-- URL bar -->
+  <rect x="310" y="186" width="310" height="28" rx="14" fill="#312e4b"/>
+  <!-- H1 bar - widest, darkest -->
+  <rect x="160" y="260" width="480" height="38" rx="8" fill="#5b5e8b"/>
+  <!-- H2 bar -->
+  <rect x="160" y="316" width="340" height="28" rx="7" fill="#8b8bbf"/>
+  <!-- H3 bar -->
+  <rect x="180" y="360" width="240" height="22" rx="6" fill="#b4b3cf"/>
+  <!-- Body text lines -->
+  <rect x="160" y="400" width="480" height="12" rx="6" fill="#d5d5e8"/>
+  <rect x="160" y="420" width="440" height="12" rx="6" fill="#d5d5e8"/>
+  <rect x="160" y="440" width="460" height="12" rx="6" fill="#d5d5e8"/>
+  <!-- H2 bar 2 -->
+  <rect x="160" y="470" width="300" height="28" rx="7" fill="#8b8bbf"/>
+  <!-- H3 bar 2 -->
+  <rect x="180" y="514" width="200" height="22" rx="6" fill="#b4b3cf"/>
+  <!-- Body text lines 2 -->
+  <rect x="160" y="548" width="480" height="12" rx="6" fill="#d5d5e8"/>
+  <rect x="160" y="568" width="400" height="12" rx="6" fill="#d5d5e8"/>
+</svg>

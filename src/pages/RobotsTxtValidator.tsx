@@ -77,6 +77,204 @@ const USER_AGENTS: Record<string, { display: string; value: string }[]> = {
   ],
 }
 
+type RobotsRule = {
+  directive: "allow" | "disallow"
+  pattern: string
+  lineNumber: number
+  rawLine: string
+}
+
+type RobotsGroup = {
+  agents: string[]
+  rules: RobotsRule[]
+}
+
+type RobotsCheckResult = {
+  allowed: boolean
+  message: string
+  details: string[]
+}
+
+const GENERIC_USER_AGENT = "-- Generic User-Agent (* Default) --"
+
+USER_AGENTS.Default = [{ display: GENERIC_USER_AGENT, value: GENERIC_USER_AGENT }]
+
+function stripInlineComment(line: string): string {
+  const hashIndex = line.indexOf("#")
+  return (hashIndex === -1 ? line : line.slice(0, hashIndex)).trim()
+}
+
+function normalizePathForRobots(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return "/"
+
+  try {
+    const parsed = new URL(trimmed)
+    return `${parsed.pathname || "/"}${parsed.search || ""}`
+  } catch {
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`
+  }
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function robotsPatternToRegex(pattern: string): RegExp {
+  const anchoredEnd = pattern.endsWith("$")
+  const body = anchoredEnd ? pattern.slice(0, -1) : pattern
+  const regexBody = body
+    .split("*")
+    .map(escapeRegex)
+    .join(".*")
+
+  return new RegExp(`^${regexBody}${anchoredEnd ? "$" : ".*"}`)
+}
+
+function parseRobotsTxt(content: string): RobotsGroup[] {
+  const groups: RobotsGroup[] = []
+  let currentAgents: string[] = []
+  let currentRules: RobotsRule[] = []
+  let hasStartedRules = false
+
+  const commitGroup = () => {
+    if (currentAgents.length === 0 && currentRules.length === 0) return
+    groups.push({
+      agents: currentAgents.map((agent) => agent.toLowerCase()),
+      rules: currentRules,
+    })
+    currentAgents = []
+    currentRules = []
+    hasStartedRules = false
+  }
+
+  content.split(/\r?\n/).forEach((rawLine, index) => {
+    const lineNumber = index + 1
+    const line = stripInlineComment(rawLine)
+    if (!line) return
+
+    const match = line.match(/^([a-z-]+)\s*:\s*(.*)$/i)
+    if (!match) return
+
+    const directive = match[1].toLowerCase()
+    const value = match[2].trim()
+
+    if (directive === "user-agent") {
+      if (hasStartedRules) commitGroup()
+      if (value) currentAgents.push(value)
+      return
+    }
+
+    if (directive !== "allow" && directive !== "disallow") return
+    if (currentAgents.length === 0) return
+
+    hasStartedRules = true
+    currentRules.push({
+      directive,
+      pattern: value,
+      lineNumber,
+      rawLine: line,
+    })
+  })
+
+  commitGroup()
+  return groups.filter((group) => group.agents.length > 0)
+}
+
+function agentMatchLength(ruleAgent: string, selectedAgent: string): number | null {
+  if (ruleAgent === "*") return 0
+  return selectedAgent.includes(ruleAgent) ? ruleAgent.length : null
+}
+
+function findApplicableGroups(groups: RobotsGroup[], userAgent: string): { groups: RobotsGroup[]; matchedAgent: string } {
+  const selectedAgent = userAgent === GENERIC_USER_AGENT ? "*" : userAgent.toLowerCase()
+  const candidates: Array<{ group: RobotsGroup; matchLength: number; matchedAgent: string }> = []
+
+  groups.forEach((group) => {
+    group.agents.forEach((agent) => {
+      const length = agentMatchLength(agent, selectedAgent)
+      if (length !== null) {
+        candidates.push({ group, matchLength: length, matchedAgent: agent })
+      }
+    })
+  })
+
+  if (candidates.length === 0) return { groups: [], matchedAgent: "" }
+
+  const bestLength = Math.max(...candidates.map((candidate) => candidate.matchLength))
+  const best = candidates.filter((candidate) => candidate.matchLength === bestLength)
+  return {
+    groups: Array.from(new Set(best.map((candidate) => candidate.group))),
+    matchedAgent: bestLength === 0 ? "*" : best[0].matchedAgent,
+  }
+}
+
+function getPatternLength(pattern: string): number {
+  return pattern.replace(/\*|\$/g, "").length
+}
+
+function evaluateRobotsAccess(content: string, userAgent: string, rawPath: string): RobotsCheckResult {
+  const groups = parseRobotsTxt(content)
+  const path = normalizePathForRobots(rawPath)
+
+  if (groups.length === 0) {
+    return {
+      allowed: true,
+      message: "Allowed. No valid User-agent groups were found, so no crawl block applies.",
+      details: [`Tested path: ${path}`],
+    }
+  }
+
+  const applicable = findApplicableGroups(groups, userAgent)
+  if (applicable.groups.length === 0) {
+    return {
+      allowed: true,
+      message: "Allowed. No matching User-agent group was found, and no default (*) group applies.",
+      details: [`Selected user-agent: ${userAgent}`, `Tested path: ${path}`],
+    }
+  }
+
+  const matchingRules = applicable.groups
+    .flatMap((group) => group.rules)
+    .filter((rule) => {
+      if (rule.directive === "disallow" && rule.pattern === "") return false
+      if (rule.directive === "allow" && rule.pattern === "") return false
+      return robotsPatternToRegex(rule.pattern).test(path)
+    })
+
+  if (matchingRules.length === 0) {
+    return {
+      allowed: true,
+      message: "Allowed. Matching group found, but no Allow or Disallow rule matches this path.",
+      details: [
+        `Matched user-agent group: ${applicable.matchedAgent}`,
+        `Tested path: ${path}`,
+      ],
+    }
+  }
+
+  matchingRules.sort((a, b) => {
+    const lengthDiff = getPatternLength(b.pattern) - getPatternLength(a.pattern)
+    if (lengthDiff !== 0) return lengthDiff
+    if (a.directive === b.directive) return a.lineNumber - b.lineNumber
+    return a.directive === "allow" ? -1 : 1
+  })
+
+  const winningRule = matchingRules[0]
+  const allowed = winningRule.directive === "allow"
+
+  return {
+    allowed,
+    message: `${allowed ? "Allowed" : "Blocked"} by line ${winningRule.lineNumber}: ${winningRule.rawLine}`,
+    details: [
+      `Matched user-agent group: ${applicable.matchedAgent}`,
+      `Tested path: ${path}`,
+      `Winning rule length: ${getPatternLength(winningRule.pattern)}`,
+      "Rule precedence: longest matching path wins; Allow wins ties.",
+    ],
+  }
+}
+
 // Shared FAQ items used for UI and JSON-LD
 const FAQ_ITEMS = [
   {
@@ -142,8 +340,8 @@ export default function RobotsTxtValidator(): JSX.Element {
   const [robotsContent, setRobotsContent] = useState("")
   const [robotsUrl, setRobotsUrl] = useState("")
   const [robotsUrlError, setRobotsUrlError] = useState("")
-  const serverFetchEndpoint = "http://localhost:3001/fetch-robots"
-  const [userAgent, setUserAgent] = useState("-- Generic User-Agent (* Default) --")
+  const serverFetchEndpoint = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/fetch-robots` : ""
+  const [userAgent, setUserAgent] = useState(GENERIC_USER_AGENT)
   const [urlToTest, setUrlToTest] = useState("/blog/post-123")
   const [validationResult, setValidationResult] = useState("")
   const [isValidating, setIsValidating] = useState(false)
@@ -242,6 +440,7 @@ export default function RobotsTxtValidator(): JSX.Element {
     try {
       // Try server-side fetch first (best-effort). If it fails, fall back to client fetch with proxy.
       try {
+        if (!serverFetchEndpoint) throw new Error("no server configured")
         const res = await fetch(serverFetchEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -297,30 +496,26 @@ export default function RobotsTxtValidator(): JSX.Element {
   // === Validate ===
   const handleValidate = useCallback(() => {
     // Prevent running validation if inputs are empty
-    if (!robotsContent.trim() && !robotsUrl.trim()) {
-      setValidationResult("⚠️ Please provide robots.txt content or a valid URL.")
+    if (!robotsContent.trim()) {
+      setValidationResult("Please fetch or paste robots.txt content before running validation.")
       setResultBg("#fee2e2")
       return
     }
 
     setIsValidating(true)
     setTimeout(() => {
-      if (urlToTest.includes("/admin")) {
-        setValidationResult("❌ Disallowed by: Disallow: /admin")
-        setResultBg("#fee2e2")
-      } else {
-        setValidationResult("✅ Allowed for this User-Agent.")
-        setResultBg("#d1fae5")
-      }
+      const result = evaluateRobotsAccess(robotsContent, userAgent, urlToTest || "/")
+      setValidationResult([result.message, ...result.details].join("\n"))
+      setResultBg(result.allowed ? "#d1fae5" : "#fee2e2")
       setIsValidating(false)
     }, 1000)
-  }, [robotsContent, robotsUrl, urlToTest])
+  }, [robotsContent, urlToTest, userAgent])
 
   const handleClear = () => {
     setRobotsContent("")
     setRobotsUrl("")
     setRobotsUrlError("")
-    setUserAgent("-- Generic User-Agent (* Default) --")
+    setUserAgent(GENERIC_USER_AGENT)
     setUrlToTest("")
     setValidationResult("")
     setFetchError(null)
@@ -553,6 +748,9 @@ export default function RobotsTxtValidator(): JSX.Element {
                 style={{
                   backgroundColor: resultBg || "#f9fafb",
                   transition: "background-color 0.3s ease",
+                  whiteSpace: "pre-line",
+                  textAlign: "left",
+                  justifyContent: "flex-start",
                 }}
               >
                 {validationResult || "Click “Run Validation” to see results."}

@@ -5,8 +5,8 @@ import ValidatorIconUrl from "../assets/icons/robots-txt-tester.svg?url"
 import KeywordIconUrl from "../assets/icons/keyword.svg?url"
 import SchemaIconUrl from "../assets/icons/schema.svg?url"
 import SitemapIconUrl from "../assets/icons/sitemap.svg?url"
-import HreflangIconUrl from "../assets/icons/hreflang-checker.svg?url"
-import LlmIconUrl from "../assets/icons/llms-txt.svg?url"
+import CanonicalIconUrl from "../assets/icons/canonical-tag-generator.svg?url"
+import KeywordDensityIconUrl from "../assets/icons/keyword-density-checker.svg?url"
 
 // Type definition for each tool
 export type Tool = {
@@ -55,21 +55,15 @@ export const toolsData: Tool[] = [
     description: "Inspect and validate XML sitemaps for indexing health.",
   },
   {
-    name: "Hreflang Tag Validator",
-    icon: HreflangIconUrl,
-    link: "/hreflang-validator",
-    description: "Validate hreflang tags to ensure correct language/country targeting.",
+    name: "Canonical Tag Generator",
+    icon: CanonicalIconUrl,
+    link: "/canonical-tag-generator",
+    description: "Generate canonical link tags to define preferred URLs for indexing.",
   },
   {
-    name: "LLMs.txt Generator",
-    icon: LlmIconUrl,
-    link: "/llms-txt-generator",
-    description: "Generate an llms.txt to control how LLM crawlers access your site.",
-  },
-  {
-    name: "Header Tag Structure Viewer",
-    icon: SchemaIconUrl,
-    link: "/header-tag-structure-viewer",
-    description: "Inspect page heading tag hierarchy (H1–H6) from HTML or a URL.",
+    name: "Keyword Density Checker",
+    icon: KeywordDensityIconUrl,
+    link: "/keyword-density-checker",
+    description: "Analyze keywords, phrases, and density from your content.",
   },
 ]

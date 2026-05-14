@@ -1,16 +1,17 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Layout from "./layouts/Layout"
 import Home from "./pages/Home"
 import MetaTagGenerator from "./pages/MetaTagGenerator"
-import SchemaBuilder from "./pages/SchemaBuilder"
 import KeywordGenerator from "./pages/KeywordGenerator"
 import RobotsTxtGenerator from "./pages/RobotsTxtGenerator"
 import RobotsTxtValidator from "./pages/RobotsTxtValidator"
 import SitemapChecker from "./pages/SitemapChecker"
-import HreflangValidator from "./pages/HreflangValidator"
-import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
-import HeaderTagViewer from "./pages/HeaderTagViewer"
+import CanonicalTagGenerator from "./pages/CanonicalTagGenerator"
+import KeywordDensityChecker from "./pages/KeywordDensityChecker"
 import NotFound from "./pages/NotFound"
+
+const SchemaBuilder = lazy(() => import("./pages/SchemaBuilder"))
 
 export default function App() {
   return (
@@ -52,7 +53,9 @@ export default function App() {
               subtitle="Generate structured data (JSON-LD) to boost your search visibility and click-through rates."
               showBackLink={true}
             >
-              <SchemaBuilder />
+              <Suspense fallback={<div className="section"><div className="section-inner">Loading schema builder...</div></div>}>
+                <SchemaBuilder />
+              </Suspense>
             </Layout>
           }
         />
@@ -113,44 +116,30 @@ export default function App() {
           }
         />
 
-        {/* === Hreflang Validator === */}
+        {/* === Canonical Tag Generator === */}
         <Route
-          path="/hreflang-validator"
+          path="/canonical-tag-generator"
           element={
             <Layout
-              title="Free Hreflang Validator"
-              subtitle="Validate and generate accurate hreflang tags to ensure correct language and regional targeting."
+              title="Free Canonical Tag Generator"
+              subtitle="Generate clean canonical tags to signal the preferred URL version for indexing."
               showBackLink={true}
             >
-              <HreflangValidator />
+              <CanonicalTagGenerator />
             </Layout>
           }
         />
 
-        {/* === LLMs.txt Generator === */}
+        {/* === Keyword Density Checker === */}
         <Route
-          path="/llms-txt-generator"
+          path="/keyword-density-checker"
           element={
             <Layout
-              title="LLMs.txt Generator"
-              subtitle="Make your website AI-friendly in seconds. Generate LLM.txt files that help AI models like ChatGPT, Claude, and Perplexity understand and cite your content accurately."
+              title="Free Keyword Density Checker"
+              subtitle="Analyze keyword frequency, phrase usage, and density distribution for better on-page SEO."
               showBackLink={true}
             >
-              <LlmsTxtGenerator />
-            </Layout>
-          }
-        />
-
-        {/* === Header Tag Structure Viewer === */}
-        <Route
-          path="/header-tag-structure-viewer"
-          element={
-            <Layout
-              title="Header Tag Structure Viewer"
-              subtitle="Inspect the H1–H6 heading hierarchy for HTML or a URL."
-              showBackLink={true}
-            >
-              <HeaderTagViewer />
+              <KeywordDensityChecker />
             </Layout>
           }
         />

@@ -1,21 +1,53 @@
-import { useState, useCallback, useEffect } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Seo from "../components/Seo"
 import RelatedTools from "../components/RelatedTools"
+import { downloadText } from "../utils/download"
+import {
+  applySitemapWarnings,
+  isValidUrl,
+  parseSitemapXml,
+  sitemapEntriesToCsv,
+  type SitemapEntry,
+} from "../utils/sitemapUtils"
 
 const FAQ_ITEMS = [
   {
     q: "Why can't I fetch the sitemap?",
-    a: "Some servers block cross-origin requests (CORS) or require authentication. Try a publicly accessible sitemap, use the Raw XML input, or run a server-side fetch proxy.",
+    a: "Some servers block browser requests with CORS. If VITE_API_URL is configured, this tool tries the server endpoint first; otherwise it falls back to direct browser and public proxy checks.",
   },
   {
     q: "What is a sitemap index?",
-    a: "A sitemap index lists multiple sitemap files. This tool will detect sitemap index files and list the contained sitemap URLs for you to inspect.",
+    a: "A sitemap index lists child sitemap files. Fetch & Parse follows those child sitemaps automatically and combines their URLs.",
   },
   {
     q: "Why are some URLs marked as skipped?",
-    a: "Skipped URLs either failed due to network/CORS issues, timed out, or returned opaque responses. Try the server-side checker option for more reliable results.",
+    a: "Skipped URLs usually failed because of network errors, timeouts, CORS, or an unavailable child sitemap.",
   },
 ]
+
+type Stats = {
+  total: number
+  valid: number
+  broken: number
+  skipped: number
+  redirects: number
+  warnings: number
+}
+
+const EMPTY_STATS: Stats = { total: 0, valid: 0, broken: 0, skipped: 0, redirects: 0, warnings: 0 }
+
+function statusLabel(entry: SitemapEntry): string {
+  if (entry.statusCode) return `${entry.status || "unknown"} (${entry.statusCode})`
+  return entry.status || "unknown"
+}
+
+function statusIcon(status: SitemapEntry["status"]): string {
+  if (status === "valid") return "OK"
+  if (status === "broken") return "ERR"
+  if (status === "redirect") return "301"
+  if (status === "skipped") return "SKIP"
+  return "-"
+}
 
 export default function SitemapChecker(): JSX.Element {
   const [sitemapUrl, setSitemapUrl] = useState("")
@@ -23,42 +55,37 @@ export default function SitemapChecker(): JSX.Element {
   const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [xmlText, setXmlText] = useState("")
-  const [parsedUrls, setParsedUrls] = useState<{ loc: string; valid: boolean; status?: "unknown" | "valid" | "broken" | "skipped"; statusCode?: number | null }[]>([])
+  const [parsedUrls, setParsedUrls] = useState<SitemapEntry[]>([])
   const [checking, setChecking] = useState(false)
-  const [stats, setStats] = useState({ total: 0, valid: 0, broken: 0, skipped: 0 })
-  const [serverEndpoint] = useState<string>("http://localhost:3001/check-urls")
+  const [childSitemapCount, setChildSitemapCount] = useState(0)
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS)
+  const [serverEndpoint] = useState<string>(import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/check-urls` : "")
 
   const validateUrl = (value: string, setError: (v: string) => void) => {
-    if (!value || !value.trim()) {
+    if (!value.trim()) {
       setError("Please enter a sitemap URL")
       return false
     }
-    try {
-      new URL(value)
-      setError("")
-      return true
-    } catch {
+    if (!isValidUrl(value)) {
       setError("Invalid URL format")
       return false
     }
+    setError("")
+    return true
   }
 
   const fetchSitemap = useCallback(async (url: string) => {
-    const tryFetchText = async (u: string) => {
-      const res = await fetch(u, { headers: { Accept: "application/xml, text/xml, */*" } })
+    const target = url.trim()
+    const tryFetchText = async (fetchUrl: string) => {
+      const res = await fetch(fetchUrl, { headers: { Accept: "application/xml, text/xml, */*" } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return await res.text()
     }
 
-    const target = url.trim()
+    let fetchEndpoint = serverEndpoint
+    if (fetchEndpoint.endsWith("/check-urls")) fetchEndpoint = fetchEndpoint.replace(/\/check-urls\/?$/, "/fetch-url")
 
-    // Try server-side fetch first (if your Express scaffold is running).
-    try {
-      // derive fetch endpoint from serverEndpoint if possible
-      let fetchEndpoint = serverEndpoint
-      if (fetchEndpoint.endsWith("/check-urls")) fetchEndpoint = fetchEndpoint.replace(/\/check-urls\/?$/, "/fetch-url")
-      // fallback to a common path
-      if (!fetchEndpoint) fetchEndpoint = "http://localhost:3001/fetch-url"
+    if (fetchEndpoint) {
       try {
         const srv = await fetch(fetchEndpoint, {
           method: "POST",
@@ -69,385 +96,265 @@ export default function SitemapChecker(): JSX.Element {
           const body = await srv.json()
           if (body && typeof body.text === "string" && body.text.trim()) return body.text
         }
-      } catch (e) {
-        // server fetch failed -> continue to client attempts
-      }
-    } catch (e) {
-      // ignore
+      } catch {}
     }
 
-    // Try direct client fetch
     try {
       return await tryFetchText(target)
     } catch (err) {
-      // Try a sequence of public proxy fallbacks (best-effort)
-      const proxyGenerators = [
+      const proxies = [
         (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
         (u: string) => `https://thingproxy.freeboard.io/fetch/${u}`,
       ]
-
-      for (const gen of proxyGenerators) {
+      for (const proxy of proxies) {
         try {
-          const proxied = gen(target)
-          return await tryFetchText(proxied)
-        } catch (e) {
-          // continue to next proxy
-        }
+          return await tryFetchText(proxy(target))
+        } catch {}
       }
-
-      // Nothing worked — rethrow the original error to be handled by caller with context
       throw err
     }
-  }, [])
+  }, [serverEndpoint])
+
+  const fetchAndParseSitemapTree = useCallback(async (
+    url: string,
+    depth = 0,
+    seen = new Set<string>(),
+  ): Promise<{ entries: SitemapEntry[]; xml: string; childCount: number }> => {
+    const target = url.trim()
+    if (seen.has(target) || depth > 3) return { entries: [], xml: "", childCount: 0 }
+    seen.add(target)
+
+    const xml = await fetchSitemap(target)
+    const parsed = parseSitemapXml(xml)
+    if (parsed.childSitemaps.length === 0) return { entries: parsed.entries, xml, childCount: 0 }
+
+    const children = await Promise.all(parsed.childSitemaps.slice(0, 50).map(async (child) => {
+      try {
+        return await fetchAndParseSitemapTree(child, depth + 1, seen)
+      } catch {
+        return {
+          entries: [{
+            loc: child,
+            valid: isValidUrl(child),
+            status: "skipped" as const,
+            statusCode: null,
+            warnings: ["Could not fetch child sitemap."],
+          }],
+          xml: "",
+          childCount: 0,
+        }
+      }
+    }))
+
+    return {
+      entries: children.flatMap((child) => child.entries),
+      xml,
+      childCount: parsed.childSitemaps.length + children.reduce((sum, child) => sum + child.childCount, 0),
+    }
+  }, [fetchSitemap])
+
+  const setEntries = (entries: SitemapEntry[]) => {
+    setParsedUrls(applySitemapWarnings(entries))
+  }
+
+  const parseXml = (text: string) => {
+    if (!text.trim()) {
+      setEntries([])
+      setChildSitemapCount(0)
+      return
+    }
+
+    try {
+      const parsed = parseSitemapXml(text)
+      if (parsed.childSitemaps.length) {
+        setChildSitemapCount(parsed.childSitemaps.length)
+        setEntries(parsed.childSitemaps.map((loc) => ({
+          loc,
+          valid: isValidUrl(loc),
+          status: "unknown",
+          statusCode: null,
+          warnings: ["Child sitemap listed. Use Fetch & Parse to recursively fetch URLs."],
+        })))
+      } else {
+        setChildSitemapCount(0)
+        setEntries(parsed.entries)
+      }
+      setFetchError(null)
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Failed to parse XML.")
+      setEntries([])
+      setChildSitemapCount(0)
+    }
+  }
 
   const handleFetch = async () => {
     setFetchError(null)
     if (!validateUrl(sitemapUrl, setUrlError)) return
     setFetching(true)
     try {
-      const text = await fetchSitemap(sitemapUrl)
-      setXmlText(text || "")
-      parseXml(text || "")
+      const tree = await fetchAndParseSitemapTree(sitemapUrl)
+      setXmlText(tree.xml)
+      setChildSitemapCount(tree.childCount)
+      setEntries(tree.entries)
     } catch (err) {
-      // Surface a clearer error. If the error is a TypeError (likely CORS/network), show a hint.
       const message = err instanceof Error ? err.message : String(err)
-      if (message === "Failed to fetch" || /TypeError/i.test(message)) {
-        setFetchError("Could not fetch the sitemap — network or CORS error. Try a different URL or use the Raw XML option.")
-      } else {
-        setFetchError(`Could not fetch the sitemap: ${message}`)
-      }
+      setFetchError(/Failed to fetch|TypeError/i.test(message)
+        ? "Could not fetch the sitemap. Try raw XML or configure a server-side fetch endpoint."
+        : `Could not fetch the sitemap: ${message}`)
       setXmlText("")
-      setParsedUrls([])
+      setEntries([])
+      setChildSitemapCount(0)
     } finally {
       setFetching(false)
     }
   }
 
-  const parseXml = (text: string) => {
-    if (!text) {
-      setParsedUrls([])
+  useEffect(() => {
+    if (parsedUrls.length === 0) {
+      setStats(EMPTY_STATS)
       return
     }
-    try {
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(text, "application/xml")
-      // Some responses are HTML pages (not XML). Detect and show helpful message.
-      const rootName = doc && doc.documentElement && doc.documentElement.nodeName ? doc.documentElement.nodeName.toLowerCase() : ""
-      if (rootName === "html") {
-        setFetchError("Invalid sitemap: the fetched content appears to be HTML, not XML. Check the URL or try fetching the raw sitemap XML.")
-        setParsedUrls([])
-        return
-      }
-
-      if (doc.querySelector("parsererror")) {
-        setFetchError("Invalid XML: parsing failed — the provided content is not valid XML.")
-        setParsedUrls([])
-        return
-      }
-
-      // sitemap index
-      const sitemapNodes = Array.from(doc.querySelectorAll("sitemap > loc"))
-      if (sitemapNodes.length) {
-        const urls = sitemapNodes.map((n) => ({ loc: (n.textContent || "").trim(), valid: isValidUrl((n.textContent || "").trim()), status: "unknown" as const, statusCode: null }))
-        setParsedUrls(urls)
-        setFetchError(null)
-        return
-      }
-
-      // regular sitemap
-      const urlNodes = Array.from(doc.querySelectorAll("url > loc"))
-      if (urlNodes.length) {
-        const urls = urlNodes.map((n) => ({ loc: (n.textContent || "").trim(), valid: isValidUrl((n.textContent || "").trim()), status: "unknown" as const, statusCode: null }))
-        setParsedUrls(urls)
-        setFetchError(null)
-        return
-      }
-
-      // fallback: find any <loc>
-      const anyLoc = Array.from(doc.querySelectorAll("loc"))
-      const urls = anyLoc.map((n) => ({ loc: (n.textContent || "").trim(), valid: isValidUrl((n.textContent || "").trim()), status: "unknown" as const, statusCode: null }))
-      setParsedUrls(urls)
-      setFetchError(null)
-    } catch (err) {
-      setFetchError("Failed to parse XML — ensure you've provided valid sitemap XML (looks like HTML or malformed XML).")
-      setParsedUrls([])
-    }
-  }
-
-  const isValidUrl = (v: string) => {
-    try {
-      new URL(v)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  const handleParseFromTextarea = () => {
-    parseXml(xmlText)
-  }
-
-  // copy/download handlers removed (not used in UI)
-
-  useEffect(() => {
-    // Only update total when parsedUrls changes to avoid clobbering
-    // counts while `checkUrls` updates them incrementally.
-    if (parsedUrls.length === 0) {
-      setStats({ total: 0, valid: 0, broken: 0, skipped: 0 })
-    } else {
-      setStats((prev) => ({ ...prev, total: parsedUrls.length }))
-    }
+    setStats((prev) => ({
+      ...prev,
+      total: parsedUrls.length,
+      redirects: parsedUrls.filter((entry) => entry.status === "redirect").length,
+      warnings: parsedUrls.reduce((sum, entry) => sum + entry.warnings.length, 0),
+    }))
   }, [parsedUrls])
 
-  // If the user has entered a sitemap URL but it's invalid, clear and disable the raw XML textarea
   useEffect(() => {
-    if (sitemapUrl && !isValidUrl(sitemapUrl)) {
-      if (xmlText) setXmlText("")
-    }
+    if (sitemapUrl && !isValidUrl(sitemapUrl) && xmlText) setXmlText("")
   }, [sitemapUrl, xmlText])
 
   const fetchWithTimeout = async (input: RequestInfo, init: RequestInit = {}, timeout = 10000) => {
     const controller = new AbortController()
     const id = setTimeout(() => controller.abort(), timeout)
     try {
-      const res = await fetch(input, { ...init, signal: controller.signal })
-      clearTimeout(id)
-      return res
+      return await fetch(input, { ...init, signal: controller.signal })
     } finally {
       clearTimeout(id)
     }
   }
 
-  // Server-side URL checks: POST /check-urls { urls: string[], concurrency?, timeoutMs? }
   const checkUrlsServerSide = async () => {
-    if (!parsedUrls.length) return [] as any
-    const body = { urls: parsedUrls.map((p) => p.loc), concurrency: 6, timeoutMs: 8000 }
+    if (!serverEndpoint) throw new Error("no server configured")
     const res = await fetch(serverEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ urls: parsedUrls.map((p) => p.loc), concurrency: 6, timeoutMs: 8000 }),
     })
     if (!res.ok) throw new Error(`Server returned ${res.status}`)
     const json = await res.json()
-    const results: { url: string; status: string; statusCode?: number }[] = json.results || []
-    return results
+    return (json.results || []) as { url: string; status: string; statusCode?: number }[]
   }
 
-  // Unified check: try server first, fall back to client-side checks on failure
+  const checkUrls = async () => {
+    if (!parsedUrls.length) return
+    const results: Stats = { ...EMPTY_STATS, total: parsedUrls.length }
+    const concurrency = 6
+    let idx = 0
+
+    const updateEntry = (index: number, status: SitemapEntry["status"], statusCode: number | null) => {
+      setParsedUrls((prev) => {
+        const copy = prev.slice()
+        copy[index] = { ...copy[index], status, statusCode }
+        return applySitemapWarnings(copy)
+      })
+    }
+
+    const tryFetch = async (url: string) => {
+      try {
+        const head = await fetchWithTimeout(url, { method: "HEAD" }, 8000)
+        if (head) return head
+      } catch {}
+      return fetchWithTimeout(url, { method: "GET" }, 10000)
+    }
+
+    const worker = async () => {
+      while (idx < parsedUrls.length) {
+        const i = idx++
+        try {
+          const res = await tryFetch(parsedUrls[i].loc)
+          const code = typeof res.status === "number" ? res.status : null
+          let status: SitemapEntry["status"] = "skipped"
+          if (code !== null && code >= 200 && code < 300) {
+            status = "valid"
+            results.valid++
+          } else if (code !== null && code >= 300 && code < 400) {
+            status = "redirect"
+            results.redirects++
+          } else if (code !== null && code >= 400) {
+            status = "broken"
+            results.broken++
+          } else {
+            results.skipped++
+          }
+          updateEntry(i, status, code)
+        } catch {
+          results.skipped++
+          updateEntry(i, "skipped", null)
+        }
+        setStats({ ...results })
+      }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, parsedUrls.length) }, () => worker()))
+    setStats({ ...results })
+  }
+
   const checkUrlsUnified = async () => {
     if (!parsedUrls.length) return
     setChecking(true)
     setFetchError(null)
     try {
-      const results: { url: string; status: string; statusCode?: number }[] = await checkUrlsServerSide()
-      const total = parsedUrls.length
-      // merge results into parsedUrls
-      setParsedUrls((prev) => prev.map((p) => {
-        const found = results.find((r) => r.url === p.loc)
-        if (found) return { ...p, status: (found.status as any) || "skipped", statusCode: found.statusCode ?? null }
-        return p
-      }))
-      // recompute stats (use earlier-captured total to avoid stale state)
-      const newStats = { total, valid: 0, broken: 0, skipped: 0 }
-      for (const r of results) {
-        if (r.status === "valid") newStats.valid++
-        else if (r.status === "broken") newStats.broken++
-        else newStats.skipped++
-      }
-      setStats(newStats)
-    } catch (err) {
-      // server failed -> fall back to client-side checks
-      // eslint-disable-next-line no-console
-      console.warn("Server check failed, falling back to client-side checks:", err)
-      try {
-        await checkUrls()
-      } catch (e) {
-        setFetchError(String(e instanceof Error ? e.message : e))
-      }
+      const serverResults = await checkUrlsServerSide()
+      const nextStats: Stats = { ...EMPTY_STATS, total: parsedUrls.length }
+      setParsedUrls((prev) => applySitemapWarnings(prev.map((entry) => {
+        const found = serverResults.find((result) => result.url === entry.loc)
+        if (!found) return entry
+        const statusCode = found.statusCode ?? null
+        const status = statusCode && statusCode >= 300 && statusCode < 400 ? "redirect" : (found.status as SitemapEntry["status"]) || "skipped"
+        if (status === "valid") nextStats.valid++
+        else if (status === "broken") nextStats.broken++
+        else if (status === "redirect") nextStats.redirects++
+        else nextStats.skipped++
+        return { ...entry, status, statusCode }
+      })))
+      setStats(nextStats)
+    } catch {
+      await checkUrls()
     } finally {
       setChecking(false)
     }
   }
 
-  /*
-    Server-side integration snippet (commented):
-
-    If you deploy the Express scaffold (`server/express-checker`) locally
-    or the Vercel serverless handler (`serverless/vercel-check-urls.js`) to
-    `/api/check-urls`, you can offload the per-URL HTTP checks to the server
-    to avoid CORS and public-proxy fallback issues.
-
-    Example (replace `ENDPOINT` with your deployed URL, e.g.:
-      - Local Express: http://localhost:3001/check-urls
-      - Vercel serverless: https://your-site.vercel.app/api/check-urls
-    )
-
-    // async function checkUrlsServerSide(urls: string[]) {
-    //   const ENDPOINT = 'http://localhost:3001/check-urls'
-    //   const res = await fetch(ENDPOINT, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ urls, concurrency: 6, timeoutMs: 8000 })
-    //   })
-    //   if (!res.ok) throw new Error(`Server returned ${res.status}`)
-    //   const body = await res.json()
-    //   // body.results is an array of { url, status: 'valid'|'broken'|'skipped', statusCode, attempts }
-    //   // Merge the server results into local `parsedUrls` and `stats`:
-    //   setParsedUrls((prev) => prev.map((p) => {
-    //     const found = (body.results || []).find((r: any) => r.url === p.loc)
-    //     return found ? { ...p, status: found.status, statusCode: found.statusCode } : p
-    //   }))
-    //   // Recompute stats from results (or rely on server-provided summary)
-    // }
-
-    Use this helper instead of client-side fetch loops when possible.
-  */
-
-  const tryFetch = async (url: string) => {
-    // Try HEAD first, then GET; if CORS blocks us, try via a public proxy
-    try {
-      let res = await fetchWithTimeout(url, { method: "HEAD" }, 8000)
-      if (res && res.ok) return res
-      // sometimes HEAD not allowed, try GET
-      res = await fetchWithTimeout(url, { method: "GET" }, 10000)
-      if (res) return res
-    } catch (e) {
-      // fall through to proxy
-    }
-
-    // proxy fallback
-    const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-    try {
-      const res = await fetchWithTimeout(proxied, { method: "GET" }, 12000)
-      return res
-    } catch (e) {
-      throw e
-    }
-  }
-
-    const checkUrls = async () => {
-    if (!parsedUrls.length) return
-    setChecking(true)
-    const results = { total: parsedUrls.length, valid: 0, broken: 0, skipped: 0 }
-
-    // concurrency limit
-    const concurrency = 6
-    let idx = 0
-
-    const worker = async () => {
-      while (true) {
-        const i = idx++
-        if (i >= parsedUrls.length) return
-        const u = parsedUrls[i].loc
-        try {
-          // retry loop with backoff to reduce transient/skipped results
-          let res: Response | null = null
-          let attempt = 0
-          const maxAttempts = 3
-          while (attempt < maxAttempts) {
-            try {
-              // tryFetch will itself fallback to proxy if needed
-              // eslint-disable-next-line no-await-in-loop
-              res = await tryFetch(u)
-              break
-            } catch (e) {
-              attempt++
-              // small exponential backoff
-              // eslint-disable-next-line no-await-in-loop
-              await new Promise((r) => setTimeout(r, 200 * attempt))
-            }
-          }
-
-          if (!res) {
-            // final failure after retries
-            results.skipped++
-            setParsedUrls((prev) => {
-              const copy = prev.slice()
-              copy[i] = { ...copy[i], status: "skipped", statusCode: null }
-              return copy
-            })
-          } else {
-            let status: "valid" | "broken" | "skipped" = "skipped"
-            const statusCode = typeof res.status === "number" ? res.status : null
-
-            if (statusCode !== null) {
-              // Consider 2xx and 3xx as valid. Treat 4xx/5xx as broken.
-              if (statusCode >= 200 && statusCode < 400) {
-                status = "valid"
-                results.valid++
-              } else if (statusCode >= 400 && statusCode < 600) {
-                status = "broken"
-                results.broken++
-              } else {
-                // other numeric statuses -> treat as valid
-                status = "valid"
-                results.valid++
-              }
-            } else {
-              // opaque responses (CORS-opaque) have status 0 and type 'opaque'
-              // treat opaque responses as valid (we got a response, even if opaque)
-              // otherwise mark as skipped
-              // @ts-ignore - safe access on Response
-              if (res.type === "opaque") {
-                status = "valid"
-                results.valid++
-              } else {
-                status = "skipped"
-                results.skipped++
-              }
-            }
-
-            setParsedUrls((prev) => {
-              const copy = prev.slice()
-              copy[i] = { ...copy[i], status, statusCode }
-              return copy
-            })
-          }
-        } catch (err) {
-          results.skipped++
-          setParsedUrls((prev) => {
-            const copy = prev.slice()
-            copy[i] = { ...copy[i], status: "skipped", statusCode: null }
-            return copy
-          })
-        }
-
-        // update intermediate stats so UI feels responsive
-        setStats({ ...results })
-      }
-    }
-
-    const workers = Array.from({ length: Math.min(concurrency, parsedUrls.length) }, () => worker())
-    await Promise.all(workers)
-    setStats({ ...results })
-    setChecking(false)
-  }
-
   const handleClear = () => {
     setSitemapUrl("")
     setXmlText("")
-    setParsedUrls([])
+    setEntries([])
     setUrlError("")
     setFetchError(null)
+    setChildSitemapCount(0)
   }
 
-  // Dynamic one-line summary shown under the Summary title
+  const warningEntries = useMemo(() => parsedUrls.filter((entry) => entry.warnings.length > 0), [parsedUrls])
+
   const summaryText = (() => {
     if (fetching) return "Fetching sitemap..."
     if (checking) return "Checking URLs..."
-    if (!sitemapUrl) return "No sitemap URL provided."
-    if (!isValidUrl(sitemapUrl)) return "Provided sitemap URL is invalid."
-    if (parsedUrls.length === 0) return "Sitemap fetched but no URLs parsed."
+    if (!sitemapUrl && !xmlText) return "No sitemap URL or raw XML provided."
+    if (parsedUrls.length === 0) return "No URLs parsed yet."
     if (stats.broken > 0) return `${stats.broken} broken URL${stats.broken !== 1 ? "s" : ""} found.`
-    if (stats.skipped > 0) return `All checked; ${stats.skipped} URL${stats.skipped !== 1 ? "s" : ""} skipped due to errors or CORS.`
-    return "The sitemap you provided is valid. No errors found."
+    if (stats.redirects > 0) return `${stats.redirects} redirecting URL${stats.redirects !== 1 ? "s" : ""} found.`
+    if (stats.warnings > 0) return `${stats.warnings} sitemap warning${stats.warnings !== 1 ? "s" : ""} found.`
+    return "The sitemap looks clean from the checks run so far."
   })()
 
   return (
     <>
       <Seo
         title="Free XML Sitemap Checker"
-        description="Fetch and validate XML sitemaps. Parse sitemap index files or standard sitemaps and list contained URLs with basic validation." 
+        description="Fetch, parse, recurse, and validate XML sitemaps with status checks, sitemap metadata extraction, duplicate warnings, and CSV export."
         keywords="sitemap checker, sitemap validator, xml sitemap, seo tools"
         url="https://cralite.com/tools/sitemap-checker"
       />
@@ -455,169 +362,123 @@ export default function SitemapChecker(): JSX.Element {
       <section className="section section--neutral">
         <div className="section-inner">
           <section className="tool-section">
-          <div className="tool-grid">
-                <div className="tool-form">
-            <h2 className="tool-h2">XML Sitemap Checker</h2>
-            <p className="text-sm text-gray-600 mb-4">Paste an absolute sitemap URL (e.g. https://example.com/sitemap.xml) and fetch & parse the XML. The tool will list URLs found and flag invalid entries.</p>
+            <div className="tool-grid">
+              <div className="tool-form">
+                <h2 className="tool-h2">XML Sitemap Checker</h2>
+                <p className="text-sm text-gray-600 mb-4">Fetch a sitemap URL or paste XML. Sitemap indexes are followed automatically when fetched.</p>
 
-            {/* Left-column summary removed per request — moving summary to right column */}
+                <div className="tool-field">
+                  <label className="tool-label">Sitemap URL</label>
+                  <input
+                    type="url"
+                    className="tool-input"
+                    placeholder="https://example.com/sitemap.xml"
+                    value={sitemapUrl}
+                    onChange={(e) => {
+                      setSitemapUrl(e.target.value)
+                      validateUrl(e.target.value, setUrlError)
+                    }}
+                  />
+                  {urlError && <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">{urlError}</div>}
+                </div>
 
-            <div className="tool-field">
-              <label className="tool-label">Sitemap URL</label>
-              <input
-                type="url"
-                className="tool-input"
-                placeholder="https://example.com/sitemap.xml"
-                value={sitemapUrl}
-                onChange={(e) => {
-                  setSitemapUrl(e.target.value)
-                  validateUrl(e.target.value, setUrlError)
-                }}
-              />
-              {urlError && <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">{urlError}</div>}
-            </div>
+                <div className="button-group">
+                  <button onClick={handleFetch} className="action-btn" disabled={fetching || !isValidUrl(sitemapUrl)}>{fetching ? "Fetching..." : "Fetch & Parse"}</button>
+                  <button onClick={checkUrlsUnified} className="action-btn" disabled={checking || parsedUrls.length === 0}>{checking ? "Checking..." : "Check URLs"}</button>
+                  <button onClick={() => parseXml(xmlText)} className="clear-btn" disabled={!xmlText.trim()}>Parse Raw XML</button>
+                  <button onClick={() => downloadText("sitemap-checker-results.csv", sitemapEntriesToCsv(parsedUrls))} className="clear-btn" disabled={parsedUrls.length === 0}>Export CSV</button>
+                  <button onClick={handleClear} className="clear-btn">Clear</button>
+                </div>
 
-            <div className="button-group">
-              <button onClick={handleFetch} className="action-btn" disabled={fetching || !isValidUrl(sitemapUrl)}>{fetching ? "Fetching..." : "Fetch & Parse"}</button>
-              <button onClick={() => checkUrlsUnified()} className="action-btn" disabled={checking || parsedUrls.length === 0}>{checking ? "Checking..." : "Check URLs"}</button>
-              <button
-                onClick={handleParseFromTextarea}
-                className="clear-btn"
-                disabled={xmlText.trim().length === 0 || (sitemapUrl !== "" && !isValidUrl(sitemapUrl))}
-              >
-                Parse Raw XML
-              </button>
-              <button onClick={handleClear} className="clear-btn">Clear</button>
-            </div>
-
-            {/* Server endpoint used automatically (server first, then client fallback) */}
-
-              {!(sitemapUrl && !isValidUrl(sitemapUrl)) ? (
-              <div className="tool-field">
-                <label className="tool-label">Raw XML (optional)</label>
-                <textarea
-                  value={xmlText}
-                  onChange={(e) => setXmlText(e.target.value)}
-                  className="tool-textarea"
-                  rows={8}
-                  placeholder="Paste sitemap XML here to parse without fetching"
-                ></textarea>
-              </div>
-            ) : (
-              <div className="tool-field">
-                <label className="tool-label">Raw XML (optional)</label>
-                <div className="mt-2 text-sm text-orange-600">Raw XML input hidden while the sitemap URL is invalid. Clear or fix the URL to enable pasting XML.</div>
-              </div>
-            )}
-
-            {fetchError && <div className="mt-3 text-sm text-red-600">{fetchError}</div>}
-
-            <div className="tool-field">
-              <h3 className="tool-section-title">Parsed URLs</h3>
-              <div className="text-sm text-gray-700 mb-2">Found <strong>{parsedUrls.length}</strong> entries.</div>
-
-              <div className="overflow-auto max-h-64 border rounded p-2 bg-white parsed-urls">
-                {parsedUrls.length === 0 ? (
-                  <div className="text-sm text-gray-500">No URLs parsed yet.</div>
-                ) : (
-                  <ul className="text-sm">
-                    {parsedUrls.map((u, i) => (
-                      <li key={i} className={`py-1 flex items-center gap-2 ${u.status === "broken" ? "text-red-600" : ""}`}>
-                        <span className="w-6 text-center">
-                          {u.status === "valid" ? "✅" : u.status === "broken" ? "❌" : u.status === "skipped" ? "🟡" : "•"}
-                        </span>
-                        <span className="truncate">{u.loc || "(empty)"}{!u.valid && " — invalid URL"}</span>
-                        <span className="ml-auto text-xs text-gray-500">{u.statusCode ?? ""}</span>
-                      </li>
-                    ))}
-                  </ul>
+                {!serverEndpoint && (
+                  <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    Server-side checking is not configured. Set VITE_API_URL for more reliable fetches and status checks without browser CORS limits.
+                  </div>
                 )}
+
+                <div className="tool-field">
+                  <label className="tool-label">Raw XML (optional)</label>
+                  <textarea
+                    value={xmlText}
+                    onChange={(e) => setXmlText(e.target.value)}
+                    className="tool-textarea"
+                    rows={8}
+                    placeholder="Paste sitemap XML here to parse without fetching"
+                  />
+                </div>
+
+                {fetchError && <div className="mt-3 text-sm text-red-600">{fetchError}</div>}
+
+                <div className="tool-field">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <h3 className="tool-section-title mb-0">Parsed URLs</h3>
+                    <div className="text-sm text-gray-700">Found <strong>{parsedUrls.length}</strong> entries</div>
+                  </div>
+
+                  <div className="overflow-auto max-h-96 border rounded p-2 bg-white parsed-urls">
+                    {parsedUrls.length === 0 ? (
+                      <div className="text-sm text-gray-500">No URLs parsed yet.</div>
+                    ) : (
+                      <ul className="text-sm divide-y divide-gray-100">
+                        {parsedUrls.map((entry, i) => (
+                          <li key={`${entry.loc}-${i}`} className={`py-3 ${entry.status === "broken" ? "text-red-600" : ""}`}>
+                            <div className="flex items-start gap-2">
+                              <span className="w-10 shrink-0 text-xs font-semibold text-gray-500">{statusIcon(entry.status)}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="break-all">{entry.loc || "(empty)"}{!entry.valid && " - invalid URL"}</div>
+                                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                  {entry.lastmod && <span>lastmod: {entry.lastmod}</span>}
+                                  {entry.changefreq && <span>changefreq: {entry.changefreq}</span>}
+                                  {entry.priority && <span>priority: {entry.priority}</span>}
+                                  <span>{statusLabel(entry)}</span>
+                                </div>
+                                {entry.warnings.length > 0 && (
+                                  <ul className="mt-2 list-disc pl-5 text-xs text-amber-700">
+                                    {entry.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                                  </ul>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Copy/Download toolbar removed per design — actions available elsewhere */}
+              <div className="tool-preview">
+                <h3 className="tool-h2 mb-3">Summary</h3>
+                <div className={fetchError ? "text-sm text-red-600 mb-3" : "text-sm text-gray-700 mb-3"}>{summaryText}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  {[
+                    ["Total URLs", stats.total, "bg-blue-50 text-blue-700"],
+                    ["Valid", stats.valid, "bg-green-50 text-green-700"],
+                    ["Broken", stats.broken, "bg-red-50 text-red-700"],
+                    ["Redirects", stats.redirects, "bg-purple-50 text-purple-700"],
+                    ["Skipped", stats.skipped, "bg-yellow-50 text-yellow-700"],
+                    ["Warnings", stats.warnings, "bg-amber-50 text-amber-700"],
+                  ].map(([label, value, classes]) => (
+                    <div key={String(label)} className={`p-4 rounded-lg ${classes}`}>
+                      <div className="text-sm opacity-80">{label}</div>
+                      <div className="text-2xl font-semibold">{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                  <div><strong>Child sitemaps followed:</strong> {childSitemapCount}</div>
+                  <div><strong>Rows with warnings:</strong> {warningEntries.length}</div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="tool-preview">
-            <h3 className="tool-h2 mb-3">Summary</h3>
-            <div className={fetchError ? "text-sm text-red-600 mb-3" : "text-sm text-gray-700 mb-3"}>{summaryText}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              <div className="p-4 rounded-lg bg-blue-50 flex items-center gap-4">
-                <div className="text-2xl text-blue-600">🔵</div>
-                <div>
-                  <div className="text-sm text-gray-500">Total URLs</div>
-                  <div className="text-2xl font-semibold text-blue-700">{stats.total}</div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-green-50 flex items-center gap-4">
-                <div className="text-2xl text-green-600">✅</div>
-                <div>
-                  <div className="text-sm text-gray-500">Valid (200)</div>
-                  <div className="text-2xl font-semibold text-green-700">{stats.valid}</div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-red-50 flex items-center gap-4">
-                <div className="text-2xl text-red-600">❌</div>
-                <div>
-                  <div className="text-sm text-gray-500">Broken (4xx/5xx)</div>
-                  <div className="text-2xl font-semibold text-red-700">{stats.broken}</div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-yellow-50 flex items-center gap-4">
-                <div className="text-2xl text-yellow-600">🟡</div>
-                <div>
-                  <div className="text-sm text-gray-500">Skipped / Error</div>
-                  <div className="text-2xl font-semibold text-yellow-700">{stats.skipped}</div>
-                </div>
-              </div>
-            </div>
-            <h3 className="tool-h2">About</h3>
-            <p className="text-sm text-gray-700 leading-relaxed">This checker will attempt to fetch a sitemap URL and parse it as XML. It supports sitemap index files and standard URL sitemaps. If the remote server blocks CORS, the tool will retry via a public proxy.</p>
-          </div>
-        </div>
-        </section>
+          </section>
         </div>
       </section>
 
       <section className="section section--white">
         <div className="section-inner">
           <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Sitemap Checker</h2>
-          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Paste an absolute sitemap URL and click "Fetch & Parse". Use "Check URLs" to validate each URL's HTTP status. If CORS prevents fetching, paste the raw XML into the editor.</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
-            <div className="text-center">
-              <div className="step-icon-outer">
-                <div className="step-icon-circle">
-                  <div className="text-2xl">1</div>
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Fetch a Sitemap</h3>
-              <p className="text-lg text-secondary max-w-xs mx-auto">Enter the sitemap URL and press "Fetch & Parse". The tool will list parsed URLs.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="step-icon-outer">
-                <div className="step-icon-circle">
-                  <div className="text-2xl">2</div>
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Check URLs</h3>
-              <p className="text-lg text-secondary max-w-xs mx-auto">Click "Check URLs" to validate status codes. Use the server-side check if you run the provided Express checker to avoid CORS issues.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="step-icon-outer">
-                <div className="step-icon-circle">
-                  <div className="text-2xl">3</div>
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Resolve Problems</h3>
-              <p className="text-lg text-secondary max-w-xs mx-auto">Use the raw XML input to troubleshoot non-fetchable sitemaps, or run checks from a server to avoid proxy limitations.</p>
-            </div>
-          </div>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Paste a sitemap URL and click Fetch & Parse. Use Check URLs for HTTP status checks, then export CSV for audit notes.</p>
         </div>
       </section>
 
@@ -632,11 +493,12 @@ export default function SitemapChecker(): JSX.Element {
           ))}
         </div>
       </section>
-            <section className="section">
-              <div className="section-inner">
-                <RelatedTools exclude="/sitemap-checker" />
-              </div>
-            </section>
+
+      <section className="section">
+        <div className="section-inner">
+          <RelatedTools exclude="/sitemap-checker" />
+        </div>
+      </section>
     </>
   )
 }

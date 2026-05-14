@@ -3,7 +3,6 @@ import { useState, useMemo, useEffect, type ComponentType } from "react"
 import { Plus, Minus } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 import { buildSchemaFromState, schemaFields, schemaDescriptions, schemaExamples, HELP_LINKS } from "../utils/schema/builders"
-import { } from "react-router-dom"
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import type { StateProps } from '../types/state'
@@ -31,6 +30,41 @@ import type { ArticleFields } from "../types/article"
 import FaqForm from "../components/schema/FaqForm"
 
 import { downloadText, copyToClipboard } from "../utils"
+
+const RICH_RESULT_ELIGIBILITY: Record<string, { eligible: string; recommended: string[] }> = {
+  Article: {
+    eligible: "Can be eligible for article rich result features when headline, image, dates, author, and publisher data are complete.",
+    recommended: ["headline", "authorName", "datePublished", "images", "publisherName"],
+  },
+  Product: {
+    eligible: "Can be eligible for product and review snippets when offer, image, rating, and product identity fields are complete.",
+    recommended: ["name", "image", "price", "currency", "availability", "ratingValue"],
+  },
+  "FAQ Page": {
+    eligible: "Can describe FAQ content. Google has limited FAQ rich results, but the markup remains useful for content understanding.",
+    recommended: ["faqItems"],
+  },
+  "How-to": {
+    eligible: "Can describe step-by-step content when each instruction is complete and accurate.",
+    recommended: ["name", "steps", "description"],
+  },
+  "Local Business": {
+    eligible: "Strengthens local entity understanding when address, phone, URL, hours, and business type are complete.",
+    recommended: ["name", "url", "telephone", "street", "city", "country"],
+  },
+  Event: {
+    eligible: "Can be eligible for event search features when dates, venue, event status, organizer, and offer data are complete.",
+    recommended: ["name", "startDate", "location", "description"],
+  },
+  Video: {
+    eligible: "Can be eligible for video enhancements when thumbnail, upload date, duration, and video URLs are complete.",
+    recommended: ["name", "thumbnailUrl", "uploadDate", "duration"],
+  },
+  "Job Posting": {
+    eligible: "Can be eligible for Google job search features when hiring, location, dates, and salary data are complete.",
+    recommended: ["title", "jobDescription", "hiringOrganization", "datePosted", "validThrough"],
+  },
+}
 
 export default function SchemaBuilder(): JSX.Element {
   const getInitialOrgExtras = (schemaType: string): Array<{ key: string; value: string }> =>
@@ -867,6 +901,31 @@ export default function SchemaBuilder(): JSX.Element {
     }
   }
 
+  const getFieldLabel = (key: string) => {
+    const allFields = schemaFields[type] || []
+    return allFields.find((field) => field.key === key)?.label || key
+  }
+
+  const getFieldValue = (key: string) => {
+    if (key === "faqItems") return faqItemsState.some((item) => item.question.trim() && item.answer.trim()) ? "filled" : ""
+    if (key === "itemList") return breadcrumbs.some((item) => item.name.trim() && item.url.trim()) ? "filled" : ""
+    if (key === "steps") return howToSteps.some((step) => step.instruction.trim()) || fields.steps?.trim() ? "filled" : ""
+    if (key === "images") return images.some((image) => image.trim()) || fields.images?.trim() ? "filled" : ""
+    return fields[key] || ""
+  }
+
+  const richResultPreview = useMemo(() => {
+    const config = RICH_RESULT_ELIGIBILITY[type]
+    const recommended = config?.recommended || []
+    const complete = recommended.filter((key) => String(getFieldValue(key)).trim())
+    return {
+      text: config?.eligible || "This schema helps search engines understand the entity on the page. Rich result eligibility depends on Google's supported features and field completeness.",
+      completeCount: complete.length,
+      totalCount: recommended.length,
+      missing: recommended.filter((key) => !String(getFieldValue(key)).trim()),
+    }
+  }, [breadcrumbs, faqItemsState, fields, howToSteps, images, type])
+
   const updateBreadcrumb = (index: number, key: "name" | "url", value: string) => {
     setBreadcrumbs((prev) => {
       const next = prev.slice()
@@ -1693,6 +1752,60 @@ export default function SchemaBuilder(): JSX.Element {
   
 
   const articleTitle = "Article Schema"
+  const builderSeoMeta: Record<string, { title: string; description: string }> = {
+    Article: {
+      title: "Free Article Schema Generator (JSON-LD)",
+      description: "Generate Article, BlogPosting, and NewsArticle JSON-LD with headlines, authors, and publisher data to improve SEO and search visibility.",
+    },
+    Breadcrumb: {
+      title: "Free Breadcrumb Schema Generator (JSON-LD)",
+      description: "Create BreadcrumbList JSON-LD to define your site structure and improve breadcrumb snippets in Google search results for better navigation.",
+    },
+    "FAQ Page": {
+      title: "Free FAQ Schema Generator (JSON-LD)",
+      description: "Build FAQPage JSON-LD with structured question and answer pairs to increase eligibility for Google rich results and improve click-through rates.",
+    },
+    "How-to": {
+      title: "Free How-To Schema Generator (JSON-LD)",
+      description: "Generate HowTo JSON-LD for step-by-step guides, including tools, instructions, and structured data to enhance visibility in search results.",
+    },
+    "Local Business": {
+      title: "Free Local Business Schema Generator",
+      description: "Create LocalBusiness JSON-LD with address, opening hours, and contact details to strengthen local SEO and improve visibility in Google search.",
+    },
+    Organization: {
+      title: "Free Organization Schema Generator (JSON-LD)",
+      description: "Generate Organization JSON-LD with brand details, social profiles, contact points, and entity signals to improve recognition in search results.",
+    },
+    Product: {
+      title: "Free Product Schema Generator (JSON-LD)",
+      description: "Build Product JSON-LD with pricing, availability, ratings, and reviews to enhance eCommerce listings and qualify for rich results in search.",
+    },
+    Video: {
+      title: "Free Video Schema Generator (JSON-LD)",
+      description: "Create VideoObject JSON-LD with thumbnails, duration, upload date, and metadata to improve video indexing and visibility in search results.",
+    },
+    "Website Sitelinks Searchbox": {
+      title: "Free Sitelinks Searchbox Schema Generator",
+      description: "Generate WebSite JSON-LD with SearchAction to enable a sitelinks search box for branded queries and improve navigation in search results.",
+    },
+    Person: {
+      title: "Free Person Schema Generator (JSON-LD)",
+      description: "Create Person JSON-LD with name, role, bio, and social profiles to strengthen identity signals and improve entity recognition in search.",
+    },
+    "Job Posting": {
+      title: "Free Job Posting Schema Generator",
+      description: "Build JobPosting JSON-LD with title, salary, location, and hiring details to qualify for Google job search features and improve visibility.",
+    },
+    Event: {
+      title: "Free Event Schema Generator (JSON-LD)",
+      description: "Create Event JSON-LD with dates, venue, ticketing, and organizer details to improve visibility and eligibility for event rich results.",
+    },
+  }
+  const seoMeta = builderSeoMeta[type] || {
+    title: `${type} Schema Builder (JSON-LD)`,
+    description: `Generate clean JSON-LD for ${type}.`,
+  }
 
   // Derived flags used by several product/offer controls
   const offerDisabled = !((fields.offerType || "").trim())
@@ -1701,8 +1814,8 @@ export default function SchemaBuilder(): JSX.Element {
   return (
     <>
       <Seo
-        title="Free Schema Markup Generator (JSON-LD)"
-        description="Generate clean and structured JSON-LD for multiple content types using this builder."
+        title={seoMeta.title}
+        description={seoMeta.description}
         keywords="schema generator, json-ld generator, seo tools"
         url="https://cralite.com/tools/schema-builder"
         disableBreadcrumb={true}
@@ -1810,8 +1923,6 @@ export default function SchemaBuilder(): JSX.Element {
                 )}
               </p>
             </div>
-
-            
 
             {type === "Recipe" && (
               <div className="text-sm text-gray-500 mt-0">
@@ -2222,6 +2333,27 @@ export default function SchemaBuilder(): JSX.Element {
             resetMsgVisible={resetMsgVisible}
             testMsgVisible={testMsgVisible}
             validateMsgVisible={validateMsgVisible}
+            richResultPreview={
+              <div className="tool-serp bg-white mb-4">
+                <h3 className="tool-section-title mt-0">Rich Result Eligibility</h3>
+                <p className="text-sm text-gray-700 leading-relaxed">{richResultPreview.text}</p>
+                <div className="mt-3 text-sm text-gray-600">
+                  Completion: <strong>{richResultPreview.completeCount}/{richResultPreview.totalCount || 0}</strong> key signals
+                </div>
+                {richResultPreview.missing.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-sm font-semibold text-secondary">Missing signals</div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {richResultPreview.missing.map((key) => (
+                        <span key={key} className="text-xs border border-orange-200 rounded-full px-3 py-1 bg-orange-50 text-orange-700">
+                          {getFieldLabel(key)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            }
           />
         </div>
       </section>
