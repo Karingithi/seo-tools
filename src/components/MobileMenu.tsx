@@ -65,11 +65,11 @@ export default function MobileMenu({
     <div className="mobile-menu-overlay fixed inset-0 bg-secondary z-50">
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="container flex items-center justify-between py-3.5 md:py-[25px]">
+        <div className="container flex items-center justify-between py-3.5 md:py-6.25">
           <a href="https://cralite.com/">
             <img
-              src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg"
-              className="h-10 md:h-[50px]"
+              src="https://cralite.com/storage/settings/cralite-light-logo.svg"
+              className="h-10 md:h-12.5"
               alt="Cralite Logo"
             />
           </a>

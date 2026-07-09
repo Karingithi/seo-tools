@@ -113,10 +113,10 @@ export default function Home() {
     <>
       {/* SEO */}
       <Seo
-        title="Free SEO Tools"
-        description="Cralite Free SEO Tools: meta tag, robots, sitemap, hreflang, schema and more. Free, no signup."
+        title="Free SEO Tools: Analyze, Audit & Optimize Your Website"
+        description="Generate meta tags, schema markup, sitemaps, and more. Free SEO tools to help your site rank, including an llms.txt generator for AI visibility."
         keywords="seo tools, meta tag generator, robots.txt, sitemap checker, hreflang, schema"
-        url="https://cralite.com"
+        url="https://cralite.com/"
         image="https://cralite.com/path/to/preview-image.jpg"
         siteName="Cralite Tools"
       />
@@ -213,7 +213,7 @@ export default function Home() {
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>
-                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+                <p className="text-[17px] text-secondary max-w-xs mx-auto">{desc}</p>
               </div>
             ))}
           </div>
@@ -251,13 +251,13 @@ export default function Home() {
                     <Plus className="w-6 h-6 text-secondary transition-transform duration-200 faq-plus" />
                   )}
                 </summary>
-                <div className="pb-6 text-lg text-secondary">{faq.node}</div>
+                <div className="pb-6 text-[17px] text-secondary">{faq.node}</div>
               </details>
             ))}
           </div>
 
           <div className="max-w-5xl mx-auto text-center mt-6">
-            <p className="text-lg text-secondary">
+            <p className="text-[17px] text-secondary">
               Have more questions?{" "}
               <Link to="https://cralite.com/contact/" className="text-primary font-normal">
                 Contact us

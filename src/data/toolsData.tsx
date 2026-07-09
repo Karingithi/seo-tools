@@ -7,6 +7,7 @@ import SchemaIconUrl from "../assets/icons/schema.svg?url"
 import SitemapIconUrl from "../assets/icons/sitemap.svg?url"
 import CanonicalIconUrl from "../assets/icons/canonical-tag-generator.svg?url"
 import KeywordDensityIconUrl from "../assets/icons/keyword-density-checker.svg?url"
+import LlmsTxtIconUrl from "../assets/icons/llms-txt.svg?url"
 
 // Type definition for each tool
 export type Tool = {
@@ -37,7 +38,7 @@ export const toolsData: Tool[] = [
     description: "Validate robots.txt files and detect syntax or access issues.",
   },
   {
-    name: "JSON-LD Schema Generator",
+    name: "Schema Markup Generator",
     icon: SchemaIconUrl,
     link: "/schema-builder",
     description: "Create JSON-LD structured data (schema) for rich results.",
@@ -65,5 +66,11 @@ export const toolsData: Tool[] = [
     icon: KeywordDensityIconUrl,
     link: "/keyword-density-checker",
     description: "Analyze keywords, phrases, and density from your content.",
+  },
+  {
+    name: "LLMs.txt Generator",
+    icon: LlmsTxtIconUrl,
+    link: "/llms-txt-generator",
+    description: "Generate an llms.txt file so AI tools accurately understand your site.",
   },
 ]

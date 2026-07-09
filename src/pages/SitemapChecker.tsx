@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Seo from "../components/Seo"
 import RelatedTools from "../components/RelatedTools"
+import downloadIcon from "../assets/icons/download.svg"
+import resetIcon from "../assets/icons/reset.svg"
 import { downloadText } from "../utils/download"
 import {
   applySitemapWarnings,
@@ -13,7 +15,7 @@ import {
 const FAQ_ITEMS = [
   {
     q: "Why can't I fetch the sitemap?",
-    a: "Some servers block browser requests with CORS. If VITE_API_URL is configured, this tool tries the server endpoint first; otherwise it falls back to direct browser and public proxy checks.",
+    a: "Some servers block browser requests with CORS. If fetching fails, paste the raw sitemap XML or try the sitemap URL directly in your browser.",
   },
   {
     q: "What is a sitemap index?",
@@ -356,7 +358,7 @@ export default function SitemapChecker(): JSX.Element {
         title="Free XML Sitemap Checker"
         description="Fetch, parse, recurse, and validate XML sitemaps with status checks, sitemap metadata extraction, duplicate warnings, and CSV export."
         keywords="sitemap checker, sitemap validator, xml sitemap, seo tools"
-        url="https://cralite.com/tools/sitemap-checker"
+        url="https://cralite.com/tools/sitemap-checker/"
       />
 
       <section className="section section--neutral">
@@ -367,10 +369,14 @@ export default function SitemapChecker(): JSX.Element {
                 <h2 className="tool-h2">XML Sitemap Checker</h2>
                 <p className="text-sm text-gray-600 mb-4">Fetch a sitemap URL or paste XML. Sitemap indexes are followed automatically when fetched.</p>
 
+                <form onSubmit={(e) => { e.preventDefault(); handleFetch() }}>
                 <div className="tool-field">
-                  <label className="tool-label">Sitemap URL</label>
+                  <label className="tool-label" htmlFor="sitemap-url-input">Sitemap URL</label>
                   <input
+                    id="sitemap-url-input"
                     type="url"
+                    name="sitemap-url"
+                    autoComplete="url"
                     className="tool-input"
                     placeholder="https://example.com/sitemap.xml"
                     value={sitemapUrl}
@@ -380,31 +386,57 @@ export default function SitemapChecker(): JSX.Element {
                     }}
                   />
                   {urlError && <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">{urlError}</div>}
+                  <p className="text-xs text-gray-500 mt-1">
+                    If direct fetch is blocked by the site's CORS policy, this tool retries through a public proxy (allorigins.win or thingproxy.freeboard.io).
+                  </p>
                 </div>
 
-                <div className="button-group">
-                  <button onClick={handleFetch} className="action-btn" disabled={fetching || !isValidUrl(sitemapUrl)}>{fetching ? "Fetching..." : "Fetch & Parse"}</button>
-                  <button onClick={checkUrlsUnified} className="action-btn" disabled={checking || parsedUrls.length === 0}>{checking ? "Checking..." : "Check URLs"}</button>
-                  <button onClick={() => parseXml(xmlText)} className="clear-btn" disabled={!xmlText.trim()}>Parse Raw XML</button>
-                  <button onClick={() => downloadText("sitemap-checker-results.csv", sitemapEntriesToCsv(parsedUrls))} className="clear-btn" disabled={parsedUrls.length === 0}>Export CSV</button>
-                  <button onClick={handleClear} className="clear-btn">Clear</button>
+                <div className="button-group sitemap-actions-row mb-0">
+                  <button type="submit" className="action-btn" disabled={fetching || !isValidUrl(sitemapUrl)}>{fetching ? "Fetching..." : "Fetch & Parse"}</button>
+                  <button type="button" onClick={checkUrlsUnified} className="action-btn" disabled={checking || parsedUrls.length === 0}>{checking ? "Checking..." : "Check URLs"}</button>
+                  <button type="button" onClick={() => parseXml(xmlText)} className="clear-btn" disabled={!xmlText.trim()}>Parse Raw XML</button>
                 </div>
+                </form>
 
-                {!serverEndpoint && (
-                  <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                    Server-side checking is not configured. Set VITE_API_URL for more reliable fetches and status checks without browser CORS limits.
+                <div>
+
+                  <div className="tool-field">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="tool-label">Raw XML (optional)</label>
+                      <div className="toolbar">
+                        <span className="toolbar-wrap">
+                          <button
+                            type="button"
+                            onClick={() => downloadText("sitemap-checker-results.csv", sitemapEntriesToCsv(parsedUrls))}
+                            className="toolbar-btn toolbar-btn--green"
+                            disabled={parsedUrls.length === 0}
+                            aria-label="Export CSV"
+                          >
+                            <img src={downloadIcon} alt="" className="toolbar-icon" />
+                          </button>
+                          <span className="tooltip">Export CSV</span>
+                        </span>
+                        <span className="toolbar-wrap">
+                          <button
+                            type="button"
+                            onClick={handleClear}
+                            className="toolbar-btn toolbar-btn--red"
+                            aria-label="Clear"
+                          >
+                            <img src={resetIcon} alt="" className="toolbar-icon" />
+                          </button>
+                          <span className="tooltip">Clear</span>
+                        </span>
+                      </div>
+                    </div>
+                    <textarea
+                      value={xmlText}
+                      onChange={(e) => setXmlText(e.target.value)}
+                      className="tool-textarea"
+                      rows={8}
+                      placeholder="Paste sitemap XML here to parse without fetching"
+                    />
                   </div>
-                )}
-
-                <div className="tool-field">
-                  <label className="tool-label">Raw XML (optional)</label>
-                  <textarea
-                    value={xmlText}
-                    onChange={(e) => setXmlText(e.target.value)}
-                    className="tool-textarea"
-                    rows={8}
-                    placeholder="Paste sitemap XML here to parse without fetching"
-                  />
                 </div>
 
                 {fetchError && <div className="mt-3 text-sm text-red-600">{fetchError}</div>}
@@ -460,12 +492,12 @@ export default function SitemapChecker(): JSX.Element {
                     ["Warnings", stats.warnings, "bg-amber-50 text-amber-700"],
                   ].map(([label, value, classes]) => (
                     <div key={String(label)} className={`p-4 rounded-lg ${classes}`}>
-                      <div className="text-sm opacity-80">{label}</div>
+                      <div className="text-base opacity-80">{label}</div>
                       <div className="text-2xl font-semibold">{value}</div>
                     </div>
                   ))}
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                <div className="rounded-lg border border-gray-200 bg-white p-4 text-base text-gray-700">
                   <div><strong>Child sitemaps followed:</strong> {childSitemapCount}</div>
                   <div><strong>Rows with warnings:</strong> {warningEntries.length}</div>
                 </div>
@@ -478,7 +510,39 @@ export default function SitemapChecker(): JSX.Element {
       <section className="section section--white">
         <div className="section-inner">
           <h2 className="text-3xl md:text-4xl font-bold mb-5 text-center">How to Use the Sitemap Checker</h2>
-          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">Paste a sitemap URL and click Fetch & Parse. Use Check URLs for HTTP status checks, then export CSV for audit notes.</p>
+          <p className="max-w-3xl mx-auto text-center text-secondary mb-5">
+            Fetch your XML sitemap, inspect crawl issues, and export a clean audit file for SEO reviews.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: new URL("../assets/icons/enter.svg", import.meta.url).href,
+                title: "1. Enter Sitemap",
+                desc: "Paste your sitemap URL or add raw XML when a site blocks browser fetching.",
+              },
+              {
+                icon: new URL("../assets/icons/validate.svg", import.meta.url).href,
+                title: "2. Check URLs",
+                desc: "Parse child sitemaps, review warnings, and run status checks for broken or redirecting URLs.",
+              },
+              {
+                icon: new URL("../assets/icons/download.svg", import.meta.url).href,
+                title: "3. Export Results",
+                desc: "Download the CSV report and use it to clean up sitemap and indexing issues.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <div className="step-icon-outer">
+                  <div className="step-icon-circle">
+                    <img src={icon} alt={title} className="step-icon-img" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-lg text-secondary max-w-xs mx-auto">{desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

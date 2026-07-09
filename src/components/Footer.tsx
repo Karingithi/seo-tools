@@ -1,33 +1,33 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFacebookF, faInstagram, faXTwitter, faLinkedin, faYoutube, faWhatsapp } from '@fortawesome/free-brands-svg-icons'
+import bgShape from "../assets/images/bg-shape.avif"
 
 export default function Footer() {
   return (
     <footer className="bg-secondary text-gray-300 p-4 pt-10 lg:pt-16 lg:pb-2.5 relative overflow-x-hidden">
       {/* Background overlay (match hero style) */}
       <div
-        className="absolute inset-0 z-0 bg-no-repeat bg-center opacity-80 pointer-events-none"
+        className="absolute inset-0 z-0 bg-no-repeat bg-center opacity-100 pointer-events-none"
         style={{
-          backgroundImage:
-            "url('https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp')",
-          backgroundSize: "42% auto",
-          backgroundPosition: "80% 0",
+          backgroundImage: `url(${bgShape})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
         }}
       ></div>
 
-      <div className="max-w-[1240px] mx-auto relative z-10 flex flex-col gap-8">
+      <div className="max-w-310 mx-auto relative z-10 flex flex-col gap-8">
 
         {/* First vertical container: grid of four columns (responsive) */}
-        <div className="grid grid-cols-1 gap-[30px] md:gap-5 md:grid-cols-[33%_17%_17%_33%] w-full">
+        <div className="grid grid-cols-1 gap-7.5 md:gap-5 md:grid-cols-[33%_17%_17%_33%] w-full">
             {/* Logo + Intro (stacked) */}
             <div className="flex flex-col gap-4 justify-center">
               <img
-                src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg"
+                src="https://cralite.com/storage/settings/cralite-light-logo.svg"
                 alt="Cralite"
-                className="w-[140px] h-auto"
+                className="w-35 h-auto"
               />
               <p className="text-white text-[17px] leading-relaxed w-full lg:w-[86%] mb-0">
-                We create digital experiences that engage and convert.
+                Premium web design, SEO, social media marketing, and branding built to grow your business in Kenya and beyond.
               </p>
             </div>
 
@@ -35,8 +35,8 @@ export default function Footer() {
         <div className="flex flex-col justify-start">
           <h3 className="text-white font-bold mb-5 text-xl">Company</h3>
             <ul className="space-y-2.5 text-[17px]">
-            <li><a href="https://cralite.com/about/" className="text-white hover:text-primary">About us</a></li>
-            <li><a href="https://cralite.com/privacy-policy/" className="text-white hover:text-primary">Privacy Policy</a></li>
+            <li><a href="https://cralite.com/about/" className="text-white hover:text-primary">About</a></li>
+            <li><a href="https://cralite.com/blog/" className="text-white hover:text-primary">Blog</a></li>
             <li><a href="https://cralite.com/contact/" className="text-white hover:text-primary">Contact</a></li>
           </ul>
         </div>
@@ -46,16 +46,16 @@ export default function Footer() {
           <h3 className="text-white font-bold mb-5 text-xl">Our Projects</h3>
             <ul className="space-y-2.5 text-[17px]">
             <li>
-              <a href="https://cralite.com/branding-projects/" className="text-white hover:text-primary">Branding</a>
+              <a href="https://cralite.com/portfolio?category=branding" className="text-white hover:text-primary">Branding</a>
             </li>
             <li>
-              <a href="https://cralite.com/digital-design-projects/" className="text-white hover:text-primary">Digital Design</a>
+              <a href="https://cralite.com/portfolio?category=digital-design" className="text-white hover:text-primary">Digital Design</a>
             </li>
             <li>
-              <a href="https://cralite.com/rich-media-gallery/" className="text-white hover:text-primary">Rich Media Gallery</a>
+              <a href="https://cralite.com/portfolio?category=packaging-design" className="text-white hover:text-primary">Packaging Design</a>
             </li>
             <li>
-              <a href="https://cralite.com/web-design-projects/" className="text-white hover:text-primary">Website Design</a>
+              <a href="https://cralite.com/portfolio?category=website-design" className="text-white hover:text-primary">Web Design</a>
             </li>
           </ul>
         </div>

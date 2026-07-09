@@ -241,7 +241,7 @@ export default function KeywordDensityChecker(): JSX.Element {
         title="Free Keyword Density Checker"
         description="Professional SEO text analysis for keywords, phrases, and density with 1-word, 2-word, and 3-word distribution insights."
         keywords="keyword density checker, seo keyword analysis, phrase density, n-gram checker"
-        url="https://cralite.com/tools/keyword-density-checker"
+        url="https://cralite.com/tools/keyword-density-checker/"
       />
 
       <section className="section section--neutral">
@@ -284,6 +284,8 @@ export default function KeywordDensityChecker(): JSX.Element {
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
+                      name="target-keyword"
+                      autoComplete="on"
                       className="tool-input flex-1"
                       placeholder="Enter target keyword (optional)"
                       value={targetKeyword}
@@ -370,11 +372,11 @@ export default function KeywordDensityChecker(): JSX.Element {
               <aside className="tool-preview">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="rounded-xl p-4 bg-blue-50/80">
-                    <div className="text-gray-500 font-normal">Total Words</div>
+                    <div className="text-base text-gray-500 font-normal">Total Words</div>
                     <div className="text-2xl leading-8 font-semibold text-blue-700">{totalWords}</div>
                   </div>
                   <div className="rounded-xl p-4 bg-green-50/80">
-                    <div className="text-gray-500 font-normal">Unique</div>
+                    <div className="text-base text-gray-500 font-normal">Unique</div>
                     <div className="text-2xl leading-8 font-semibold text-green-700">{uniqueWords}</div>
                   </div>
                 </div>
@@ -390,15 +392,15 @@ export default function KeywordDensityChecker(): JSX.Element {
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="rounded-xl p-4 bg-slate-50">
-                    <div className="text-gray-500 font-normal">Sentences</div>
+                    <div className="text-base text-gray-500 font-normal">Sentences</div>
                     <div className="text-2xl leading-8 font-semibold text-slate-700">{readabilityStats.sentenceCount}</div>
                   </div>
                   <div className="rounded-xl p-4 bg-slate-50">
-                    <div className="text-gray-500 font-normal">Reading Time</div>
+                    <div className="text-base text-gray-500 font-normal">Reading Time</div>
                     <div className="text-2xl leading-8 font-semibold text-slate-700">{readabilityStats.readingTimeMinutes}m</div>
                   </div>
                   <div className="rounded-xl p-4 bg-slate-50 col-span-2">
-                    <div className="text-gray-500 font-normal">Average Sentence Length</div>
+                    <div className="text-base text-gray-500 font-normal">Average Sentence Length</div>
                     <div className="text-2xl leading-8 font-semibold text-slate-700">{readabilityStats.averageSentenceLength} words</div>
                   </div>
                 </div>

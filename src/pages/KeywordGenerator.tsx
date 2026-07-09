@@ -243,7 +243,7 @@ export default function KeywordGenerator(): JSX.Element {
         title="Keyword Generator (AI-Powered)"
         description="Generate SEO keyword ideas, long-tail variations, and related search terms with AI-powered semantic expansion and search intent tagging."
         keywords="keyword generator, AI keyword tool, seo tools"
-        url="https://cralite.com/tools/keyword-generator"
+        url="https://cralite.com/tools/keyword-generator/"
       />
       {/* Structured data */}
       <Helmet>
@@ -281,6 +281,8 @@ export default function KeywordGenerator(): JSX.Element {
                   <label className="tool-label">Enter a Topic or Keyword</label>
                   <input
                     type="text"
+                    name="seed-keyword"
+                    autoComplete="on"
                     value={seedKeyword}
                     onChange={(e) => setSeedKeyword(e.target.value)}
                     placeholder="e.g. local SEO, yoga retreats, web design"
@@ -298,7 +300,7 @@ export default function KeywordGenerator(): JSX.Element {
                     onChange={(e) => setAiMode(e.target.checked)}
                     className="w-4 h-4 accent-primary"
                   />
-                  <label htmlFor="ai-mode" className="text-sm text-gray-700">
+                  <label htmlFor="ai-mode" className="text-base text-gray-700">
                     Enable <strong>AI-Powered Expansion Mode</strong>
                   </label>
                 </div>

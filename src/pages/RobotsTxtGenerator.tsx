@@ -305,7 +305,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
         title="Free Robots.txt Generator"
         description="Generate a robots.txt file to control crawling and indexing with per-robot rules, crawl-delay settings, sitemap support, and disallow lists using a live preview."
         keywords="robots.txt generator, seo tools, robots generator"
-        url="https://cralite.com/tools/robots-txt-generator"
+        url="https://cralite.com/tools/robots-txt-generator/"
       />
 
       {/* Inject structured data JSON-LD for FAQ */}

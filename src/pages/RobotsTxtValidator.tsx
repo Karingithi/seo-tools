@@ -606,7 +606,7 @@ export default function RobotsTxtValidator(): JSX.Element {
         title="Free Robots.txt Tester and Validator"
         description="Use this Free Robots.txt Validator and Robots.txt tester to check crawling rules, detect errors, and test how search engines and bots access your URLs."
         keywords="robots.txt validator, seo tools, robots rules, disallow allow"
-        url="https://cralite.com/tools/robots-txt-validator"
+        url="https://cralite.com/tools/robots-txt-validator/"
       />
 
       {/* Inject structured data JSON-LD for FAQ (single source) */}
@@ -653,6 +653,8 @@ export default function RobotsTxtValidator(): JSX.Element {
               <label className="tool-label">Fetch from URL (Optional)</label>
               <input
                 type="url"
+                name="robots-url"
+                autoComplete="url"
                 value={robotsUrl}
                 onChange={(e) => {
                   setRobotsUrl(e.target.value)
@@ -664,7 +666,7 @@ export default function RobotsTxtValidator(): JSX.Element {
               />
               {/* Server fetch attempted automatically (server first, then client fallback) */}
               <p className="text-xs text-gray-500 mt-1">
-                The robots.txt will auto-fetch when you leave this field.
+                The robots.txt will auto-fetch when you leave this field. If direct fetch is blocked by CORS, this tool retries through a public proxy (allorigins.win).
               </p>
               {robotsUrlError && (
                 <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">

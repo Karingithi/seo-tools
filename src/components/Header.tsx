@@ -34,10 +34,10 @@ const MENU_DATA: Record<string, MenuData> = {
   portfolio: {
     label: "Portfolio",
     items: [
-      { label: "Branding", href: "https://cralite.com/branding-projects/" },
-      { label: "Digital Design", href: "https://cralite.com/digital-design-projects/" },
-      { label: "Rich Media Gallery", href: "https://cralite.com/rich-media-gallery/" },
-      { label: "Website Design", href: "https://cralite.com/web-design-projects/" },
+      { label: "Branding", href: "https://cralite.com/portfolio?category=branding" },
+      { label: "Digital Design", href: "https://cralite.com/portfolio?category=digital-design" },
+      { label: "Packaging Design", href: "https://cralite.com/portfolio?category=packaging-design" },
+      { label: "Web Design", href: "https://cralite.com/portfolio?category=website-design" },
     ],
   },
   resources: {
@@ -269,13 +269,13 @@ export default function Header() {
       ${isScrolled ? "scrolled bg-secondary shadow-md z-60" : "bg-transparent z-50"}
       ${menuOpen ? "menu-open" : ""} text-white`}
     >
-      <div className="container flex items-center justify-between py-3.5 lg:py-[25px]">
+      <div className="container flex items-center justify-between py-3.5 lg:py-6.25">
         
         {/* LOGO */}
         <a href="https://cralite.com/" className="flex items-center">
           <img
-            src="https://cralite.com/wp-content/uploads/2023/12/Cralite_Light-Logo.svg"
-            className="h-10 lg:h-[50px]"
+            src="https://cralite.com/storage/settings/cralite-light-logo.svg"
+            className="h-10 lg:h-12.5"
           />
         </a>
 

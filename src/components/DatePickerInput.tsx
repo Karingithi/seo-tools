@@ -58,7 +58,7 @@ export default function DatePickerInput({ value, onChange, placeholder, classNam
       <style>{`
         .react-datepicker,
         .react-datepicker * {
-          font-family: 'Sofia Pro', ui-sans-serif, system-ui;
+          font-family: 'DM Sans', ui-sans-serif, system-ui;
         }
 
         .react-datepicker {

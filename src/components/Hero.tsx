@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import bgShape from "../assets/images/bg-shape.avif"
 
 interface HeroProps {
   title?: string
@@ -15,29 +16,16 @@ export default function Hero({
     <section className="hero-section relative overflow-hidden bg-secondary text-white pt-26 md:pt-40 pb-18 md:pb-24">
       {/* === Background Image === */}
       <div
-        className="absolute inset-0 z-0 bg-no-repeat bg-center opacity-70"
+        className="absolute inset-0 z-0 bg-no-repeat bg-center opacity-100"
         style={{
-          backgroundImage:
-            "url('https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp')",
-          backgroundSize: "60% auto",
-          backgroundPosition: "50% 0",
+          backgroundImage: `url(${bgShape})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
         }}
       ></div>
 
-      {/* === Mobile Background Adjustment === */}
-      <style>
-        {`
-          @media (max-width: 768px) {
-            .hero-section > .absolute {
-              background-size: 150% auto !important;
-              background-position: 10vw 0 !important;
-            }
-          }
-        `}
-      </style>
-
       {/* === Hero Content === */}
-      <div className="container relative z-2 py-[25px] text-center">
+      <div className="container relative z-2 py-6.25 text-center">
         {/* Back to Tools Link */}
         {showBackLink && (
           <div className="mb-5 md:mb-0">
@@ -98,7 +86,7 @@ export default function Hero({
           </h1>
 
           {/* Subtitle */}
-          <p className="my-[18px] text-lg text-white! px-4">{subtitle}</p>
+          <p className="my-4.5 text-[17px] text-white! px-4">{subtitle}</p>
         </div>
         </div>
     </section>

@@ -375,12 +375,12 @@ export default function SchemaBuilder(): JSX.Element {
 
     const googleLinks = (entry.google || []).map((g) => (
       <li key={g.url} className="mt-1">
-        <a className="text-primary" href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a>
+        <a className="text-primary text-base" href={g.url} target="_blank" rel="noopener noreferrer">{g.label}</a>
       </li>
     ))
 
     return (
-      <div className="mt-2 text-sm text-gray-600">
+      <div className="mt-2 text-base text-gray-600">
         <hr className="my-4 border-gray-200" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -1817,7 +1817,7 @@ export default function SchemaBuilder(): JSX.Element {
         title={seoMeta.title}
         description={seoMeta.description}
         keywords="schema generator, json-ld generator, seo tools"
-        url="https://cralite.com/tools/schema-builder"
+        url="https://cralite.com/tools/schema-builder/"
         disableBreadcrumb={true}
       />
       {/* Inject FAQ JSON-LD so the page provides structured FAQ data */}
@@ -1833,7 +1833,7 @@ export default function SchemaBuilder(): JSX.Element {
             <div className="tool-grid items-center">
               {/* LEFT – Dropdown + title */}
               <div>
-                <h3 className="text-[18px] font-semibold mb-2">
+                <h3 className="text-[1.5rem] font-semibold mb-2">
                   Which Schema.org markup would you like to generate?
                 </h3>
 
@@ -1888,7 +1888,7 @@ export default function SchemaBuilder(): JSX.Element {
                 After generating, test your markup using the{" "}
                 <a
                   href="https://search.google.com/test/rich-results"
-                  className="text-blue-600 underline"
+                  className="text-blue-600 underline text-base"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -1897,7 +1897,7 @@ export default function SchemaBuilder(): JSX.Element {
                 or the{" "}
                 <a
                   href="https://validator.schema.org/"
-                  className="text-blue-600 underline"
+                  className="text-blue-600 underline text-base"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

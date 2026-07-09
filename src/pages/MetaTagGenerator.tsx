@@ -291,12 +291,25 @@ export default function MetaTagGenerator(): JSX.Element {
       return true
     }
     try {
-      new URL(value)
+      const parsed = new URL(value)
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        setError("URL must start with http:// or https://")
+        return false
+      }
       setError("")
       return true
     } catch {
       setError("Invalid URL format")
       return false
+    }
+  }
+
+  const safeHref = (value: string) => {
+    try {
+      const parsed = new URL(value)
+      return parsed.protocol === "http:" || parsed.protocol === "https:" ? value : undefined
+    } catch {
+      return undefined
     }
   }
 
@@ -665,7 +678,7 @@ export default function MetaTagGenerator(): JSX.Element {
         title="Free Meta Tag Generator"
         description="Generate free, optimized meta tags including titles, descriptions, canonical URLs, robots directives, Open Graph, and Twitter Cards with a live preview."
         keywords="meta tag generator, seo tools, canonical, open graph, twitter card"
-        url="https://cralite.com/tools/meta-tag-generator"
+        url="https://cralite.com/tools/meta-tag-generator/"
       />
 
       {/* Inject structured data JSON-LD for SEO */}
@@ -697,6 +710,8 @@ export default function MetaTagGenerator(): JSX.Element {
               <label className="tool-label">Page Title</label>
               <input
                 type="text"
+                name="page-title"
+                autoComplete="on"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="tool-input"
@@ -712,6 +727,8 @@ export default function MetaTagGenerator(): JSX.Element {
             <div className="tool-field" style={{ minWidth: 0 }}>
               <label className="tool-label">Meta Description</label>
               <textarea
+                name="meta-description"
+                autoComplete="on"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="tool-textarea"
@@ -727,6 +744,8 @@ export default function MetaTagGenerator(): JSX.Element {
               <label className="tool-label">Primary Keyword</label>
               <input
                 type="text"
+                name="primary-keyword"
+                autoComplete="on"
                 value={primaryKeyword}
                 onChange={(e) => setPrimaryKeyword(e.target.value)}
                 className="tool-input"
@@ -740,6 +759,8 @@ export default function MetaTagGenerator(): JSX.Element {
               <label className="tool-label">Site Keywords</label>
               <input
                 type="text"
+                name="meta-keywords"
+                autoComplete="on"
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
                 className="tool-input"
@@ -765,8 +786,8 @@ export default function MetaTagGenerator(): JSX.Element {
                           : "border border-gray-200 bg-white rounded-md p-3"
                     }
                   >
-                    <div className="text-sm font-semibold text-secondary">{item.label}</div>
-                    <div className="text-xs text-gray-600 mt-1">{item.detail}</div>
+                    <div className="text-base font-semibold text-secondary">{item.label}</div>
+                    <div className="text-base text-gray-600 mt-1">{item.detail}</div>
                   </div>
                 ))}
               </div>
@@ -876,6 +897,8 @@ export default function MetaTagGenerator(): JSX.Element {
                 <label className="tool-label">Author Name</label>
                 <input
                   type="text"
+                  name="author-name"
+                  autoComplete="name"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
                   className="tool-input"
@@ -890,6 +913,8 @@ export default function MetaTagGenerator(): JSX.Element {
             <div className="tool-field" style={{ minWidth: 0 }}>
               <input
                 type="text"
+                name="og-title"
+                autoComplete="on"
                 value={ogTitle}
                 onChange={(e) => setOgTitle(e.target.value)}
                 className="tool-input"
@@ -897,6 +922,8 @@ export default function MetaTagGenerator(): JSX.Element {
                 style={inputStyle}
               />
               <textarea
+                name="og-description"
+                autoComplete="on"
                 value={ogDescription}
                 onChange={(e) => setOgDescription(e.target.value)}
                 className="tool-textarea"
@@ -906,6 +933,8 @@ export default function MetaTagGenerator(): JSX.Element {
               />
               <input
                 type="url"
+                name="og-url"
+                autoComplete="url"
                 value={ogUrl}
                 onChange={(e) => {
                   setOgUrl(e.target.value)
@@ -922,6 +951,8 @@ export default function MetaTagGenerator(): JSX.Element {
               )}
               <input
                 type="url"
+                name="og-image"
+                autoComplete="url"
                 value={ogImage}
                 onChange={(e) => {
                   setOgImage(e.target.value)
@@ -956,6 +987,8 @@ export default function MetaTagGenerator(): JSX.Element {
               <label className="tool-label">@Site</label>
               <input
                 type="text"
+                name="twitter-site"
+                autoComplete="on"
                 value={twitterSite}
                 onChange={(e) => setTwitterSite(e.target.value)}
                 className="tool-input"
@@ -968,6 +1001,8 @@ export default function MetaTagGenerator(): JSX.Element {
               <label className="tool-label">@Creator</label>
               <input
                 type="text"
+                name="twitter-creator"
+                autoComplete="on"
                 value={twitterCreator}
                 onChange={(e) => setTwitterCreator(e.target.value)}
                 className="tool-input"
@@ -1016,9 +1051,9 @@ export default function MetaTagGenerator(): JSX.Element {
                     }}
                   />
                   <div className="min-w-0">
-                    {canonical || ogUrl ? (
+                    {safeHref(canonical || ogUrl) ? (
                       <a
-                        href={canonical || ogUrl}
+                        href={safeHref(canonical || ogUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#202124]! text-sm truncate block"

@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+
 import Layout from "./layouts/Layout"
 import Home from "./pages/Home"
 import MetaTagGenerator from "./pages/MetaTagGenerator"
@@ -9,9 +9,9 @@ import RobotsTxtValidator from "./pages/RobotsTxtValidator"
 import SitemapChecker from "./pages/SitemapChecker"
 import CanonicalTagGenerator from "./pages/CanonicalTagGenerator"
 import KeywordDensityChecker from "./pages/KeywordDensityChecker"
+import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
+import SchemaBuilder from "./pages/SchemaBuilder"
 import NotFound from "./pages/NotFound"
-
-const SchemaBuilder = lazy(() => import("./pages/SchemaBuilder"))
 
 export default function App() {
   return (
@@ -53,9 +53,7 @@ export default function App() {
               subtitle="Generate structured data (JSON-LD) to boost your search visibility and click-through rates."
               showBackLink={true}
             >
-              <Suspense fallback={<div className="section"><div className="section-inner">Loading schema builder...</div></div>}>
-                <SchemaBuilder />
-              </Suspense>
+              <SchemaBuilder />
             </Layout>
           }
         />
@@ -140,6 +138,20 @@ export default function App() {
               showBackLink={true}
             >
               <KeywordDensityChecker />
+            </Layout>
+          }
+        />
+
+        {/* === llms.txt Generator === */}
+        <Route
+          path="/llms-txt-generator"
+          element={
+            <Layout
+              title="Free llms.txt Generator"
+              subtitle="Generate a clean llms.txt file to help AI tools understand your site's structure, brand, and key resources."
+              showBackLink={true}
+            >
+              <LlmsTxtGenerator />
             </Layout>
           }
         />

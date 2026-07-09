@@ -125,7 +125,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
         title="Free Canonical Tag Generator"
         description="Free canonical tag generator with URL cleaner. Fix parameters, enforce HTTPS, and generate single or bulk canonical tags instantly."
         keywords="canonical tag generator, canonical tags bulk, rel canonical, seo tools"
-        url="https://cralite.com/tools/canonical-tag-generator"
+        url="https://cralite.com/tools/canonical-tag-generator/"
       />
 
       <section className="section section--neutral">
@@ -165,6 +165,8 @@ export default function CanonicalTagGenerator(): JSX.Element {
                   {mode === "single" ? (
                     <input
                       type="url"
+                      name="canonical-url"
+                      autoComplete="url"
                       className="tool-input"
                       placeholder="https://www.example.com/page?utm_source=news"
                       value={sourceUrl}
@@ -172,6 +174,8 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                   ) : mode === "bulk" ? (
                     <textarea
+                      name="canonical-urls-bulk"
+                      autoComplete="on"
                       className="tool-textarea"
                       rows={5}
                       placeholder={"https://example.com/page1\nhttps://example.com/page2?utm=ref"}
@@ -180,6 +184,8 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                   ) : (
                     <textarea
+                      name="canonical-html-scan"
+                      autoComplete="on"
                       className="tool-textarea"
                       rows={8}
                       placeholder={'<head>\n  <link rel="canonical" href="https://example.com/page/" />\n</head>'}
@@ -190,7 +196,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3 mt-2">
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.addTrailingSlash}
@@ -198,7 +204,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                     Add trailing slash (/)
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.forceLowercase}
@@ -206,7 +212,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                     Force lowercase
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.stripQueryParams}
@@ -214,7 +220,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                     Strip UTM/Query Params
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.forceHttps}
@@ -222,7 +228,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                     Force HTTPS
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.removeWww}
@@ -230,7 +236,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                     />
                     Remove WWW
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm border border-gray-200 rounded-md px-3 py-3">
+                  <label className="inline-flex items-center gap-2 text-base border border-gray-200 rounded-md px-3 py-3">
                     <input
                       type="checkbox"
                       checked={options.removeFragments}
@@ -242,7 +248,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
 
                 <div className="border-t border-gray-200 mt-5 pt-5">
                   <div className="flex items-center justify-between gap-3 mb-3">
-                    <h3 className="tool-section-title uppercase">Generated Output</h3>
+                    <h3 className="tool-section-title">Generated Output</h3>
                     <div className="toolbar">
                       <div className="toolbar-wrap">
                         <div className={`tooltip ${copiedToast ? "visible msg-fade" : ""}`}>

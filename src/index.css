@@ -34,10 +34,10 @@
   --easing-ease-out: ease-out;
 
   /* Typography tokens */
-  --crl-primary-font-family: "Sofia Pro", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --crl-text-font-family: "Sofia Pro", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --crl-primary-font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --crl-text-font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --crl-headline-color: var(--headline);
   --crl-body-color: var(--body);
 
@@ -94,7 +94,7 @@
   --crl-typography--p-t: none;
   --crl-typography--p-st: normal;
   --crl-typography--p-c: var(--crl-body-color);
-  --crl-typography--p-s: 18px;
+  --crl-typography--p-s: 17px;
 }
 
 /* Responsive typography token adjustments */
@@ -131,11 +131,11 @@
   body {
     background-color: var(--neutral-light);
     color: var(--body);
-    font-family: "Sofia Pro", system-ui, -apple-system, BlinkMacSystemFont,
-      "Segoe UI", sans-serif;
+    font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-size: 14px;
+    font-size: 17px;
   }
 
   /* Headings – keep sensible defaults, but let Tailwind control sizes if used */
