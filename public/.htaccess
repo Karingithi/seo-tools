@@ -1,0 +1,14 @@
+# SPA fallback so direct/deep links under /tools/ (e.g. /tools/robots-txt-validator)
+# are served index.html instead of a 404, letting React Router render the route client-side.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /tools/
+
+  # Let real files/directories (assets, sitemap.xml, llms.txt, etc.) pass through.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else under /tools/ falls back to index.html.
+  RewriteRule ^ index.html [L]
+</IfModule>

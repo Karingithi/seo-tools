@@ -84,11 +84,11 @@ export default function Seo({
       <link rel="canonical" href={url} />
 
       {/* === Favicon === */}
-    <link rel="icon" type="image/svg+xml" href="https://cralite.com/storage/settings/cralite-favicon.svg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="https://cralite.com/storage/settings/cralite-favicon.svg" />
-    <link rel="apple-touch-icon" sizes="120x120" href="https://cralite.com/storage/settings/cralite-favicon.svg" />
-    <link rel="apple-touch-icon" sizes="76x76" href="https://cralite.com/storage/settings/cralite-favicon.svg" />
-    <link rel="apple-touch-icon" href="https://cralite.com/storage/settings/cralite-favicon.svg" />
+    <link rel="icon" type="image/png" href="https://cralite.com/storage/settings/cralite-favicon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cralite.com/storage/settings/cralite-favicon.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="https://cralite.com/storage/settings/cralite-favicon.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="https://cralite.com/storage/settings/cralite-favicon.png" />
+    <link rel="apple-touch-icon" href="https://cralite.com/storage/settings/cralite-favicon.png" />
       {breadcrumbJsonLd && (
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       )}

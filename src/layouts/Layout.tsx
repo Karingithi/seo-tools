@@ -1,7 +1,6 @@
 import Header from "../components/Header"
 import Footer from "../components/Footer"
 import Hero from "../components/Hero"
-import Seo from "../components/Seo"
 import CursorRing from "../components/CursorRing"
 import { ReactNode, useEffect } from "react"
 import { useLocation } from "react-router-dom"
@@ -28,12 +27,6 @@ export default function Layout({
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-slate-800">
       <CursorRing />
-      <Seo
-        title={title}
-        description={subtitle}
-        keywords="seo tools, free seo tools, meta tag generator, sitemap checker"
-        disableBreadcrumb={true}
-      />
 
       {/* HEADER */}
       <Header />
