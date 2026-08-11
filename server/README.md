@@ -35,22 +35,21 @@ ALLOWED_ORIGINS=https://cralite.com PORT=3001 npm start
 
 ## Deploying (Render)
 
-A `render.yaml` blueprint at the repo root is already configured for this:
-`rootDir: server`, free plan, health check on `/health`.
+Live at `https://free-seo-tools-server.onrender.com`, deployed as a Render
+**Web Service** (Render's UI didn't offer a Blueprint option at setup time, so
+it was configured manually to match `render.yaml`):
 
-1. In the Render dashboard: **New > Blueprint**, point it at this repo. Render
-   reads `render.yaml` and creates the `free-seo-tools-server` web service
-   automatically (build: `npm install`, start: `npm start`).
-2. After the first deploy, Render assigns a URL like
-   `https://free-seo-tools-server.onrender.com` (shown in the service
-   dashboard — may differ slightly if that exact name is taken). Copy it.
-3. Update three places with that exact URL:
-   - `VITE_API_URL` in your production build env (see `.env.example`)
-   - `connect-src` in the root `index.html` CSP
-   - Nothing else needed server-side — `ALLOWED_ORIGINS` is already set to
-     `https://cralite.com` via `render.yaml`.
-4. Rebuild and redeploy the frontend so `VITE_API_URL` is baked into the
-   bundle (it's a build-time env var, not runtime).
+- Repo: `Karingithi/Seo-Tools`, branch `gh-pages`
+- Root Directory: `server`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Instance Type: Free
+- Env var: `ALLOWED_ORIGINS=https://cralite.com`
+- Health Check Path: `/health`
+
+`VITE_API_URL` (frontend build env) and `connect-src` (root `index.html` CSP)
+are already pointed at this URL. If the service is ever recreated under a
+different name/URL, update those two places plus this doc.
 
 Note: Render's free tier spins the service down after ~15 minutes of
 inactivity and takes a few seconds to cold-start on the next request. The
