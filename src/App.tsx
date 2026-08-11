@@ -12,6 +12,7 @@ import KeywordDensityChecker from "./pages/KeywordDensityChecker"
 import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
 import SchemaBuilder from "./pages/SchemaBuilder"
 import HreflangGenerator from "./pages/HreflangGenerator"
+import SchemaValidator from "./pages/SchemaValidator"
 import NotFound from "./pages/NotFound"
 
 export default function App() {
@@ -167,6 +168,20 @@ export default function App() {
               showBackLink={true}
             >
               <HreflangGenerator />
+            </Layout>
+          }
+        />
+
+        {/* === Structured Data / Rich Results Validator === */}
+        <Route
+          path="/schema-validator"
+          element={
+            <Layout
+              title="Free Structured Data / Rich Results Validator"
+              subtitle="Paste any JSON-LD or HTML with embedded structured data to check it for errors and missing fields before you publish."
+              showBackLink={true}
+            >
+              <SchemaValidator />
             </Layout>
           }
         />

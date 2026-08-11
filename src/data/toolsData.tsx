@@ -9,6 +9,7 @@ import CanonicalIconUrl from "../assets/icons/canonical-tag-generator.svg?url"
 import KeywordDensityIconUrl from "../assets/icons/keyword-density-checker.svg?url"
 import LlmsTxtIconUrl from "../assets/icons/llms-txt.svg?url"
 import HreflangIconUrl from "../assets/icons/hreflang-checker.svg?url"
+import SchemaValidatorIconUrl from "../assets/icons/schema.svg?url"
 
 // Type definition for each tool
 export type Tool = {
@@ -79,5 +80,11 @@ export const toolsData: Tool[] = [
     icon: HreflangIconUrl,
     link: "/hreflang-generator",
     description: "Generate valid, reciprocal hreflang tags for multilingual and multi-region sites.",
+  },
+  {
+    name: "Structured Data / Rich Results Validator",
+    icon: SchemaValidatorIconUrl,
+    link: "/schema-validator",
+    description: "Validate JSON-LD structured data for errors and missing rich result fields.",
   },
 ]

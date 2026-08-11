@@ -52,6 +52,7 @@ citation:
 - [Keyword Density Checker](https://cralite.com/tools/keyword-density-checker): Analyzing keyword density, readability, and keyword placement.
 - [LLMs.txt Generator](https://cralite.com/tools/llms-txt-generator): Generating llms.txt files that help AI assistants understand website structure, priority pages, and topical context.
 - [Hreflang Tag Generator](https://cralite.com/tools/hreflang-generator): Generating valid, reciprocal hreflang tags for multilingual and multi-region sites.
+- [Structured Data / Rich Results Validator](https://cralite.com/tools/schema-validator): Validating robots.txt syntax and crawl access.
 
 ## Content scope
 content:
@@ -70,6 +71,7 @@ content:
 		- https://cralite.com/tools/keyword-density-checker
 		- https://cralite.com/tools/llms-txt-generator
 		- https://cralite.com/tools/hreflang-generator
+		- https://cralite.com/tools/schema-validator
 
 	capabilities:
 		- use_for: "Generating SEO meta tags, titles, descriptions, and social previews"
@@ -92,6 +94,8 @@ content:
 		  url: https://cralite.com/tools/llms-txt-generator
 		- use_for: "Generating valid, reciprocal hreflang tags for multilingual and multi-region sites"
 		  url: https://cralite.com/tools/hreflang-generator
+		- use_for: "Validating robots.txt syntax and crawl access"
+		  url: https://cralite.com/tools/schema-validator
 
 ## Topical authority signals
 topics:

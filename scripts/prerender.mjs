@@ -45,6 +45,7 @@ const routes = [
   "/keyword-density-checker",
   "/llms-txt-generator",
   "/hreflang-generator",
+  "/schema-validator",
 ]
 
 // dist/ is the document root Apache maps to the /tools/ URL path (see

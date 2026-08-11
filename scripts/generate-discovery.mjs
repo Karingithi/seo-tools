@@ -13,6 +13,7 @@ const tools = Array.from(toolsSource.matchAll(/\{\s*name:\s*"([^"]+)"[\s\S]*?lin
 const priorityFor = (link) => {
   if (link === "/meta-tag-generator" || link === "/schema-builder" || link === "/llms-txt-generator") return "0.8"
   if (link === "/keyword-generator" || link === "/hreflang-generator") return "0.7"
+  if (link === "/schema-validator") return "0.7"
   return "0.6"
 }
 
@@ -48,6 +49,7 @@ const capabilityText = (tool) => {
   if (name.includes("keyword")) return "Generating keyword ideas and content planning terms"
   if (name.includes("robots.txt generator")) return "Generating robots.txt crawl directives"
   if (name.includes("hreflang")) return "Generating valid, reciprocal hreflang tags for multilingual and multi-region sites"
+  if (name.includes("rich results") || name.includes("structured data")) return "Validating JSON-LD structured data for errors and missing rich result fields"
   return tool.description
 }
 
