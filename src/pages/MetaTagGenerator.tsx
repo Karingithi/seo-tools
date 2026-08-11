@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import { Plus, Minus } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 import { buildMetaTags } from "../utils/metaUtils"
@@ -678,6 +679,11 @@ export default function MetaTagGenerator(): JSX.Element {
         title="Free Meta Tag Generator"
         description="Generate free, optimized meta tags including titles, descriptions, canonical URLs, robots directives, Open Graph, and Twitter Cards with a live preview."
         keywords="meta tag generator, seo tools, canonical, open graph, twitter card"
+        url="https://cralite.com/tools/meta-tag-generator/"
+      />
+      <ToolSchema
+        name="Meta Tag Generator"
+        description="Generate free, optimized meta tags including titles, descriptions, canonical URLs, robots directives, Open Graph, and Twitter Cards with a live preview."
         url="https://cralite.com/tools/meta-tag-generator/"
       />
 

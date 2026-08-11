@@ -36,9 +36,8 @@ async function tryFetchText(url: string, ms = 8000): Promise<string> {
   return res.text()
 }
 
-/** Race direct + CORS proxies simultaneously; return first success. */
+/** Race a direct fetch against the backend fetcher; return first success. */
 async function fetchFast(targetUrl: string): Promise<string> {
-  // Backend endpoint (optional, most reliable)
   const backendAttempt = API_URL
     ? fetch(`${API_URL}/fetch-url`, {
         method: "POST",
@@ -53,12 +52,7 @@ async function fetchFast(targetUrl: string): Promise<string> {
       })
     : null
 
-  const attempts: Array<Promise<string>> = [
-    tryFetchText(targetUrl, 6000),
-    tryFetchText(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, 9000),
-    tryFetchText(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, 9000),
-    tryFetchText(`https://thingproxy.freeboard.io/fetch/${targetUrl}`, 9000),
-  ]
+  const attempts: Array<Promise<string>> = [tryFetchText(targetUrl, 6000)]
   if (backendAttempt) attempts.unshift(backendAttempt)
 
   return Promise.any(attempts)

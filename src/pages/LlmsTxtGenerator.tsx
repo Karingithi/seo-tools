@@ -1,5 +1,6 @@
 import { useState } from "react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import RelatedTools from "../components/RelatedTools"
 import { copyToClipboard } from "../utils/clipboard"
 import { downloadText } from "../utils/download"
@@ -109,6 +110,11 @@ export default function LlmsTxtGenerator(): JSX.Element {
         keywords="llms.txt generator, llms txt, ai seo, llm crawl, ai site map, ai search"
         url="https://cralite.com/tools/llms-txt-generator/"
       />
+      <ToolSchema
+        name="LLMs.txt Generator"
+        description="Enter your domain and instantly generate an llms.txt file. Crawls your sitemap, extracts page info, and builds a clean AI-readable site map."
+        url="https://cralite.com/tools/llms-txt-generator/"
+      />
 
       <section className="section section--neutral">
         <div className="section-inner">
@@ -122,7 +128,7 @@ export default function LlmsTxtGenerator(): JSX.Element {
                   preview from your public sitemap.
                 </p>
                 <p className="text-xs text-gray-500 mb-2">
-                  If direct fetch is blocked by CORS, this tool retries through a public proxy (allorigins.win, corsproxy.io, or thingproxy.freeboard.io).
+                  If direct fetch is blocked by CORS, this tool retries through our server-side fetcher.
                 </p>
 
                 <form

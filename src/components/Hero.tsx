@@ -58,6 +58,7 @@ export default function Hero({
               "Boost Visibility, Rankings, and Business Growth",
               "Business Growth and Visibility",
               "Keyword Generator",
+              "Robots.txt Validator and Testing Tool",
               "Robots.txt Validator",
               "Schema Markup Generator",
               "Meta Tag Generator",

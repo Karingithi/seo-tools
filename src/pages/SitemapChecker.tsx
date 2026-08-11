@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import RelatedTools from "../components/RelatedTools"
 import downloadIcon from "../assets/icons/download.svg"
 import resetIcon from "../assets/icons/reset.svg"
@@ -101,20 +102,7 @@ export default function SitemapChecker(): JSX.Element {
       } catch {}
     }
 
-    try {
-      return await tryFetchText(target)
-    } catch (err) {
-      const proxies = [
-        (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        (u: string) => `https://thingproxy.freeboard.io/fetch/${u}`,
-      ]
-      for (const proxy of proxies) {
-        try {
-          return await tryFetchText(proxy(target))
-        } catch {}
-      }
-      throw err
-    }
+    return await tryFetchText(target)
   }, [serverEndpoint])
 
   const fetchAndParseSitemapTree = useCallback(async (
@@ -360,6 +348,11 @@ export default function SitemapChecker(): JSX.Element {
         keywords="sitemap checker, sitemap validator, xml sitemap, seo tools"
         url="https://cralite.com/tools/sitemap-checker/"
       />
+      <ToolSchema
+        name="XML Sitemap Checker"
+        description="Fetch, parse, recurse, and validate XML sitemaps with status checks, sitemap metadata extraction, duplicate warnings, and CSV export."
+        url="https://cralite.com/tools/sitemap-checker/"
+      />
 
       <section className="section section--neutral">
         <div className="section-inner">
@@ -387,7 +380,7 @@ export default function SitemapChecker(): JSX.Element {
                   />
                   {urlError && <div className="mt-2 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">{urlError}</div>}
                   <p className="text-xs text-gray-500 mt-1">
-                    If direct fetch is blocked by the site's CORS policy, this tool retries through a public proxy (allorigins.win or thingproxy.freeboard.io).
+                    If direct fetch is blocked by the site's CORS policy, this tool retries through our server-side fetcher.
                   </p>
                 </div>
 

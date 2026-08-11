@@ -1,0 +1,15 @@
+{
+  "name": "free-seo-tools-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-side URL fetcher for the Sitemap Checker and Robots.txt Validator tools, replacing public CORS proxies (allorigins.win, corsproxy.io, thingproxy.freeboard.io).",
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "node --watch index.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Plus, Minus } from "lucide-react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import { Helmet } from "react-helmet-async"
 import copyIconUrl from "../assets/icons/copy.svg?url"
 import downloadIconUrl from "../assets/icons/download.svg?url"
@@ -305,6 +306,11 @@ export default function RobotsTxtGenerator(): JSX.Element {
         title="Free Robots.txt Generator"
         description="Generate a robots.txt file to control crawling and indexing with per-robot rules, crawl-delay settings, sitemap support, and disallow lists using a live preview."
         keywords="robots.txt generator, seo tools, robots generator"
+        url="https://cralite.com/tools/robots-txt-generator/"
+      />
+      <ToolSchema
+        name="Robots.txt Generator"
+        description="Generate a robots.txt file to control crawling and indexing with per-robot rules, crawl-delay settings, sitemap support, and disallow lists using a live preview."
         url="https://cralite.com/tools/robots-txt-generator/"
       />
 

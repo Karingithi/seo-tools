@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import RelatedTools from "../components/RelatedTools"
 import { downloadText } from "../utils/download"
 import {
@@ -241,6 +242,11 @@ export default function KeywordDensityChecker(): JSX.Element {
         title="Free Keyword Density Checker"
         description="Professional SEO text analysis for keywords, phrases, and density with 1-word, 2-word, and 3-word distribution insights."
         keywords="keyword density checker, seo keyword analysis, phrase density, n-gram checker"
+        url="https://cralite.com/tools/keyword-density-checker/"
+      />
+      <ToolSchema
+        name="Keyword Density Checker"
+        description="Professional SEO text analysis for keywords, phrases, and density with 1-word, 2-word, and 3-word distribution insights."
         url="https://cralite.com/tools/keyword-density-checker/"
       />
 

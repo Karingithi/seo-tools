@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import RelatedTools from "../components/RelatedTools"
 import { copyToClipboard } from "../utils/clipboard"
 import { downloadText } from "../utils/download"
@@ -125,6 +126,11 @@ export default function CanonicalTagGenerator(): JSX.Element {
         title="Free Canonical Tag Generator"
         description="Free canonical tag generator with URL cleaner. Fix parameters, enforce HTTPS, and generate single or bulk canonical tags instantly."
         keywords="canonical tag generator, canonical tags bulk, rel canonical, seo tools"
+        url="https://cralite.com/tools/canonical-tag-generator/"
+      />
+      <ToolSchema
+        name="Canonical Tag Generator"
+        description="Free canonical tag generator with URL cleaner. Fix parameters, enforce HTTPS, and generate single or bulk canonical tags instantly."
         url="https://cralite.com/tools/canonical-tag-generator/"
       />
 

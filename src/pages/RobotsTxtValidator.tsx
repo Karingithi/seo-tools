@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef, useEffect } from "react"
 import { Plus, Minus } from "lucide-react"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import { Helmet } from "react-helmet-async"
 import RelatedTools from "../components/RelatedTools"
 
@@ -389,7 +390,7 @@ export default function RobotsTxtValidator(): JSX.Element {
       tried.push(url)
       return await tryFetch(url)
     } catch (err) {
-      // continue to fallbacks
+      // continue to fallback
     }
 
     // 2) if HTTPS failed, try HTTP (some sites serve robots only on http)
@@ -399,17 +400,8 @@ export default function RobotsTxtValidator(): JSX.Element {
         tried.push(httpUrl)
         return await tryFetch(httpUrl)
       }
+      throw new Error(`All fetch attempts failed (${tried.join(', ')})`)
     } catch (err) {
-      // continue
-    }
-
-    // 3) try a public CORS proxy (best-effort)
-    try {
-      const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-      tried.push(proxied)
-      return await tryFetch(proxied)
-    } catch (err) {
-      // all attempts failed — include tried urls in error
       const message = err instanceof Error ? err.message : String(err)
       throw new Error(`All fetch attempts failed (${tried.join(', ')}): ${message}`)
     }
@@ -608,6 +600,11 @@ export default function RobotsTxtValidator(): JSX.Element {
         keywords="robots.txt validator, seo tools, robots rules, disallow allow"
         url="https://cralite.com/tools/robots-txt-validator/"
       />
+      <ToolSchema
+        name="Robots.txt Tester and Validator"
+        description="Use this Free Robots.txt Validator and Robots.txt tester to check crawling rules, detect errors, and test how search engines and bots access your URLs."
+        url="https://cralite.com/tools/robots-txt-validator/"
+      />
 
       {/* Inject structured data JSON-LD for FAQ (single source) */}
       <Helmet>
@@ -666,7 +663,7 @@ export default function RobotsTxtValidator(): JSX.Element {
               />
               {/* Server fetch attempted automatically (server first, then client fallback) */}
               <p className="text-xs text-gray-500 mt-1">
-                The robots.txt will auto-fetch when you leave this field. If direct fetch is blocked by CORS, this tool retries through a public proxy (allorigins.win).
+                The robots.txt will auto-fetch when you leave this field. If direct fetch is blocked by CORS, this tool retries through our server-side fetcher.
               </p>
               {robotsUrlError && (
                 <div className="mt-0 bg-orange-50 border border-orange-200 text-red-600 text-sm rounded-md p-2">

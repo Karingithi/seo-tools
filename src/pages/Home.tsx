@@ -113,7 +113,7 @@ export default function Home() {
     <>
       {/* SEO */}
       <Seo
-        title="Free SEO Tools: Analyze, Audit & Optimize Your Website"
+        title="Free SEO Tools | No Sign Up Required | Cralite Digital"
         description="Generate meta tags, schema markup, sitemaps, and more. Free SEO tools to help your site rank, including an llms.txt generator for AI visibility."
         keywords="seo tools, meta tag generator, robots.txt, sitemap checker, hreflang, schema"
         url="https://cralite.com/"

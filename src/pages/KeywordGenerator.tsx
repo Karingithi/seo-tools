@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Plus, Minus } from "lucide-react"
 import { Link } from "react-router-dom"
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 import { Helmet } from "react-helmet-async"
 import RelatedTools from "../components/RelatedTools"
 
@@ -243,6 +244,11 @@ export default function KeywordGenerator(): JSX.Element {
         title="Keyword Generator (AI-Powered)"
         description="Generate SEO keyword ideas, long-tail variations, and related search terms with AI-powered semantic expansion and search intent tagging."
         keywords="keyword generator, AI keyword tool, seo tools"
+        url="https://cralite.com/tools/keyword-generator/"
+      />
+      <ToolSchema
+        name="Free Keyword Generator"
+        description="Generate SEO keyword ideas, long-tail variations, and related search terms with AI-powered semantic expansion and search intent tagging."
         url="https://cralite.com/tools/keyword-generator/"
       />
       {/* Structured data */}

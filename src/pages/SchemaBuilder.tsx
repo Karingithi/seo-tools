@@ -13,6 +13,7 @@ import currencyCodes from "currency-codes"
 import ISO6391 from "iso-639-1"
 
 import Seo from "../components/Seo"
+import ToolSchema from "../components/ToolSchema"
 
 // Preview icons are now imported by `SchemaPreview` component
 
@@ -1819,6 +1820,11 @@ export default function SchemaBuilder(): JSX.Element {
         keywords="schema generator, json-ld generator, seo tools"
         url="https://cralite.com/tools/schema-builder/"
         disableBreadcrumb={true}
+      />
+      <ToolSchema
+        name={seoMeta.title}
+        description={seoMeta.description}
+        url="https://cralite.com/tools/schema-builder/"
       />
       {/* Inject FAQ JSON-LD so the page provides structured FAQ data */}
       <Helmet>
