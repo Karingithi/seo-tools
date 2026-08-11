@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, Children, isValidElement, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { Search, Plus, Minus } from "lucide-react"
@@ -6,11 +6,13 @@ import Seo from "../components/Seo"
 import ToolTitle from "../components/ToolTitle"
 import { toolsData, type Tool } from "../data/toolsData"
 
+// `node` is the single source of truth for each FAQ answer (rendered in the
+// UI). The FAQPage JSON-LD text is derived from it via nodeToText below, so
+// the two can't drift out of sync the way separately hand-maintained q/a
+// strings could.
 const FAQ_ITEMS = [
   {
     q: "What are the best free SEO tools for beginners?",
-    a:
-      "Beginner-friendly SEO tools include meta tag generators, robots.txt and sitemap validators, and simple keyword suggestion tools. Cralite bundles these tools with clean interfaces to help you get started quickly.",
     node: (
       <>
         Beginner-friendly SEO tools include <Link to="/meta-tag-generator" className="text-primary font-normal">meta tag generators</Link>,
@@ -23,8 +25,6 @@ const FAQ_ITEMS = [
   },
   {
     q: "How can I generate meta tags for my website for free?",
-    a:
-      "You can use Cralite’s free Meta Tag Generator to create optimized title tags and meta descriptions with live previews, helping improve click-through rates from search results.",
     node: (
       <>
         You can use Cralite’s free <Link to="/meta-tag-generator" className="text-primary font-normal">Meta Tag Generator</Link> to
@@ -34,8 +34,6 @@ const FAQ_ITEMS = [
   },
   {
     q: "Which free tools can I use to check or validate my XML sitemap?",
-    a:
-      "Cralite’s XML Sitemap Checker allows you to inspect sitemap structure, detect errors, and confirm indexing readiness for search engines.",
     node: (
       <>
         Cralite’s <Link to="/sitemap-checker" className="text-primary font-normal">XML Sitemap Checker</Link> allows you to
@@ -45,8 +43,6 @@ const FAQ_ITEMS = [
   },
   {
     q: "Are Cralite SEO tools completely free to use?",
-    a:
-      "Yes. Cralite offers free SEO tools with no sign-up required, making it easy to analyze, optimize, and validate key SEO elements instantly.",
     node: (
       <>
         Yes. Cralite offers free SEO tools with no sign-up required, making it easy to analyze, optimize, and validate key SEO elements instantly.
@@ -55,8 +51,6 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do Cralite SEO tools support visibility in AI-powered search results?",
-    a:
-      "Cralite’s tools help you create clean metadata, structured data, and crawl-friendly configurations that AI-powered search engines rely on to understand and surface content accurately.",
     node: (
       <>
         Cralite’s tools help you create clean metadata, structured data, and crawl-friendly configurations that AI-powered search engines rely on to understand and surface content accurately.
@@ -65,6 +59,16 @@ const FAQ_ITEMS = [
     ),
   },
 ]
+
+// Recursively flattens a React node tree to plain text, e.g. for feeding
+// visible JSX content into JSON-LD that Google can compare against the page.
+function nodeToText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return ""
+  if (typeof node === "string" || typeof node === "number") return String(node)
+  if (Array.isArray(node)) return node.map(nodeToText).join("")
+  if (isValidElement(node)) return Children.toArray((node.props as { children?: ReactNode }).children).map(nodeToText).join("")
+  return ""
+}
 
 // Structured data
 const structuredData = [
@@ -91,7 +95,7 @@ const structuredData = [
       name: faq.q,
       acceptedAnswer: {
         "@type": "Answer",
-        text: faq.a,
+        text: nodeToText(faq.node),
       },
     })),
   },
@@ -115,7 +119,6 @@ export default function Home() {
       <Seo
         title="Free SEO Tools | No Sign Up Required | Cralite Digital"
         description="Generate meta tags, schema markup, sitemaps, and more. Free SEO tools to help your site rank, including an llms.txt generator for AI visibility."
-        keywords="seo tools, meta tag generator, robots.txt, sitemap checker, hreflang, schema"
         url="https://cralite.com/"
         image="https://cralite.com/path/to/preview-image.jpg"
         siteName="Cralite Tools"
@@ -160,7 +163,7 @@ export default function Home() {
             <div className="tools-grid-cards">
               {filteredTools.map((tool) => (
                 <Link key={tool.name} to={tool.link} className="tool-item shadow-sm">
-                  <img src={tool.icon} alt={`${tool.name} icon`} className="tool-icon" />
+                  <img src={tool.icon} alt={`${tool.name} icon`} className="tool-icon" width={52} height={52} loading="lazy" />
                   <div className="ml-3 flex-1">
                     <ToolTitle>{tool.name}</ToolTitle>
                     {tool.description && (
@@ -209,7 +212,7 @@ export default function Home() {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

@@ -25,7 +25,7 @@ export default function Toolbar({ actions }: { actions: Action[] }) {
             title={a.label}
             style={{ background: a.color } as CSSProperties}
           >
-            <img src={a.iconSrc} alt={a.label ?? ""} className="toolbar-icon" />
+            <img src={a.iconSrc} alt={a.label ?? ""} className="toolbar-icon" width={16} height={16} />
           </button>
         </div>
       ))}

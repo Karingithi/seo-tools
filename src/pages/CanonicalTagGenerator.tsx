@@ -125,7 +125,6 @@ export default function CanonicalTagGenerator(): JSX.Element {
       <Seo
         title="Free Canonical Tag Generator"
         description="Free canonical tag generator with URL cleaner. Fix parameters, enforce HTTPS, and generate single or bulk canonical tags instantly."
-        keywords="canonical tag generator, canonical tags bulk, rel canonical, seo tools"
         url="https://cralite.com/tools/canonical-tag-generator/"
       />
       <ToolSchema
@@ -267,7 +266,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                           aria-label="Copy"
                           className="toolbar-btn toolbar-btn--blue"
                         >
-                          <img src={copyIcon} alt="copy" className="toolbar-icon" />
+                          <img src={copyIcon} alt="copy" className="toolbar-icon" width={16} height={16} />
                         </button>
                       </div>
 
@@ -282,7 +281,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                           aria-label="Download"
                           className="toolbar-btn toolbar-btn--green"
                         >
-                          <img src={downloadIcon} alt="download" className="toolbar-icon" />
+                          <img src={downloadIcon} alt="download" className="toolbar-icon" width={16} height={16} />
                         </button>
                       </div>
 
@@ -297,7 +296,7 @@ export default function CanonicalTagGenerator(): JSX.Element {
                           aria-label="Reset"
                           className="toolbar-btn toolbar-btn--red"
                         >
-                          <img src={resetIcon} alt="reset" className="toolbar-icon" />
+                          <img src={resetIcon} alt="reset" className="toolbar-icon" width={16} height={16} />
                         </button>
                       </div>
                     </div>

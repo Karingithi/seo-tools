@@ -243,7 +243,6 @@ export default function KeywordGenerator(): JSX.Element {
       <Seo
         title="Keyword Generator (AI-Powered)"
         description="Generate SEO keyword ideas, long-tail variations, and related search terms with AI-powered semantic expansion and search intent tagging."
-        keywords="keyword generator, AI keyword tool, seo tools"
         url="https://cralite.com/tools/keyword-generator/"
       />
       <ToolSchema
@@ -522,7 +521,7 @@ export default function KeywordGenerator(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

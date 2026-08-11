@@ -107,7 +107,6 @@ export default function LlmsTxtGenerator(): JSX.Element {
       <Seo
         title="Free LLMs.txt Generator | No Credit Card Required"
         description="Enter your domain and instantly generate an llms.txt file. Crawls your sitemap, extracts page info, and builds a clean AI-readable site map. No signup required."
-        keywords="llms.txt generator, llms txt, ai seo, llm crawl, ai site map, ai search"
         url="https://cralite.com/tools/llms-txt-generator/"
       />
       <ToolSchema
@@ -201,7 +200,7 @@ export default function LlmsTxtGenerator(): JSX.Element {
                       className="toolbar-btn toolbar-btn--blue"
                       disabled={phase !== "results"}
                     >
-                      <img src={copyIcon} alt="copy" className="toolbar-icon" />
+                      <img src={copyIcon} alt="copy" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
                   <div className="toolbar-wrap">
@@ -215,7 +214,7 @@ export default function LlmsTxtGenerator(): JSX.Element {
                       className="toolbar-btn toolbar-btn--green"
                       disabled={phase !== "results"}
                     >
-                      <img src={downloadIcon} alt="download" className="toolbar-icon" />
+                      <img src={downloadIcon} alt="download" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
                   <div className="toolbar-wrap">
@@ -227,7 +226,7 @@ export default function LlmsTxtGenerator(): JSX.Element {
                       className="toolbar-btn toolbar-btn--red"
                       disabled={phase === "loading"}
                     >
-                      <img src={resetIcon} alt="reset" className="toolbar-icon" />
+                      <img src={resetIcon} alt="reset" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
                 </div>

@@ -305,7 +305,6 @@ export default function RobotsTxtGenerator(): JSX.Element {
       <Seo
         title="Free Robots.txt Generator"
         description="Generate a robots.txt file to control crawling and indexing with per-robot rules, crawl-delay settings, sitemap support, and disallow lists using a live preview."
-        keywords="robots.txt generator, seo tools, robots generator"
         url="https://cralite.com/tools/robots-txt-generator/"
       />
       <ToolSchema
@@ -494,7 +493,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
                       aria-label="Copy"
                       className="toolbar-btn toolbar-btn--blue"
                     >
-                      <img src={copyIconUrl} alt="copy" className="toolbar-icon" />
+                      <img src={copyIconUrl} alt="copy" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
 
@@ -507,7 +506,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
                       aria-label="Download"
                       className="toolbar-btn toolbar-btn--green"
                     >
-                      <img src={downloadIconUrl} alt="download" className="toolbar-icon" />
+                      <img src={downloadIconUrl} alt="download" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
 
@@ -520,7 +519,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
                       aria-label="Reset"
                       className="toolbar-btn toolbar-btn--red"
                     >
-                      <img src={resetIconUrl} alt="reset" className="toolbar-icon" />
+                      <img src={resetIconUrl} alt="reset" className="toolbar-icon" width={16} height={16} />
                     </button>
                   </div>
                 </div>
@@ -571,7 +570,7 @@ export default function RobotsTxtGenerator(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

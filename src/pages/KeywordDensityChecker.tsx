@@ -241,7 +241,6 @@ export default function KeywordDensityChecker(): JSX.Element {
       <Seo
         title="Free Keyword Density Checker"
         description="Professional SEO text analysis for keywords, phrases, and density with 1-word, 2-word, and 3-word distribution insights."
-        keywords="keyword density checker, seo keyword analysis, phrase density, n-gram checker"
         url="https://cralite.com/tools/keyword-density-checker/"
       />
       <ToolSchema

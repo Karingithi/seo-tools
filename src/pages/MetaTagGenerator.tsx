@@ -678,7 +678,6 @@ export default function MetaTagGenerator(): JSX.Element {
       <Seo
         title="Free Meta Tag Generator"
         description="Generate free, optimized meta tags including titles, descriptions, canonical URLs, robots directives, Open Graph, and Twitter Cards with a live preview."
-        keywords="meta tag generator, seo tools, canonical, open graph, twitter card"
         url="https://cralite.com/tools/meta-tag-generator/"
       />
       <ToolSchema
@@ -1051,6 +1050,8 @@ export default function MetaTagGenerator(): JSX.Element {
                     src={faviconUrl}
                     alt="site favicon"
                     className="w-6 h-6 rounded-sm shrink-0"
+                    width={24}
+                    height={24}
                     onError={(e) => {
                       const img = e.currentTarget as HTMLImageElement
                       if (img.src !== DefaultFavicon) img.src = DefaultFavicon
@@ -1217,7 +1218,7 @@ export default function MetaTagGenerator(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

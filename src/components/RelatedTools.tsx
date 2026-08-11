@@ -24,7 +24,7 @@ export default function RelatedTools({ exclude, limit = 4 }: Props) {
       <div className="tools-grid-cards related-tools-grid">
         {related.map((tool) => (
           <Link key={tool.name} to={tool.link} className="tool-item shadow-sm" onClick={scrollToTop}>
-            <img src={tool.icon} alt={tool.name} className="tool-icon" />
+            <img src={tool.icon} alt={tool.name} className="tool-icon" width={52} height={52} loading="lazy" />
             <div className="ml-3 flex-1">
               <ToolTitle className="tool-title">{tool.name}</ToolTitle>
             </div>

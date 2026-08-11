@@ -25,6 +25,9 @@ export default function Footer() {
                 src="https://cralite.com/storage/settings/cralite-light-logo.svg"
                 alt="Cralite"
                 className="w-35 h-auto"
+                width={140}
+                height={43}
+                loading="lazy"
               />
               <p className="text-white text-[17px] leading-relaxed w-full lg:w-[86%] mb-0">
                 Premium web design, SEO, social media marketing, and branding built to grow your business in Kenya and beyond.

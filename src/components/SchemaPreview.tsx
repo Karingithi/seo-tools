@@ -46,7 +46,7 @@ export default function SchemaPreview({
               {testMsgVisible ? "Copied — open test" : "Test Schema"}
             </div>
             <button onClick={onTest} className="toolbar-btn toolbar-btn--google" title="Test Schema" aria-label="Test Schema">
-              <img src={googleIconUrl} alt="test schema" className="toolbar-icon" />
+              <img src={googleIconUrl} alt="test schema" className="toolbar-icon" width={16} height={16} />
             </button>
           </div>
 
@@ -55,7 +55,7 @@ export default function SchemaPreview({
               {validateMsgVisible ? "Copied — open validator" : "Validate"}
             </div>
             <button onClick={onValidate} className="toolbar-btn toolbar-btn--schema" title="Validate Schema" aria-label="Validate Schema">
-              <img src={schemaIconUrl} alt="validate schema" className="toolbar-icon" />
+              <img src={schemaIconUrl} alt="validate schema" className="toolbar-icon" width={16} height={16} />
             </button>
           </div>
 
@@ -64,7 +64,7 @@ export default function SchemaPreview({
               {copied ? "Copied!" : "Copy"}
             </div>
             <button onClick={onCopy} className="toolbar-btn toolbar-btn--blue">
-              <img src={copyIconUrl} alt="copy" className="toolbar-icon" />
+              <img src={copyIconUrl} alt="copy" className="toolbar-icon" width={16} height={16} />
             </button>
           </div>
 
@@ -73,7 +73,7 @@ export default function SchemaPreview({
               {downloadMsgVisible ? "Downloaded" : "Download"}
             </div>
             <button onClick={onDownload} className="toolbar-btn toolbar-btn--green">
-              <img src={downloadIconUrl} alt="download" className="toolbar-icon" />
+              <img src={downloadIconUrl} alt="download" className="toolbar-icon" width={16} height={16} />
             </button>
           </div>
 
@@ -82,7 +82,7 @@ export default function SchemaPreview({
               {resetMsgVisible ? "Reset" : "Reset"}
             </div>
             <button onClick={onReset} className="toolbar-btn toolbar-btn--red">
-              <img src={resetIconUrl} alt="reset" className="toolbar-icon" />
+              <img src={resetIconUrl} alt="reset" className="toolbar-icon" width={16} height={16} />
             </button>
           </div>
         </div>

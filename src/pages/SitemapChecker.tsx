@@ -345,7 +345,6 @@ export default function SitemapChecker(): JSX.Element {
       <Seo
         title="Free XML Sitemap Checker"
         description="Fetch, parse, recurse, and validate XML sitemaps with status checks, sitemap metadata extraction, duplicate warnings, and CSV export."
-        keywords="sitemap checker, sitemap validator, xml sitemap, seo tools"
         url="https://cralite.com/tools/sitemap-checker/"
       />
       <ToolSchema
@@ -405,7 +404,7 @@ export default function SitemapChecker(): JSX.Element {
                             disabled={parsedUrls.length === 0}
                             aria-label="Export CSV"
                           >
-                            <img src={downloadIcon} alt="" className="toolbar-icon" />
+                            <img src={downloadIcon} alt="" className="toolbar-icon" width={16} height={16} />
                           </button>
                           <span className="tooltip">Export CSV</span>
                         </span>
@@ -416,7 +415,7 @@ export default function SitemapChecker(): JSX.Element {
                             className="toolbar-btn toolbar-btn--red"
                             aria-label="Clear"
                           >
-                            <img src={resetIcon} alt="" className="toolbar-icon" />
+                            <img src={resetIcon} alt="" className="toolbar-icon" width={16} height={16} />
                           </button>
                           <span className="tooltip">Clear</span>
                         </span>
@@ -528,7 +527,7 @@ export default function SitemapChecker(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

@@ -415,6 +415,8 @@ export default function JobPostingForm(props: JobPostingFormProps): JSX.Element 
                 className="flag-preview"
                 src={`https://flagcdn.com/24x18/${selectedCountryCode.toLowerCase()}.png`}
                 alt={selectedCountryCode}
+                width={24}
+                height={18}
               />
             ) : null}
 

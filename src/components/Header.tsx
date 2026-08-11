@@ -275,7 +275,10 @@ export default function Header() {
         <a href="https://cralite.com/" className="flex items-center">
           <img
             src="https://cralite.com/storage/settings/cralite-light-logo.svg"
-            className="h-10 lg:h-12.5"
+            alt="Cralite Digital"
+            width={128}
+            height={40}
+            className="h-10 lg:h-12.5 w-auto"
           />
         </a>
 

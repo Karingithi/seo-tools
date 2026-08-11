@@ -1817,7 +1817,6 @@ export default function SchemaBuilder(): JSX.Element {
       <Seo
         title={seoMeta.title}
         description={seoMeta.description}
-        keywords="schema generator, json-ld generator, seo tools"
         url="https://cralite.com/tools/schema-builder/"
         disableBreadcrumb={true}
       />
@@ -2395,7 +2394,7 @@ export default function SchemaBuilder(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>

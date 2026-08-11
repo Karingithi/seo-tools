@@ -69,8 +69,10 @@ export default function MobileMenu({
           <a href="https://cralite.com/">
             <img
               src="https://cralite.com/storage/settings/cralite-light-logo.svg"
-              className="h-10 md:h-12.5"
+              className="h-10 md:h-12.5 w-auto"
               alt="Cralite Logo"
+              width={128}
+              height={40}
             />
           </a>
           <button className="text-white" onClick={onClose} aria-label="Close menu">

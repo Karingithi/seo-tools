@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async"
 interface SeoProps {
   title: string
   description: string
-  keywords?: string
   image?: string
   url?: string
   siteName?: string
@@ -14,7 +13,6 @@ interface SeoProps {
 export default function Seo({
   title,
   description,
-  keywords,
   image = "https://cralite.com/wp-content/uploads/2023/12/Cralite-Digital-Hero-Bg.webp",
   url = "https://cralite.com",
   siteName = "Cralite Digital",
@@ -63,7 +61,6 @@ export default function Seo({
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
       {/* === Open Graph === */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />

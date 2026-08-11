@@ -597,7 +597,6 @@ export default function RobotsTxtValidator(): JSX.Element {
       <Seo
         title="Free Robots.txt Tester and Validator"
         description="Use this Free Robots.txt Validator and Robots.txt tester to check crawling rules, detect errors, and test how search engines and bots access your URLs."
-        keywords="robots.txt validator, seo tools, robots rules, disallow allow"
         url="https://cralite.com/tools/robots-txt-validator/"
       />
       <ToolSchema
@@ -802,7 +801,7 @@ export default function RobotsTxtValidator(): JSX.Element {
               <div key={title} className="text-center">
                 <div className="step-icon-outer">
                   <div className="step-icon-circle">
-                    <img src={icon} alt={title} className="step-icon-img" />
+                    <img src={icon} alt={title} className="step-icon-img" width={24} height={24} loading="lazy" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>
