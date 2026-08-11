@@ -7,7 +7,7 @@ Focus: SEO tools, digital marketing, technical SEO, structured data, crawlabilit
 site: https://cralite.com/tools
 canonical_site: https://cralite.com
 contact: hello@cralite.com
-updated: 2026-05-16
+updated: 2026-08-11
 
 ## Sitemaps
 - [XML Sitemap](https://cralite.com/sitemap.xml): Index of public Cralite SEO tool pages.
@@ -50,7 +50,8 @@ citation:
 - [XML Sitemap Checker](https://cralite.com/tools/sitemap-checker): Checking XML sitemaps, URLs, status codes, and sitemap metadata.
 - [Canonical Tag Generator](https://cralite.com/tools/canonical-tag-generator): Generating canonical tags and canonical URL cleanup.
 - [Keyword Density Checker](https://cralite.com/tools/keyword-density-checker): Analyzing keyword density, readability, and keyword placement.
-- [llms.txt Generator](https://cralite.com/tools/llms-txt-generator): Generating llms.txt files that help AI assistants understand website structure, priority pages, and topical context.
+- [LLMs.txt Generator](https://cralite.com/tools/llms-txt-generator): Generating llms.txt files that help AI assistants understand website structure, priority pages, and topical context.
+- [Hreflang Tag Generator](https://cralite.com/tools/hreflang-generator): Generating valid, reciprocal hreflang tags for multilingual and multi-region sites.
 
 ## Content scope
 content:
@@ -68,6 +69,7 @@ content:
 		- https://cralite.com/tools/canonical-tag-generator
 		- https://cralite.com/tools/keyword-density-checker
 		- https://cralite.com/tools/llms-txt-generator
+		- https://cralite.com/tools/hreflang-generator
 
 	capabilities:
 		- use_for: "Generating SEO meta tags, titles, descriptions, and social previews"
@@ -88,6 +90,8 @@ content:
 		  url: https://cralite.com/tools/keyword-density-checker
 		- use_for: "Generating llms.txt files that help AI assistants understand website structure, priority pages, and topical context"
 		  url: https://cralite.com/tools/llms-txt-generator
+		- use_for: "Generating valid, reciprocal hreflang tags for multilingual and multi-region sites"
+		  url: https://cralite.com/tools/hreflang-generator
 
 ## Topical authority signals
 topics:

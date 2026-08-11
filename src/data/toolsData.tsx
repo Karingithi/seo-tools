@@ -8,6 +8,7 @@ import SitemapIconUrl from "../assets/icons/sitemap.svg?url"
 import CanonicalIconUrl from "../assets/icons/canonical-tag-generator.svg?url"
 import KeywordDensityIconUrl from "../assets/icons/keyword-density-checker.svg?url"
 import LlmsTxtIconUrl from "../assets/icons/llms-txt.svg?url"
+import HreflangIconUrl from "../assets/icons/hreflang-checker.svg?url"
 
 // Type definition for each tool
 export type Tool = {
@@ -72,5 +73,11 @@ export const toolsData: Tool[] = [
     icon: LlmsTxtIconUrl,
     link: "/llms-txt-generator",
     description: "Generate an llms.txt file so AI tools accurately understand your site.",
+  },
+  {
+    name: "Hreflang Tag Generator",
+    icon: HreflangIconUrl,
+    link: "/hreflang-generator",
+    description: "Generate valid, reciprocal hreflang tags for multilingual and multi-region sites.",
   },
 ]

@@ -11,6 +11,7 @@ import CanonicalTagGenerator from "./pages/CanonicalTagGenerator"
 import KeywordDensityChecker from "./pages/KeywordDensityChecker"
 import LlmsTxtGenerator from "./pages/LlmsTxtGenerator"
 import SchemaBuilder from "./pages/SchemaBuilder"
+import HreflangGenerator from "./pages/HreflangGenerator"
 import NotFound from "./pages/NotFound"
 
 export default function App() {
@@ -152,6 +153,20 @@ export default function App() {
               showBackLink={true}
             >
               <LlmsTxtGenerator />
+            </Layout>
+          }
+        />
+
+        {/* === Hreflang Tag Generator === */}
+        <Route
+          path="/hreflang-generator"
+          element={
+            <Layout
+              title="Free Hreflang Tag Generator"
+              subtitle="Build valid, reciprocal hreflang tags for multilingual and multi-region sites. Export as HTML link tags or sitemap XML."
+              showBackLink={true}
+            >
+              <HreflangGenerator />
             </Layout>
           }
         />

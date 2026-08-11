@@ -44,6 +44,7 @@ const routes = [
   "/canonical-tag-generator",
   "/keyword-density-checker",
   "/llms-txt-generator",
+  "/hreflang-generator",
 ]
 
 // dist/ is the document root Apache maps to the /tools/ URL path (see

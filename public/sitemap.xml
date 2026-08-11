@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Generated from src/data/toolsData.tsx on 2026-05-16 -->
+  <!-- Generated from src/data/toolsData.tsx on 2026-08-11 -->
   <url>
     <loc>https://cralite.com/tools/</loc>
     <changefreq>weekly</changefreq>
@@ -50,5 +50,10 @@
     <loc>https://cralite.com/tools/llms-txt-generator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://cralite.com/tools/hreflang-generator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
